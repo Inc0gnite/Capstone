@@ -50,6 +50,18 @@ app.get('/health', (_req, res) => {
   })
 })
 
+// Root info
+app.get('/', (_req, res) => {
+  res.json({
+    message: 'API REST - Plataforma de Gestión de Ingreso de Vehículos',
+    version: '1.0.0',
+    endpoints: {
+      health: '/health',
+      api: '/api',
+    },
+  })
+})
+
 // API info
 app.get('/api', (_req, res) => {
   res.json({
