@@ -1,0 +1,29 @@
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "services": [
+    {
+      "name": "backend",
+      "rootDirectory": "backend",
+      "buildCommand": "npm ci && npm run build && npm run db:generate",
+      "startCommand": "npm start",
+      "envVars": {
+        "NODE_ENV": "production"
+      },
+      "port": 3000,
+      "healthcheckPath": "/health"
+    },
+    {
+      "name": "frontend",
+      "rootDirectory": "frontend",
+      "buildCommand": "npm ci && npm run build",
+      "startCommand": "npm run start",
+      "envVars": {
+        "NODE_ENV": "production"
+      },
+      "port": 5173
+    }
+  ]
+}
+
+
+
