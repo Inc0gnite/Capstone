@@ -19,6 +19,11 @@ export default defineConfig({
       },
     },
   },
+  preview: {
+    // Permitir dominios asignados por Railway (host check)
+    allowedHosts: true,
+    host: true,
+  },
   build: {
     outDir: 'dist',
     sourcemap: true,
