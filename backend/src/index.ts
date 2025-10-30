@@ -77,13 +77,15 @@ app.use(notFoundHandler)
 // Manejo de errores
 app.use(errorHandler)
 
-// Iniciar servidor
-app.listen(PORT, () => {
-  logger.info(`🚀 Servidor corriendo en http://localhost:${PORT}`)
-  logger.info(`📝 API disponible en http://localhost:${PORT}/api`)
-  logger.info(`❤️  Health check en http://localhost:${PORT}/health`)
-  logger.info(`🌍 Entorno: ${process.env.NODE_ENV || 'development'}`)
-})
+// Iniciar servidor (solo en desarrollo o producción tradicional)
+if (process.env.NODE_ENV !== 'vercel') {
+  app.listen(PORT, () => {
+    logger.info(`🚀 Servidor corriendo en http://localhost:${PORT}`)
+    logger.info(`📝 API disponible en http://localhost:${PORT}/api`)
+    logger.info(`❤️  Health check en http://localhost:${PORT}/health`)
+    logger.info(`🌍 Entorno: ${process.env.NODE_ENV || 'development'}`)
+  })
+}
 
 export default app
 
