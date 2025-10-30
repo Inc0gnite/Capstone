@@ -15,14 +15,41 @@ const PORT = process.env.PORT || 3000
 
 // Middlewares de seguridad
 app.use(helmet())
-app.use(cors({
-  origin: [
-    process.env.FRONTEND_URL || 'http://localhost:5173',
-    'http://localhost:5174', // Puerto alternativo de Vite
-    'http://localhost:3000'  // Puerto del backend
-  ],
+
+// CORS robusto basado en lista blanca
+const defaultAllowedOrigins = [
+  process.env.FRONTEND_URL || '',
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:3000',
+].filter(Boolean)
+
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || '')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean)
+  .concat(defaultAllowedOrigins)
+
+const allowAllOrigins = (process.env.ALLOWED_ORIGINS || '')
+  .split(',')
+  .map((s) => s.trim())
+  .includes('*')
+
+const corsOptions: cors.CorsOptions = {
+  origin: allowAllOrigins
+    ? true
+    : (origin, callback) => {
+        if (!origin) return callback(null, true) // permitir herramientas como curl/postman
+        if (allowedOrigins.includes(origin)) return callback(null, true)
+        return callback(new Error(`CORS bloqueado para origen: ${origin}`))
+      },
   credentials: true,
-}))
+  methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}
+
+app.use(cors(corsOptions))
+app.options('*', cors(corsOptions))
 
 // Rate limiting - más permisivo en desarrollo
 const limiter = rateLimit({
