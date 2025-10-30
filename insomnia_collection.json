@@ -1,0 +1,322 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "resources": [
+    {
+      "_type": "request_group",
+      "_id": "fld_auth",
+      "name": "🔐 Auth",
+      "environment": {},
+      "metaSortKey": -1000
+    },
+    {
+      "_type": "request",
+      "_id": "req_login_admin",
+      "parentId": "fld_auth",
+      "name": "Login Admin",
+      "method": "POST",
+      "url": "{{ _.base_url }}/auth/login",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"email\": \"admin@pepsico.cl\",\n  \"password\": \"admin123\"\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ]
+    },
+    {
+      "_type": "request",
+      "_id": "req_get_me",
+      "parentId": "fld_auth",
+      "name": "Get Current User",
+      "method": "GET",
+      "url": "{{ _.base_url }}/auth/me",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ]
+    },
+    {
+      "_type": "request_group",
+      "_id": "fld_users",
+      "name": "👥 Users",
+      "environment": {},
+      "metaSortKey": -900
+    },
+    {
+      "_type": "request",
+      "_id": "req_list_users",
+      "parentId": "fld_users",
+      "name": "List Users",
+      "method": "GET",
+      "url": "{{ _.base_url }}/users?page=1&limit=10",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ]
+    },
+    {
+      "_type": "request_group",
+      "_id": "fld_roles",
+      "name": "🎭 Roles",
+      "environment": {},
+      "metaSortKey": -800
+    },
+    {
+      "_type": "request",
+      "_id": "req_list_roles",
+      "parentId": "fld_roles",
+      "name": "List Roles",
+      "method": "GET",
+      "url": "{{ _.base_url }}/roles",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ]
+    },
+    {
+      "_type": "request",
+      "_id": "req_list_permissions",
+      "parentId": "fld_roles",
+      "name": "List Permissions",
+      "method": "GET",
+      "url": "{{ _.base_url }}/roles/permissions",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ]
+    },
+    {
+      "_type": "request_group",
+      "_id": "fld_vehicles",
+      "name": "🚗 Vehicles",
+      "environment": {},
+      "metaSortKey": -700
+    },
+    {
+      "_type": "request",
+      "_id": "req_list_vehicles",
+      "parentId": "fld_vehicles",
+      "name": "List Vehicles",
+      "method": "GET",
+      "url": "{{ _.base_url }}/vehicles",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ]
+    },
+    {
+      "_type": "request",
+      "_id": "req_vehicle_stats",
+      "parentId": "fld_vehicles",
+      "name": "Vehicle Stats",
+      "method": "GET",
+      "url": "{{ _.base_url }}/vehicles/stats",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ]
+    },
+    {
+      "_type": "request_group",
+      "_id": "fld_work_orders",
+      "name": "🔨 Work Orders",
+      "environment": {},
+      "metaSortKey": -600
+    },
+    {
+      "_type": "request",
+      "_id": "req_list_work_orders",
+      "parentId": "fld_work_orders",
+      "name": "List Work Orders",
+      "method": "GET",
+      "url": "{{ _.base_url }}/work-orders",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ]
+    },
+    {
+      "_type": "request",
+      "_id": "req_work_order_stats",
+      "parentId": "fld_work_orders",
+      "name": "Work Order Stats",
+      "method": "GET",
+      "url": "{{ _.base_url }}/work-orders/stats",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ]
+    },
+    {
+      "_type": "request_group",
+      "_id": "fld_spare_parts",
+      "name": "🔧 Spare Parts",
+      "environment": {},
+      "metaSortKey": -500
+    },
+    {
+      "_type": "request",
+      "_id": "req_list_spare_parts",
+      "parentId": "fld_spare_parts",
+      "name": "List Spare Parts",
+      "method": "GET",
+      "url": "{{ _.base_url }}/spare-parts",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ]
+    },
+    {
+      "_type": "request",
+      "_id": "req_low_stock",
+      "parentId": "fld_spare_parts",
+      "name": "Low Stock Items",
+      "method": "GET",
+      "url": "{{ _.base_url }}/spare-parts/low-stock",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ]
+    },
+    {
+      "_type": "request_group",
+      "_id": "fld_workshops",
+      "name": "🏭 Workshops & Regions",
+      "environment": {},
+      "metaSortKey": -400
+    },
+    {
+      "_type": "request",
+      "_id": "req_list_regions",
+      "parentId": "fld_workshops",
+      "name": "List Regions",
+      "method": "GET",
+      "url": "{{ _.base_url }}/regions",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ]
+    },
+    {
+      "_type": "request",
+      "_id": "req_list_workshops",
+      "parentId": "fld_workshops",
+      "name": "List Workshops",
+      "method": "GET",
+      "url": "{{ _.base_url }}/workshops",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ]
+    },
+    {
+      "_type": "request_group",
+      "_id": "fld_dashboard",
+      "name": "📊 Dashboard",
+      "environment": {},
+      "metaSortKey": -300
+    },
+    {
+      "_type": "request",
+      "_id": "req_dashboard_stats",
+      "parentId": "fld_dashboard",
+      "name": "General Stats",
+      "method": "GET",
+      "url": "{{ _.base_url }}/dashboard/stats",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ]
+    },
+    {
+      "_type": "request",
+      "_id": "req_dashboard_period",
+      "parentId": "fld_dashboard",
+      "name": "Stats by Week",
+      "method": "GET",
+      "url": "{{ _.base_url }}/dashboard/stats/week",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ]
+    },
+    {
+      "_type": "request",
+      "_id": "req_mechanics_performance",
+      "parentId": "fld_dashboard",
+      "name": "Mechanics Performance",
+      "method": "GET",
+      "url": "{{ _.base_url }}/dashboard/mechanics-performance",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ]
+    },
+    {
+      "_type": "request_group",
+      "_id": "fld_notifications",
+      "name": "🔔 Notifications",
+      "environment": {},
+      "metaSortKey": -200
+    },
+    {
+      "_type": "request",
+      "_id": "req_my_notifications",
+      "parentId": "fld_notifications",
+      "name": "My Notifications",
+      "method": "GET",
+      "url": "{{ _.base_url }}/notifications",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ]
+    },
+    {
+      "_type": "environment",
+      "_id": "env_base",
+      "name": "Development",
+      "data": {
+        "base_url": "http://localhost:3000/api",
+        "token": ""
+      }
+    }
+  ]
+}
+
+

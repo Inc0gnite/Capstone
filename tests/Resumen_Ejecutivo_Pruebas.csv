@@ -1,0 +1,8 @@
+Tipo de Prueba,Archivo,Total Casos,Críticos,Alta Prioridad,Media Prioridad,Baja Prioridad,Pendientes,En Progreso,Pasaron,Fallaron,Bloqueados,% Completado,% Éxito,Responsable,Fecha Inicio,Fecha Fin
+Funcionales,Plan_Pruebas_Funcionales.csv,57,15,25,13,4,57,0,0,0,0,0%,N/A,QA Team,,
+Unitarias,Plan_Pruebas_Unitarias.csv,30,10,15,5,0,30,0,0,0,0,0%,N/A,Desarrolladores,,
+Integración,Plan_Pruebas_Integracion.csv,20,8,10,2,0,20,0,0,0,0,0%,N/A,Dev + QA,,
+Seguridad,Plan_Pruebas_Seguridad.csv,25,10,12,3,0,25,0,0,0,0,0%,N/A,Security Team,,
+Rendimiento,Plan_Pruebas_Rendimiento.csv,15,5,8,2,0,15,0,0,0,0,0%,N/A,QA + DevOps,,
+Usabilidad,Plan_Pruebas_Usabilidad.csv,10,0,10,0,0,10,0,0,0,0,0%,N/A,UX + QA,,
+TOTAL,,157,48,80,25,4,157,0,0,0,0,0%,N/A,Equipo Completo,,

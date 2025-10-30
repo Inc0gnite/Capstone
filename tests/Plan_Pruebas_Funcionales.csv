@@ -1,0 +1,197 @@
+ID,Módulo,Caso de Uso,Escenario de Prueba,Prioridad,Precondiciones,Pasos de Ejecución,Resultado Esperado,Resultado Obtenido,Estado,Evidencias,Comentarios,Tester,Fecha Ejecución
+FT-001,Autenticación,CU-001: Iniciar Sesión,Usuario ingresa credenciales válidas,Crítica,Usuario registrado en BD,"1. Abrir aplicación
+2. Ingresar RUT válido
+3. Ingresar contraseña correcta
+4. Click en 'Iniciar Sesión'","Token JWT generado, Usuario redirigido al dashboard, Sesión activa",,Pendiente,,,
+FT-002,Autenticación,CU-001: Iniciar Sesión,Usuario ingresa credenciales inválidas,Alta,Usuario registrado en BD,"1. Abrir aplicación
+2. Ingresar RUT válido
+3. Ingresar contraseña incorrecta
+4. Click en 'Iniciar Sesión'","Error 401, Mensaje 'Credenciales inválidas', Usuario permanece en login",,Pendiente,,,
+FT-003,Autenticación,CU-002: Cerrar Sesión,Usuario cierra sesión activa,Alta,Usuario autenticado,"1. Usuario logueado
+2. Click en menú de usuario
+3. Click en 'Cerrar Sesión'","Sesión terminada, Token invalidado, Redirección a login",,Pendiente,,,
+FT-004,Autenticación,CU-003: Recuperar Contraseña,Usuario solicita reseteo de contraseña,Media,Usuario registrado,"1. Click en '¿Olvidaste tu contraseña?'
+2. Ingresar email registrado
+3. Click en 'Enviar'","Email enviado con link de recuperación, Mensaje de confirmación",,Pendiente,,,
+FT-010,Gestión de Ingresos,CU-010: Registrar Ingreso,Guardia registra ingreso completo,Crítica,Guardia autenticado con permisos,"1. Click en 'Registrar Ingreso'
+2. Escanear/Ingresar patente
+3. Completar datos del conductor (RUT, nombre, teléfono)
+4. Ingresar kilometraje
+5. Seleccionar nivel de combustible
+6. Agregar observaciones
+7. Click en 'Guardar'","Código de ingreso generado, Registro guardado en BD, Redirección a subir fotos",,Pendiente,,,
+FT-011,Gestión de Ingresos,CU-010: Registrar Ingreso,Intento de ingreso con patente inválida,Alta,Guardia autenticado,"1. Click en 'Registrar Ingreso'
+2. Ingresar patente con formato inválido (ej: ABC)
+3. Intentar continuar","Error de validación, Mensaje indicando formato correcto, No se permite avanzar",,Pendiente,,,
+FT-012,Gestión de Ingresos,CU-011: Tomar Fotografías,Subir 4 fotos del vehículo,Crítica,Ingreso registrado,"1. En pantalla de fotos
+2. Seleccionar vista 'Frontal' y subir imagen
+3. Seleccionar vista 'Trasera' y subir imagen
+4. Seleccionar vista 'Lateral Izq' y subir imagen
+5. Seleccionar vista 'Lateral Der' y subir imagen
+6. Click en 'Finalizar'","4 fotos guardadas con URLs, Asociadas al ingreso, Confirmación exitosa",,Pendiente,,,
+FT-013,Gestión de Ingresos,CU-011: Tomar Fotografías,Intento de subir archivo no imagen,Media,Ingreso registrado,"1. En pantalla de fotos
+2. Intentar subir archivo .pdf o .exe","Archivo rechazado, Mensaje de error indicando formatos válidos (jpg, png)",,Pendiente,,,
+FT-014,Gestión de Ingresos,CU-012: Registrar Salida,Guardia registra salida completa,Crítica,"Vehículo con ingreso registrado, OT completada","1. Buscar vehículo por patente o código
+2. Verificar OT completadas
+3. Ingresar kilometraje de salida
+4. Agregar observaciones de salida
+5. Click en 'Registrar Salida'","Salida registrada, Fecha/hora guardada, Estado del ingreso cambió a 'Completado'",,Pendiente,,,
+FT-015,Gestión de Ingresos,CU-012: Registrar Salida,Intento de salida con OT pendiente,Alta,Vehículo con OT en progreso,"1. Buscar vehículo
+2. Verificar estado de OT (pendiente/en progreso)
+3. Intentar registrar salida","Sistema bloquea la salida, Mensaje indicando OT pendiente, Lista de OT incompletas",,Pendiente,,,
+FT-016,Gestión de Ingresos,CU-027: Agregar Documentos,Subir PDF de documentación,Media,Usuario con permisos,"1. Acceder a ingreso o vehículo
+2. Click en 'Documentos'
+3. Click en 'Subir Documento'
+4. Seleccionar tipo de documento
+5. Seleccionar archivo PDF
+6. Click en 'Guardar'","Documento subido, URL generada, Visible en lista de documentos",,Pendiente,,,
+FT-020,Gestión de Vehículos,CU-013: Buscar Vehículo,Búsqueda por patente exacta,Alta,Vehículos registrados en BD,"1. Click en 'Vehículos'
+2. Ingresar patente exacta en buscador
+3. Click en buscar o Enter","Vehículo encontrado, Datos completos mostrados, Opción de ver historial",,Pendiente,,,
+FT-021,Gestión de Vehículos,CU-013: Buscar Vehículo,Búsqueda con filtros múltiples,Media,Vehículos registrados,"1. Click en 'Vehículos'
+2. Aplicar filtro por tipo (ej: Camión)
+3. Aplicar filtro por región (ej: RM)
+4. Aplicar filtro por estado (ej: Activo)
+5. Click en 'Buscar'","Lista de vehículos que cumplen filtros, Resultados paginados, Contador de resultados",,Pendiente,,,
+FT-022,Gestión de Vehículos,CU-014: Registrar Vehículo,Crear vehículo nuevo,Alta,Usuario con rol Admin o Recepcionista,"1. Click en 'Nuevo Vehículo'
+2. Ingresar patente única
+3. Seleccionar tipo de vehículo
+4. Ingresar marca, modelo, año
+5. Ingresar VIN (opcional)
+6. Asignar región y taller
+7. Click en 'Guardar'","Vehículo creado en BD, ID generado, Disponible para ingresos",,Pendiente,,,
+FT-023,Gestión de Vehículos,CU-016: Ver Historial,Consultar historial completo,Media,Vehículo con historial,"1. Buscar y seleccionar vehículo
+2. Click en 'Historial'
+3. Revisar lista de ingresos
+4. Click en un ingreso para ver detalle","Historial ordenado cronológicamente, Muestra ingresos, OTs, documentos, Datos completos",,Pendiente,,,
+FT-030,Órdenes de Trabajo,CU-020: Crear OT,Recepcionista crea OT completa,Crítica,Recepcionista autenticado con vehículo ingresado,"1. Click en 'Nueva Orden de Trabajo'
+2. Seleccionar vehículo/ingreso
+3. Seleccionar tipo de trabajo
+4. Ingresar descripción detallada
+5. Seleccionar prioridad (alta/media/baja)
+6. Estimar horas de trabajo
+7. Click en 'Crear OT'","OT creada con número único, Estado 'Pendiente', Notificación al Jefe de Taller",,Pendiente,,,
+FT-031,Órdenes de Trabajo,CU-020: Crear OT,Crear OT sin descripción (validación),Alta,Recepcionista autenticado,"1. Click en 'Nueva Orden de Trabajo'
+2. Seleccionar vehículo
+3. Dejar descripción vacía
+4. Intentar guardar","Validación impide guardar, Mensaje de error en campo descripción, Campo marcado como requerido",,Pendiente,,,
+FT-032,Órdenes de Trabajo,CU-021: Asignar Mecánico,Jefe asigna mecánico disponible,Crítica,Jefe de Taller autenticado con OT pendiente,"1. Acceder a lista de OT pendientes
+2. Seleccionar OT
+3. Click en 'Asignar Mecánico'
+4. Seleccionar mecánico de lista de disponibles
+5. Confirmar asignación","Mecánico asignado a OT, Estado cambia a 'Asignada', Notificación enviada al mecánico",,Pendiente,,,
+FT-033,Órdenes de Trabajo,CU-021: Asignar Mecánico,Asignar a mecánico con carga completa,Media,Mecánicos con OT asignadas,"1. Intentar asignar OT
+2. Seleccionar mecánico con 5+ OT activas","Sistema muestra advertencia de carga, Permite asignar con confirmación, Indicador de carga del mecánico",,Pendiente,,,
+FT-034,Órdenes de Trabajo,CU-022: Actualizar Estado,Mecánico cambia estado a 'en progreso',Crítica,Mecánico con OT asignada,"1. Mecánico accede a 'Mis OT'
+2. Selecciona OT asignada
+3. Click en 'Iniciar Trabajo'
+4. Confirma inicio","Estado cambia a 'En Progreso', Timestamp de inicio guardado, Visible en dashboard",,Pendiente,,,
+FT-035,Órdenes de Trabajo,CU-022: Actualizar Estado,Secuencia completa de estados,Alta,OT creada,"1. OT en estado 'Pendiente'
+2. Cambiar a 'Asignada'
+3. Cambiar a 'En Progreso'
+4. Cambiar a 'Completada'
+5. Cambiar a 'Aprobada'","Todos los cambios de estado registrados, Historial completo visible, Timestamps correctos",,Pendiente,,,
+FT-036,Órdenes de Trabajo,CU-023: Solicitar Repuesto,Solicitud con stock disponible,Alta,Mecánico trabajando en OT con repuestos en stock,"1. Dentro de OT en progreso
+2. Click en 'Solicitar Repuesto'
+3. Buscar repuesto por código o nombre
+4. Ingresar cantidad requerida
+5. Agregar justificación
+6. Click en 'Solicitar'","Solicitud creada, Estado 'Solicitado', Notificación a Asistente de Repuestos",,Pendiente,,,
+FT-037,Órdenes de Trabajo,CU-023: Solicitar Repuesto,Solicitud con stock insuficiente,Alta,Repuesto con stock bajo el solicitado,"1. Solicitar repuesto
+2. Ingresar cantidad mayor al stock disponible
+3. Intentar confirmar","Sistema muestra stock actual, Alerta de stock insuficiente, Permite solicitar cantidad disponible",,Pendiente,,,
+FT-038,Órdenes de Trabajo,CU-025: Registrar Pausa,Mecánico pausa OT con motivo,Media,OT en progreso,"1. En OT activa
+2. Click en 'Pausar Trabajo'
+3. Seleccionar motivo (falta repuesto/almuerzo/otro)
+4. Agregar observación
+5. Confirmar","OT pausada, Timestamp de pausa guardado, Estado visible, Tiempo de pausa no cuenta",,Pendiente,,,
+FT-039,Órdenes de Trabajo,CU-026: Finalizar Pausa,Mecánico resume OT pausada,Media,OT pausada,"1. Acceder a OT pausada
+2. Click en 'Reanudar Trabajo'
+3. Confirmar reanudación","OT vuelve a 'En Progreso', Timestamp de reanudación guardado, Duración de pausa calculada",,Pendiente,,,
+FT-040,Inventario,CU-024: Entregar Repuesto,Asistente entrega repuesto solicitado,Alta,Asistente con solicitud pendiente,"1. Ver solicitudes pendientes
+2. Seleccionar solicitud
+3. Verificar stock disponible
+4. Ingresar cantidad entregada
+5. Click en 'Entregar'
+6. Confirmar entrega","Stock decrementado, Solicitud marcada como 'Entregada', Movimiento registrado, OT actualizada",,Pendiente,,,
+FT-041,Inventario,CU-060: Actualizar Inventario,Ajuste manual de stock,Media,Asistente con permisos de inventario,"1. Acceder a 'Inventario'
+2. Buscar repuesto
+3. Click en 'Ajustar Stock'
+4. Ingresar nuevo stock
+5. Seleccionar motivo (conteo físico/corrección/otro)
+6. Guardar","Stock actualizado, Movimiento de ajuste registrado, Historial actualizado",,Pendiente,,,
+FT-042,Inventario,CU-061: Registrar Ingreso,Ingreso de nuevos repuestos,Media,Asistente con permisos,"1. Click en 'Ingreso de Repuestos'
+2. Seleccionar o crear repuesto
+3. Ingresar cantidad recibida
+4. Ingresar precio unitario (opcional)
+5. Agregar referencia (factura/orden compra)
+6. Guardar","Stock incrementado, Movimiento tipo 'Ingreso' creado, Referencia guardada",,Pendiente,,,
+FT-043,Inventario,CU-062: Ajustar Stock,Corrección de inventario,Media,Discrepancia entre sistema y físico,"1. Realizar conteo físico
+2. Comparar con sistema
+3. Seleccionar repuesto con diferencia
+4. Click en 'Ajuste de Stock'
+5. Ingresar cantidad real
+6. Motivo: 'Corrección de inventario'
+7. Guardar","Stock corregido, Diferencia registrada, Reporte de ajuste generado",,Pendiente,,,
+FT-044,Inventario,CU-063: Ver Movimientos,Consultar historial de movimientos,Baja,Repuesto con movimientos,"1. Seleccionar repuesto
+2. Click en 'Ver Movimientos'
+3. Aplicar filtro por fecha
+4. Aplicar filtro por tipo (ingreso/salida/ajuste)","Lista de movimientos filtrados, Detalles: fecha, tipo, cantidad, usuario, referencia",,Pendiente,,,
+FT-045,Inventario,Alertas de Stock,Sistema genera alerta por stock mínimo,Alta,Repuesto con stock <= mínimo configurado,"1. Stock de repuesto llega al mínimo
+2. Sistema ejecuta verificación automática","Notificación enviada a Asistente y Jefe, Alerta visible en dashboard, Repuesto marcado en lista",,Pendiente,,,
+FT-050,Reportes,CU-029: Ver Dashboard,Supervisora accede a dashboard,Alta,Supervisora autenticada,"1. Login como supervisora
+2. Acceder a dashboard principal","Métricas en tiempo real: OT activas, vehículos en taller, mecánicos ocupados, gráficos actualizados",,Pendiente,,,
+FT-051,Reportes,CU-030: Reporte de Flota,Generar reporte con filtros,Alta,Datos históricos disponibles,"1. Click en 'Reportes'
+2. Seleccionar 'Reporte de Flota'
+3. Filtrar por región
+4. Filtrar por rango de fechas
+5. Click en 'Generar'","Reporte generado con datos correctos, Incluye: total vehículos, ingresos, tiempo promedio, gráficos",,Pendiente,,,
+FT-052,Reportes,CU-031: Reporte de Desempeño,Generar por mecánico y período,Media,OT completadas por mecánico,"1. Seleccionar 'Reporte de Desempeño'
+2. Seleccionar mecánico específico
+3. Seleccionar período (último mes)
+4. Generar","Reporte muestra: OT completadas, tiempo promedio, eficiencia, comparativa con otros mecánicos",,Pendiente,,,
+FT-053,Reportes,CU-032: Reporte de Inventario,Reporte de stock actual,Media,Repuestos en sistema,"1. Seleccionar 'Reporte de Inventario'
+2. Opcional: filtrar por categoría
+3. Generar","Lista completa de repuestos con: código, nombre, stock actual, mínimo, máximo, alertas",,Pendiente,,,
+FT-054,Reportes,CU-033: Reporte de Costos,Análisis de costos por vehículo,Media,Repuestos utilizados con precios,"1. Seleccionar 'Reporte de Costos'
+2. Filtrar por vehículo o flota
+3. Filtrar por período
+4. Generar","Desglose de costos: repuestos, mano de obra, total por OT, tendencias, gráficos",,Pendiente,,,
+FT-055,Reportes,CU-034: Exportar PDF,Exportar cualquier reporte a PDF,Media,Reporte generado,"1. Generar cualquier reporte
+2. Click en botón 'Exportar PDF'
+3. Esperar generación","Archivo PDF descargado, Formato profesional con logo, Incluye todos los datos y gráficos",,Pendiente,,,
+FT-056,Reportes,CU-035: Exportar Excel,Exportar reporte a Excel,Media,Reporte generado,"1. Generar reporte
+2. Click en 'Exportar Excel'","Archivo .xlsx descargado, Datos en formato tabular, Compatible con Excel/Sheets, Incluye fórmulas",,Pendiente,,,
+FT-060,Notificaciones,CU-040: Recibir Notificación,Usuario recibe notificación en tiempo real,Alta,Usuario autenticado con evento generado,"1. Usuario logueado
+2. Otro usuario realiza acción que genera notificación (ej: asignar OT)
+3. Verificar campana de notificaciones","Contador actualizado en tiempo real, Notificación aparece en lista, Sonido/alerta visual (opcional)",,Pendiente,,,
+FT-061,Notificaciones,CU-041: Marcar como Leída,Marcar notificación individual,Baja,Usuario con notificaciones no leídas,"1. Click en campana de notificaciones
+2. Click en una notificación específica","Notificación marcada como leída, Contador decrementado, Estilo visual cambia",,Pendiente,,,
+FT-062,Notificaciones,CU-042: Marcar Todas Leídas,Marcar todas de un usuario,Baja,Múltiples notificaciones no leídas,"1. Abrir panel de notificaciones
+2. Click en 'Marcar todas como leídas'","Todas las notificaciones marcadas, Contador en cero, Confirmación visual",,Pendiente,,,
+FT-063,Notificaciones,CU-043: Eliminar Notificación,Eliminar notificación específica,Baja,Notificación existente,"1. Abrir notificaciones
+2. Hover sobre notificación
+3. Click en icono eliminar
+4. Confirmar (si aplica)","Notificación eliminada de lista, No afecta contador si ya estaba leída, Acción irreversible",,Pendiente,,,
+FT-070,Administración,CU-050: Gestionar Usuarios,Admin lista todos los usuarios,Alta,Admin autenticado,"1. Acceder a 'Administración'
+2. Click en 'Usuarios'
+3. Ver lista completa","Tabla con todos los usuarios: RUT, nombre, email, rol, estado, última conexión, acciones",,Pendiente,,,
+FT-071,Administración,CU-051: Crear Usuario,Admin crea usuario nuevo,Alta,Admin con permisos,"1. Click en 'Nuevo Usuario'
+2. Ingresar RUT único
+3. Ingresar nombre y apellido
+4. Ingresar email único
+5. Asignar rol
+6. Asignar taller (si aplica)
+7. Guardar","Usuario creado, Contraseña temporal generada, Email de bienvenida enviado, Usuario activo",,Pendiente,,,
+FT-072,Administración,CU-052: Editar Usuario,Admin modifica datos de usuario,Alta,Usuario existente,"1. Buscar usuario
+2. Click en 'Editar'
+3. Modificar datos (email, rol, taller)
+4. Guardar cambios","Datos actualizados en BD, Log de auditoría creado, Usuario notificado si cambió rol/permisos",,Pendiente,,,
+FT-073,Administración,CU-053: Desactivar Usuario,Admin desactiva usuario,Alta,Usuario activo,"1. Seleccionar usuario activo
+2. Click en 'Desactivar'
+3. Ingresar motivo
+4. Confirmar","Usuario marcado como inactivo, No puede hacer login, Sesiones activas invalidadas, Log creado",,Pendiente,,,
+FT-074,Administración,CU-054: Gestionar Roles,Admin asigna permisos a rol,Alta,Roles y permisos existentes,"1. Acceder a 'Roles y Permisos'
+2. Seleccionar rol (ej: Mecánico)
+3. Marcar/desmarcar permisos
+4. Guardar","Permisos actualizados, Afecta a todos los usuarios con ese rol, Cambios efectivos inmediatamente",,Pendiente,,,

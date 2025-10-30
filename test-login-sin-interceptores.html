@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Login Guardia - Sin Interceptores</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .log { background: #f5f5f5; padding: 10px; margin: 5px 0; border-radius: 5px; }
+        .error { background: #ffebee; color: #c62828; }
+        .success { background: #e8f5e8; color: #2e7d32; }
+        .info { background: #e3f2fd; color: #1565c0; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        input { padding: 8px; margin: 5px; width: 200px; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Test Login Guardia - Sin Interceptores</h1>
+    
+    <div>
+        <h3>Credenciales:</h3>
+        <input type="text" id="email" value="guardia@pepsico.cl" placeholder="Email">
+        <input type="password" id="password" value="admin123" placeholder="Password">
+        <button onclick="testLogin()">🔐 Probar Login</button>
+        <button onclick="testWithAxios()">📡 Probar con Axios</button>
+        <button onclick="clearLogs()">🗑️ Limpiar Logs</button>
+    </div>
+    
+    <div id="logs"></div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        function log(message, type = 'info') {
+            const logsDiv = document.getElementById('logs');
+            const logDiv = document.createElement('div');
+            logDiv.className = `log ${type}`;
+            logDiv.innerHTML = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logsDiv.appendChild(logDiv);
+            console.log(message);
+        }
+        
+        function clearLogs() {
+            document.getElementById('logs').innerHTML = '';
+        }
+        
+        async function testLogin() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            log('🚀 TEST 1: Login con fetch nativo', 'info');
+            log(`📧 Email: ${email}`, 'info');
+            
+            try {
+                const response = await fetch('http://localhost:3000/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        password: password
+                    })
+                });
+                
+                log(`📊 Status: ${response.status}`, response.ok ? 'success' : 'error');
+                
+                const data = await response.json();
+                log(`📊 Datos: ${JSON.stringify(data, null, 2)}`, 'info');
+                
+                if (data.success) {
+                    log('✅ LOGIN EXITOSO con fetch', 'success');
+                    log(`👤 Usuario: ${data.data.user.firstName} ${data.data.user.lastName}`, 'success');
+                    log(`🎭 Rol: ${data.data.user.role.name}`, 'success');
+                    
+                    // Guardar tokens
+                    sessionStorage.setItem('accessToken', data.data.accessToken);
+                    sessionStorage.setItem('refreshToken', data.data.refreshToken);
+                    
+                    log('💾 Tokens guardados', 'success');
+                    
+                    // Verificar redirección
+                    const role = data.data.user.role.name;
+                    const redirectPath = role === 'Guardia' ? '/dashboard/guardia' : '/dashboard';
+                    log(`🎯 Debería redirigir a: ${redirectPath}`, 'info');
+                    
+                } else {
+                    log(`❌ LOGIN FALLÓ: ${data.error}`, 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ ERROR: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testWithAxios() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            log('🚀 TEST 2: Login con Axios', 'info');
+            
+            try {
+                const response = await axios.post('http://localhost:3000/api/auth/login', {
+                    email: email,
+                    password: password
+                });
+                
+                log(`📊 Status: ${response.status}`, 'success');
+                log(`📊 Datos: ${JSON.stringify(response.data, null, 2)}`, 'info');
+                
+                if (response.data.success) {
+                    log('✅ LOGIN EXITOSO con Axios', 'success');
+                    log(`👤 Usuario: ${response.data.data.user.firstName} ${response.data.data.user.lastName}`, 'success');
+                    log(`🎭 Rol: ${response.data.data.user.role.name}`, 'success');
+                    
+                    // Guardar tokens
+                    sessionStorage.setItem('accessToken', response.data.data.accessToken);
+                    sessionStorage.setItem('refreshToken', response.data.data.refreshToken);
+                    
+                    log('💾 Tokens guardados', 'success');
+                    
+                } else {
+                    log(`❌ LOGIN FALLÓ: ${response.data.error}`, 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ ERROR: ${error.message}`, 'error');
+                if (error.response) {
+                    log(`❌ Response: ${JSON.stringify(error.response.data)}`, 'error');
+                }
+            }
+        }
+        
+        // Verificar estado al cargar
+        window.onload = function() {
+            log('🌐 Página cargada', 'info');
+            log(`🔍 SessionStorage: ${Object.keys(sessionStorage).join(', ')}`, 'info');
+        };
+    </script>
+</body>
+</html>

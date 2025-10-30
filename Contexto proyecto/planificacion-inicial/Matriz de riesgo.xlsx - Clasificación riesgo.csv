@@ -1,0 +1,28 @@
+,,,,,,,,,,,,,,,,,,,,,
+,,Matriz de riesgo,,,,,,,,,,,,Matriz RACI,,,,,,,
+,,,,Impacto,,,,,,,,,,Actividad,,Listado de riesgos - Actividad,Probabilidad,Calificación,Impacto,Calificación,Clasificación
+,,,,Muy bajo,Bajo,Medio,Alto,Muy alto,,,,,,1,,Retraso en la recolección de requerimientos,Medio,3,Alto,4,12
+,,Probabilidad,,1,2,3,4,5,,,,,,2,,Sobrecarga académica de los integrantes,Alto,4,Alto,4,16
+,,Muy alto,5,5,10,15,20,25,,,,,,3,,Falta de datos reales para pruebas,Medio,3,Medio,3,9
+,,Alto,4,4,8,12,16,20,,,,,,4,,Cambios en los perfiles o requerimientos de PepsiCo,Medio,3,Alto,4,12
+,,Medio,3,3,6,9,12,15,,,,,,5,,Problemas técnicos en la base de datos (fallos MySQL),Bajo,2,Alto,4,8
+,,Bajo,2,2,4,6,8,10,,,,,,6,,Falla de comunicación entre equipo y stakeholders,Medio,3,Medio,3,9
+,,Muy bajo,1,1,2,3,4,5,,,,,,7,,Baja disponibilidad del hosting o servidor,Bajo,2,Alto,4,8
+,,,,,,,,,,,,,,8,,Errores en pruebas finales no detectados,Medio,3,Alto,4,12
+,,Riesgo,Min,Max,Probabilidad,,,Impacto,,,,,,9,,Falta de experiencia en integración de roles y permisos,Medio,3,Medio,3,9
+,,Muy alto,21,25,Evento muy probable que ocurra,,,Impacto catastrófico y podría generar grandes pérdidas,,,,,,10,,Pérdida de información en el control de llaves y repuestos,Bajo,2,Alto,4,8
+,,Alto,16,20,Evento probable que ocurra,,,Impacto significativo y podría causar problemas,,,,,,11,,Indisponibilidad de algún miembro del equipo por enfermedad,Medio,3,Alto,4,12
+,,Medio,11,15,Evento posible ocurra pero no necesariamente probable,,,"Impacto moderado, pero no catastrófico",,,,,,12,,Pérdida de conexión a internet durante hitos críticos,Medio,3,Alto,4,12
+,,Bajo,6,10,,,,,,,,,,13,,Falta de claridad en los permisos de cada perfil de usuario,Medio,3,Medio,3,9
+,,Muy bajo,1,5,Evento casi imposible que ocurra,,,Impacto mínimo o insignificante,,,,,,14,,"Cambios en políticas internas de PepsiCo (seguridad, datos)",Bajo,2,Alto,4,8
+,,,,,,,,,,,,,,15,,Desacuerdos en decisiones de diseño entre integrantes,Medio,3,Medio,3,9
+,,,,,,,,,,,,,,16,,Retraso en la entrega de documentación técnica,Medio,3,Alto,4,12
+,,,,,,,,,,,,,,17,,Fuga de información durante pruebas,Bajo,2,Muy alto,5,10
+,,,,,,,,,,,,,,18,,Falta de respaldo automático en la base de datos,Medio,3,Alto,4,12
+,,,,,,,,,,,,,,19,,Saturación del servidor por múltiples usuarios simultáneos,Bajo,2,Alto,4,8
+,,,,,,,,,,,,,,20,,Dificultad para capacitar a los usuarios finales,Medio,3,Medio,3,9
+,,,,,,,,,,,,,,21,,Colaboración activa de los jefes de taller,Alto,4,Alto,4,16
+,,,,,,,,,,,,,,22,,Disponibilidad de datos históricos en Excel,Alto,4,Medio,3,12
+,,,,,,,,,,,,,,23,,Experiencia previa del equipo en desarrollo web,Medio,3,Alto,4,12
+,,,,,,,,,,,,,,24,,Acceso a feedback temprano de usuarios finales,Alto,4,Alto,4,16
+,,,,,,,,,,,,,,25,,Apoyo institucional de la universidad,Medio,3,Medio,3,9

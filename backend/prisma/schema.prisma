@@ -1,0 +1,482 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// A. GESTIÓN DE USUARIOS Y SEGURIDAD (5 tablas)
+// ============================================================================
+
+model User {
+  id               String   @id @default(uuid())
+  rut              String   @unique
+  firstName        String   @map("first_name")
+  lastName         String   @map("last_name")
+  email            String   @unique
+  password         String
+  phone            String?
+  roleId           String   @map("role_id")
+  workshopId       String?  @map("workshop_id")
+  isActive         Boolean  @default(true) @map("is_active")
+  lastLogin        DateTime? @map("last_login")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+  
+  // Relaciones
+  role             Role     @relation(fields: [roleId], references: [id])
+  workshop         Workshop? @relation(fields: [workshopId], references: [id])
+  createdWorkOrders WorkOrder[] @relation("CreatedBy")
+  assignedWorkOrders WorkOrder[] @relation("AssignedTo")
+  vehicleEntries   VehicleEntry[]
+  auditLogs        AuditLog[]
+  notifications    Notification[]
+  
+  @@map("users")
+}
+
+model Role {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  // Relaciones
+  users       User[]
+  permissions RolePermission[]
+  
+  @@map("roles")
+}
+
+model Permission {
+  id          String   @id @default(uuid())
+  resource    String
+  action      String
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  
+  // Relaciones
+  roles       RolePermission[]
+  
+  @@unique([resource, action])
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       String   @map("role_id")
+  permissionId String   @map("permission_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+  
+  // Relaciones
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  action      String
+  resource    String
+  resourceId  String?  @map("resource_id")
+  details     Json?
+  ipAddress   String?  @map("ip_address")
+  userAgent   String?  @map("user_agent")
+  createdAt   DateTime @default(now()) @map("created_at")
+  
+  // Relaciones
+  user        User     @relation(fields: [userId], references: [id])
+  
+  @@index([userId])
+  @@index([resource, resourceId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// ============================================================================
+// B. GESTIÓN DE VEHÍCULOS (3 tablas)
+// ============================================================================
+
+model Vehicle {
+  id            String   @id @default(uuid())
+  licensePlate  String   @unique @map("license_plate")
+  vehicleType   String   @map("vehicle_type")
+  brand         String
+  model         String
+  year          Int
+  vin           String?  @unique
+  fleetNumber   String?  @unique @map("fleet_number")
+  regionId      String   @map("region_id")
+  status        String   @default("active")
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  
+  // Relaciones
+  region        Region   @relation(fields: [regionId], references: [id])
+  entries       VehicleEntry[]
+  workOrders    WorkOrder[]
+  
+  @@index([licensePlate])
+  @@index([regionId])
+  @@map("vehicles")
+}
+
+model VehicleEntry {
+  id              String   @id @default(uuid())
+  entryCode       String   @unique @map("entry_code")
+  vehicleId       String   @map("vehicle_id")
+  workshopId     String   @map("workshop_id")
+  driverRut       String   @map("driver_rut")
+  driverName      String   @map("driver_name")
+  driverPhone     String?  @map("driver_phone")
+  entryDate       DateTime @map("entry_date")
+  entryTime       String?  @map("entry_time")
+  exitDate        DateTime? @map("exit_date")
+  exitTime        String?  @map("exit_time")
+  entryKm         Int      @map("entry_km")
+  exitKm          Int?     @map("exit_km")
+  fuelLevel       String   @map("fuel_level")
+  hasKeys         Boolean  @default(true) @map("has_keys")
+  observations    String?
+  status          String   @default("ingresado")
+  createdById     String   @map("created_by_id")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  
+  // Relaciones
+  vehicle         Vehicle  @relation(fields: [vehicleId], references: [id])
+  workshop        Workshop @relation(fields: [workshopId], references: [id])
+  createdBy       User     @relation(fields: [createdById], references: [id])
+  workOrders      WorkOrder[]
+  keyControl      KeyControl?
+  photos          VehicleEntryPhoto[]
+  
+  @@index([vehicleId])
+  @@index([workshopId])
+  @@index([entryDate])
+  @@map("vehicle_entries")
+}
+
+model VehicleEntryPhoto {
+  id            String   @id @default(uuid())
+  entryId       String   @map("entry_id")
+  url           String
+  description   String?
+  photoType     String   @map("photo_type")
+  uploadedAt    DateTime @default(now()) @map("uploaded_at")
+  
+  // Relaciones
+  entry         VehicleEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  
+  @@index([entryId])
+  @@index([photoType])
+  @@map("vehicle_entry_photos")
+}
+
+model KeyControl {
+  id              String   @id @default(uuid())
+  entryId         String   @unique @map("entry_id")
+  keyLocation     String   @map("key_location")
+  deliveredTo     String?  @map("delivered_to")
+  deliveredAt     DateTime? @map("delivered_at")
+  returnedBy      String?  @map("returned_by")
+  returnedAt      DateTime? @map("returned_at")
+  observations    String?
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  
+  // Relaciones
+  entry           VehicleEntry @relation(fields: [entryId], references: [id])
+  
+  @@map("key_control")
+}
+
+// ============================================================================
+// C. ÓRDENES DE TRABAJO (4 tablas)
+// ============================================================================
+
+model WorkOrder {
+  id                String   @id @default(uuid())
+  orderNumber       String   @unique @map("order_number")
+  vehicleId         String   @map("vehicle_id")
+  entryId           String   @map("entry_id")
+  workshopId        String   @map("workshop_id")
+  workType          String   @map("work_type")
+  priority          String   @default("normal")
+  description       String
+  estimatedHours    Float?   @map("estimated_hours")
+  assignedToId      String?  @map("assigned_to_id")
+  scheduledDate     DateTime? @map("scheduled_date")
+  currentStatus     String   @default("pendiente") @map("current_status")
+  startedAt         DateTime? @map("started_at")
+  completedAt       DateTime? @map("completed_at")
+  totalHours        Float?   @map("total_hours")
+  observations      String?
+  createdById       String   @map("created_by_id")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+  
+  // Relaciones
+  vehicle           Vehicle  @relation(fields: [vehicleId], references: [id])
+  entry             VehicleEntry @relation(fields: [entryId], references: [id])
+  workshop          Workshop @relation(fields: [workshopId], references: [id])
+  assignedTo        User?    @relation("AssignedTo", fields: [assignedToId], references: [id])
+  createdBy         User     @relation("CreatedBy", fields: [createdById], references: [id])
+  statuses          WorkOrderStatus[]
+  photos            WorkOrderPhoto[]
+  spareParts        WorkOrderSparePart[]
+  pauses            WorkPause[]
+  
+  @@index([vehicleId])
+  @@index([entryId])
+  @@index([workshopId])
+  @@index([assignedToId])
+  @@index([currentStatus])
+  @@index([createdAt])
+  @@map("work_orders")
+}
+
+model WorkOrderStatus {
+  id            String   @id @default(uuid())
+  workOrderId   String   @map("work_order_id")
+  status        String
+  observations  String?
+  changedById   String   @map("changed_by_id")
+  changedAt     DateTime @default(now()) @map("changed_at")
+  
+  // Relaciones
+  workOrder     WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  
+  @@index([workOrderId])
+  @@index([changedAt])
+  @@map("work_order_statuses")
+}
+
+model WorkOrderPhoto {
+  id            String   @id @default(uuid())
+  workOrderId   String   @map("work_order_id")
+  url           String
+  description   String?
+  photoType     String   @map("photo_type")
+  uploadedAt    DateTime @default(now()) @map("uploaded_at")
+  
+  // Relaciones
+  workOrder     WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  
+  @@index([workOrderId])
+  @@map("work_order_photos")
+}
+
+model WorkPause {
+  id            String   @id @default(uuid())
+  workOrderId   String   @map("work_order_id")
+  reason        String
+  pausedAt      DateTime @default(now()) @map("paused_at")
+  resumedAt     DateTime? @map("resumed_at")
+  duration      Int?
+  observations  String?
+  
+  // Relaciones
+  workOrder     WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  
+  @@index([workOrderId])
+  @@map("work_pauses")
+}
+
+// ============================================================================
+// D. INVENTARIO (3 tablas)
+// ============================================================================
+
+model SparePart {
+  id              String   @id @default(uuid())
+  code            String   @unique
+  name            String
+  description     String?
+  category        String
+  unitOfMeasure   String   @map("unit_of_measure")
+  unitPrice       Float    @map("unit_price")
+  currentStock    Int      @default(0) @map("current_stock")
+  minStock        Int      @map("min_stock")
+  maxStock        Int      @map("max_stock")
+  location        String?
+  workshopId      String?  @map("workshop_id")
+  isActive        Boolean  @default(true) @map("is_active")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  
+  // Relaciones
+  workshop        Workshop? @relation(fields: [workshopId], references: [id])
+  workOrders      WorkOrderSparePart[]
+  movements       SparePartMovement[]
+  
+  @@index([code])
+  @@index([category])
+  @@index([workshopId])
+  @@map("spare_parts")
+}
+
+model WorkOrderSparePart {
+  id              String   @id @default(uuid())
+  workOrderId     String   @map("work_order_id")
+  sparePartId     String   @map("spare_part_id")
+  quantityRequested Int    @map("quantity_requested")
+  quantityDelivered Int?   @map("quantity_delivered")
+  status          String   @default("solicitado")
+  requestedAt     DateTime @default(now()) @map("requested_at")
+  deliveredAt     DateTime? @map("delivered_at")
+  observations    String?
+  
+  // Relaciones
+  workOrder       WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  sparePart       SparePart @relation(fields: [sparePartId], references: [id])
+  
+  @@index([workOrderId])
+  @@index([sparePartId])
+  @@map("work_order_spare_parts")
+}
+
+model SparePartMovement {
+  id            String   @id @default(uuid())
+  sparePartId   String   @map("spare_part_id")
+  movementType  String   @map("movement_type")
+  quantity      Int
+  previousStock Int      @map("previous_stock")
+  newStock      Int      @map("new_stock")
+  reason        String
+  reference     String?
+  createdAt     DateTime @default(now()) @map("created_at")
+  
+  // Relaciones
+  sparePart     SparePart @relation(fields: [sparePartId], references: [id])
+  
+  @@index([sparePartId])
+  @@index([createdAt])
+  @@map("spare_part_movements")
+}
+
+// ============================================================================
+// E. INFRAESTRUCTURA (3 tablas)
+// ============================================================================
+
+model Region {
+  id          String   @id @default(uuid())
+  code        String   @unique
+  name        String
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  
+  // Relaciones
+  workshops   Workshop[]
+  vehicles    Vehicle[]
+  
+  @@map("regions")
+}
+
+model Workshop {
+  id            String   @id @default(uuid())
+  code          String   @unique
+  name          String
+  regionId      String   @map("region_id")
+  address       String
+  city          String
+  phone         String?
+  capacity      Int?
+  maxOrdersPerMechanic Int? @default(5) @map("max_orders_per_mechanic")
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  
+  // Relaciones
+  region        Region   @relation(fields: [regionId], references: [id])
+  users         User[]
+  entries       VehicleEntry[]
+  workOrders    WorkOrder[]
+  schedules     WorkshopSchedule[]
+  spareParts    SparePart[]
+  
+  @@index([regionId])
+  @@map("workshops")
+}
+
+model WorkshopSchedule {
+  id            String   @id @default(uuid())
+  workshopId    String   @map("workshop_id")
+  dayOfWeek     Int      @map("day_of_week")
+  openTime      String   @map("open_time")
+  closeTime     String   @map("close_time")
+  isActive      Boolean  @default(true) @map("is_active")
+  
+  // Relaciones
+  workshop      Workshop @relation(fields: [workshopId], references: [id], onDelete: Cascade)
+  
+  @@index([workshopId])
+  @@map("workshop_schedules")
+}
+
+// ============================================================================
+// F. DOCUMENTACIÓN Y NOTIFICACIONES (2 tablas)
+// ============================================================================
+
+model Document {
+  id            String   @id @default(uuid())
+  name          String
+  type          String
+  url           String
+  relatedTo     String   @map("related_to")
+  relatedId     String   @map("related_id")
+  uploadedAt    DateTime @default(now()) @map("uploaded_at")
+  
+  @@index([relatedTo, relatedId])
+  @@map("documents")
+}
+
+model Notification {
+  id            String   @id @default(uuid())
+  userId        String   @map("user_id")
+  title         String
+  message       String
+  type          String
+  relatedTo     String?  @map("related_to")
+  relatedId     String?  @map("related_id")
+  isRead        Boolean  @default(false) @map("is_read")
+  readAt        DateTime? @map("read_at")
+  createdAt     DateTime @default(now()) @map("created_at")
+  
+  // Relaciones
+  user          User     @relation(fields: [userId], references: [id])
+  
+  @@index([userId, isRead])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+// ============================================================================
+// CONTADORES PARA NUMERACIÓN SECUENCIAL
+// ============================================================================
+
+model Counter {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  value       Int      @default(0)
+  prefix      String?
+  suffix      String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  @@map("counters")
+}
+
+
+
+
+

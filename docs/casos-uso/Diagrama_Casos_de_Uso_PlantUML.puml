@@ -1,0 +1,72 @@
+@startuml Sistema_PepsiCo_Use_Cases
+
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam actorStyle awesome
+skinparam usecaseStyle rectangle
+
+left to right direction
+
+' Actores
+actor "Guardia de Acceso" as GA
+actor "Recepcionista de Taller" as RT
+actor "Jefe de Taller" as JT
+actor "Mecánico de Flota" as M
+actor "Asistente de Repuestos" as AR
+
+' Límite del sistema
+rectangle "Sistema PepsiCo" {
+    ' Casos de uso principales
+    usecase "Programar Ingreso de Vehículo" as CU1
+    usecase "Registrar Llegada Física de Vehículo" as CU2
+    usecase "Realizar Ingreso Técnico" as CU3
+    usecase "Validar Reparación Completada" as CU4
+    usecase "Asignar Mecánico a OT" as CU5
+    usecase "Registrar Salida de Vehículo" as CU6
+    usecase "Actualizar Estado de Reparación" as CU7
+    usecase "Generar Reporte de Productividad" as CU8
+    usecase "Registrar Pausa en Proceso" as CU9
+    usecase "Gestionar Repuestos Utilizadas" as CU10
+    usecase "Subir Documentos y Evidencias" as CU11
+    usecase "Consultar Historial Documental" as CU12
+    usecase "Consultar Estados en Tiempo Real" as CU13
+}
+
+' Conexiones Guardia de Acceso
+GA --> CU1
+GA --> CU2
+GA --> CU6
+GA --> CU13
+
+' Conexiones Recepcionista de Taller
+RT --> CU1
+RT --> CU2
+RT --> CU3
+RT --> CU5
+RT --> CU6
+RT --> CU12
+RT --> CU13
+
+' Conexiones Jefe de Taller
+JT --> CU4
+JT --> CU5
+JT --> CU8
+JT --> CU12
+JT --> CU13
+
+' Conexiones Mecánico de Flota
+M --> CU7
+M --> CU9
+M --> CU10
+M --> CU11
+M --> CU12
+M --> CU13
+
+' Conexiones Asistente de Repuestos
+AR --> CU10
+AR --> CU13
+
+' Relación entre casos de uso
+CU12 ..> CU13 : <<include>>
+
+@enduml

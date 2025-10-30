@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Login Guardia</title>
+</head>
+<body>
+    <h1>Test Login Guardia</h1>
+    <div id="result"></div>
+    <button onclick="testLogin()">Probar Login</button>
+    
+    <script>
+        async function testLogin() {
+            const result = document.getElementById('result');
+            result.innerHTML = 'Probando...';
+            
+            try {
+                console.log('🔐 Iniciando login...');
+                
+                const response = await fetch('http://localhost:3000/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: 'guardia@pepsico.cl',
+                        password: 'admin123'
+                    })
+                });
+                
+                console.log('📡 Respuesta recibida:', response.status);
+                
+                const data = await response.json();
+                console.log('📊 Datos:', data);
+                
+                if (data.success) {
+                    // Simular lo que hace el frontend
+                    sessionStorage.setItem('accessToken', data.data.accessToken);
+                    sessionStorage.setItem('refreshToken', data.data.refreshToken);
+                    
+                    result.innerHTML = `
+                        <div style="color: green;">
+                            ✅ Login exitoso<br>
+                            Usuario: ${data.data.user.firstName} ${data.data.user.lastName}<br>
+                            Rol: ${data.data.user.role.name}<br>
+                            Token guardado: ${data.data.accessToken ? 'Sí' : 'No'}
+                        </div>
+                    `;
+                    
+                    // Probar redirección
+                    setTimeout(() => {
+                        console.log('🔄 Redirigiendo a dashboard del guardia...');
+                        window.location.href = '/dashboard/guardia';
+                    }, 2000);
+                    
+                } else {
+                    result.innerHTML = `<div style="color: red;">❌ Error: ${data.error}</div>`;
+                }
+            } catch (error) {
+                console.error('❌ Error:', error);
+                result.innerHTML = `<div style="color: red;">❌ Error: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>
+
+
