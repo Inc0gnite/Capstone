@@ -3,7 +3,7 @@ import cors from 'cors'
 import helmet from 'helmet'
 import rateLimit from 'express-rate-limit'
 import dotenv from 'dotenv'
-import logger from './config/logger'
+import logger from './config/logger.js'
 import { errorHandler, notFoundHandler } from './middlewares/errorHandler'
 import routes from './routes'
 
