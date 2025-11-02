@@ -379,21 +379,30 @@ npm run test:e2e
 
 ## 🚀 Deployment
 
-### Frontend (Vercel)
+**📚 Guías completas:**
+- **[GUIA_GITHUB_DEPLOYMENT.md](./GUIA_GITHUB_DEPLOYMENT.md)** - Guía paso a paso para subir a GitHub y deployment automático
+- **[COMANDOS_RAPIDOS_GITHUB.md](./COMANDOS_RAPIDOS_GITHUB.md)** - Comandos rápidos de referencia
+- **[docs/GUIA_DEPLOYMENT.md](./docs/GUIA_DEPLOYMENT.md)** - Guía técnica detallada de deployment
+
+### Resumen Rápido
+
+**Frontend (Vercel):**
 1. Conectar repositorio con Vercel
-2. Configurar variables de entorno
+2. Configurar variables de entorno (`VITE_API_URL`)
 3. Deploy automático desde `main`
 
-### Backend (Railway/Render)
+**Backend (Railway/Render):**
 1. Conectar repositorio
-2. Configurar variables de entorno
+2. Configurar variables de entorno (JWT_SECRET, DATABASE_URL, etc.)
 3. Configurar base de datos PostgreSQL
 4. Deploy automático
 
-### Base de Datos (Neon/Supabase)
+**Base de Datos (Neon/Supabase):**
 1. Crear proyecto
 2. Copiar DATABASE_URL
 3. Ejecutar migraciones en producción
+
+**💡 Recomendación:** Lee `GUIA_GITHUB_DEPLOYMENT.md` para instrucciones detalladas paso a paso.
 
 ## 👥 Equipo
 
