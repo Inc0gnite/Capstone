@@ -10,6 +10,7 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
+    "postinstall": "npm run db:generate",
     "prestart": "npm run db:migrate:deploy",
     "start": "node dist/index.js",
     "db:generate": "prisma generate",
@@ -34,6 +35,7 @@
   "license": "UNLICENSED",
   "dependencies": {
     "@prisma/client": "^5.22.0",
+    "@vercel/node": "^3.0.0",
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
@@ -60,7 +62,6 @@
     "@types/pg": "^8.11.10",
     "@typescript-eslint/eslint-plugin": "^8.7.0",
     "@typescript-eslint/parser": "^8.7.0",
-    "@vercel/node": "^3.0.0",
     "eslint": "^9.11.1",
     "nodemon": "^3.1.7",
     "prettier": "^3.3.3",

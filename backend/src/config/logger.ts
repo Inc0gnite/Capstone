@@ -9,10 +9,21 @@ const logger = winston.createLogger({
     winston.format.json()
   ),
   defaultMeta: { service: 'pepsico-fleet-api' },
-  transports: [
-    new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
-    new winston.transports.File({ filename: 'logs/combined.log' }),
-  ],
+  transports: process.env.NODE_ENV === 'production'
+    ? [
+        // En producción solo console (Vercel captura logs automáticamente)
+        new winston.transports.Console({
+          format: winston.format.combine(
+            winston.format.colorize(),
+            winston.format.simple()
+          ),
+        })
+      ]
+    : [
+        // En desarrollo: archivos + console
+        new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
+        new winston.transports.File({ filename: 'logs/combined.log' }),
+      ],
 })
 
 if (process.env.NODE_ENV !== 'production') {
