@@ -502,7 +502,7 @@ export class WorkOrderService {
     }
 
     // Validar capacidad del mecánico por horas estimadas
-    await this.validateMechanicCapacity(mechanicId, workOrder.workshopId, workOrder.estimatedHours)
+    await this.validateMechanicCapacity(mechanicId, workOrder.workshopId, workOrder.estimatedHours || undefined)
 
     // Asignar mecánico
     const updatedOrder = await prisma.workOrder.update({

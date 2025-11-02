@@ -3,13 +3,14 @@
   "version": "1.0.0",
   "description": "Backend API - Plataforma de Gestión de Ingreso de Vehículos",
   "main": "dist/index.js",
-  "type": "module",
+  "type": "commonjs",
   "directories": {
     "test": "tests"
   },
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
+    "prestart": "npm run db:migrate:deploy",
     "start": "node dist/index.js",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
@@ -59,6 +60,7 @@
     "@types/pg": "^8.11.10",
     "@typescript-eslint/eslint-plugin": "^8.7.0",
     "@typescript-eslint/parser": "^8.7.0",
+    "@vercel/node": "^3.0.0",
     "eslint": "^9.11.1",
     "nodemon": "^3.1.7",
     "prettier": "^3.3.3",

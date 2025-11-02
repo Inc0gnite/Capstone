@@ -2,7 +2,7 @@
 import { Request, Response } from 'express'
 
 export const testController = {
-  async test(req: Request, res: Response) {
+  async test(_req: Request, res: Response) {
     try {
       res.json({
         success: true,
