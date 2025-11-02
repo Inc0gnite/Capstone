@@ -1,0 +1,53 @@
+# Variables de Entorno para Backend en Railway
+
+## ⚠️ CORRECCIONES NECESARIAS
+
+Hay algunos errores tipográficos que debes corregir:
+- `SMPT_PASS` → debe ser `SMTP_PASS`
+- `SMTP_HOT` → debe ser `SMTP_HOST`
+
+## 📋 Variables Corregidas (Copia y Pega)
+
+```
+ALLOWED_ORIGINS=https://frontend-production-8642.up.railway.app
+
+DATABASE_URL=postgresql://postgres:MbgsRtXxNWsBzNlmrwuQpABOnqtofrgD@tramway.proxy.rlwy.net:16998/railway?sslmode=require
+
+FRONTEND_URL=https://frontend-production-8642.up.railway.app
+
+JWT_EXPIRES_IN=15m
+
+JWT_REFRESH_EXPIRES_IN=7d
+
+JWT_SECRET=300719080102
+
+LOG_LEVEL=info
+
+NODE_ENV=production
+
+PORT=3000
+
+SMTP_PASS=wwlcqtagrfvuhrhf
+
+SMTP_PORT=587
+
+SMTP_HOST=smtp.gmail.com
+
+SMTP_USER=imsuicideboys@gmail.com
+```
+
+## 📝 Instrucciones para Agregar en Railway
+
+1. **Railway → Backend Service → Settings → Variables**
+2. **Click en "+ New Variable"** para cada una
+3. **Agrega Nombre y Valor** según la lista de arriba
+4. **NO incluyas las comillas** al pegar en Railway
+
+## ✅ Verificación
+
+Después de agregar todas, verifica que:
+- [ ] `SMTP_PASS` (NO `SMPT_PASS`)
+- [ ] `SMTP_HOST` (NO `SMTP_HOT`)
+- [ ] `FRONTEND_URL` tiene `https://` al inicio
+- [ ] `DATABASE_URL` está completa y correcta
+
