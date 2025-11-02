@@ -4,7 +4,7 @@
     {
       "name": "backend",
       "rootDirectory": "backend",
-      "buildCommand": "npm install && npm run build && npm run db:generate",
+      "buildCommand": "npm install && npm run build && npm run db:generate && npx prisma db push --skip-generate",
       "startCommand": "npm start",
       "envVars": {
         "NODE_ENV": "production"
