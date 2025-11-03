@@ -103,6 +103,29 @@ export class UserService {
       }
     }
 
+    // Verificar que el rol exista
+    const role = await prisma.role.findUnique({
+      where: { id: roleId },
+    })
+
+    if (!role) {
+      throw new Error('Rol no encontrado')
+    }
+
+    // Verificar que el taller exista (si se proporciona)
+    // Convertir workshopId vacío a undefined
+    const finalWorkshopId = workshopId && workshopId.trim() !== '' ? workshopId : undefined
+    
+    if (finalWorkshopId) {
+      const workshop = await prisma.workshop.findUnique({
+        where: { id: finalWorkshopId },
+      })
+
+      if (!workshop) {
+        throw new Error('Taller no encontrado')
+      }
+    }
+
     // Hash de la contraseña
     const hashedPassword = await hashPassword(password)
 
@@ -116,7 +139,7 @@ export class UserService {
         password: hashedPassword,
         phone,
         roleId,
-        workshopId,
+        workshopId: finalWorkshopId,
       },
       include: {
         role: true,

@@ -21,13 +21,14 @@ export default function Users() {
   const [showPassword, setShowPassword] = useState(false)
   const [showCreate, setShowCreate] = useState(false)
   const [createUser, setCreateUser] = useState<{
+    rut: string
     firstName: string
     lastName: string
     email: string
     password: string
     roleId: string
     workshopId?: string
-  }>({ firstName: '', lastName: '', email: '', password: '', roleId: '', workshopId: '' })
+  }>({ rut: '', firstName: '', lastName: '', email: '', password: '', roleId: '', workshopId: '' })
   const [inProgressMap, setInProgressMap] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
@@ -407,6 +408,10 @@ export default function Users() {
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Agregar Usuario</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
+                    <label className="block text-sm text-gray-600 mb-1">RUT</label>
+                    <input value={createUser.rut} onChange={(e)=>setCreateUser({ ...createUser, rut: e.target.value })} placeholder="12.345.678-9" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+                  </div>
+                  <div>
                     <label className="block text-sm text-gray-600 mb-1">Nombre</label>
                     <input value={createUser.firstName} onChange={(e)=>setCreateUser({ ...createUser, firstName: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
                   </div>
@@ -434,7 +439,7 @@ export default function Users() {
                   </div>
                   <div>
                     <label className="block text-sm text-gray-600 mb-1">Taller</label>
-                    <select value={createUser.workshopId} onChange={(e)=>setCreateUser({ ...createUser, workshopId: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                    <select value={createUser.workshopId || ''} onChange={(e)=>setCreateUser({ ...createUser, workshopId: e.target.value || undefined })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
                       <option value="">Sin taller</option>
                       {workshops.map(w => (<option key={w.id} value={w.id}>{w.name}</option>))}
                     </select>
@@ -445,15 +450,36 @@ export default function Users() {
                   <button
                     onClick={async ()=>{
                       try {
-                        if (!createUser.firstName || !createUser.lastName || !createUser.email || !createUser.password || !createUser.roleId) { alert('Completa nombre, apellido, email, contraseña y rol'); return }
+                        if (!createUser.rut || !createUser.firstName || !createUser.lastName || !createUser.email || !createUser.password || !createUser.roleId) { 
+                          alert('Completa todos los campos obligatorios: RUT, nombre, apellido, email, contraseña y rol'); 
+                          return 
+                        }
                         setLoading(true)
-                        const created = await userService.create(createUser)
+                        // Preparar datos para enviar, convirtiendo workshopId vacío a undefined
+                        const userData: any = {
+                          rut: createUser.rut,
+                          firstName: createUser.firstName,
+                          lastName: createUser.lastName,
+                          email: createUser.email,
+                          password: createUser.password,
+                          roleId: createUser.roleId,
+                        }
+                        // Solo incluir workshopId si tiene un valor
+                        if (createUser.workshopId && createUser.workshopId.trim() !== '') {
+                          userData.workshopId = createUser.workshopId
+                        }
+                        const created = await userService.create(userData)
                         setUsers(prev=>[...(prev||[]), created.data || created])
                         setShowCreate(false)
-                        setCreateUser({ firstName:'', lastName:'', email:'', password:'', roleId:'', workshopId:'' })
-                      } finally { setLoading(false) }
+                        setCreateUser({ rut:'', firstName:'', lastName:'', email:'', password:'', roleId:'', workshopId:'' })
+                      } catch (err: any) {
+                        console.error('Error creando usuario:', err)
+                        alert(err?.response?.data?.error || err?.message || 'Error al crear el usuario')
+                      } finally { 
+                        setLoading(false) 
+                      }
                     }}
-                    disabled={createUser.password.length < 8}
+                    disabled={createUser.password.length < 8 || !createUser.rut || !createUser.firstName || !createUser.lastName || !createUser.email || !createUser.roleId}
                     className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
                   >
                     Guardar

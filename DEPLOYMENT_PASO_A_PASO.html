@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guía de Deployment - Backend y Base de Datos</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+            color: #333;
+        }
+        h1 {
+            color: #1a1a1a;
+            border-bottom: 3px solid #007acc;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #007acc;
+            margin-top: 30px;
+            border-left: 4px solid #007acc;
+            padding-left: 15px;
+        }
+        h3 {
+            color: #555;
+            margin-top: 20px;
+        }
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        pre {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            border-left: 4px solid #007acc;
+        }
+        pre code {
+            background: none;
+            color: inherit;
+            padding: 0;
+        }
+        ul, ol {
+            padding-left: 25px;
+        }
+        li {
+            margin: 5px 0;
+        }
+        .checklist {
+            background: #e8f4f8;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #007acc;
+        }
+        .warning {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #ffc107;
+            margin: 15px 0;
+        }
+        .success {
+            background: #d4edda;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #28a745;
+            margin: 15px 0;
+        }
+        a {
+            color: #007acc;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        blockquote {
+            border-left: 4px solid #ccc;
+            margin: 0;
+            padding-left: 20px;
+            color: #666;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <h1>🚀 Guía de Deployment - Backend y Base de Datos</h1>
+    
+    <p>Esta guía te ayudará a subir el backend y la base de datos para que funcione con tu frontend en Vercel.</p>
+    
+    <div class="checklist">
+        <h2>📋 Checklist Pre-Deployment</h2>
+        <ul>
+            <li>✅ Backend configurado localmente</li>
+            <li>✅ Base de datos local funcionando</li>
+            <li>✅ Frontend en Vercel (ya configurado)</li>
+            <li>⬜ Base de datos en producción (Neon)</li>
+            <li>⬜ Backend en producción (Railway)</li>
+        </ul>
+    </div>
+    
+    <h2>Paso 1: Crear Base de Datos en Neon 🗄️</h2>
+    
+    <h3>1.1 Crear cuenta y proyecto</h3>
+    <ol>
+        <li>Ve a <a href="https://neon.tech" target="_blank">https://neon.tech</a></li>
+        <li>Click en <strong>"Sign Up"</strong> (puedes usar GitHub)</li>
+        <li>Click en <strong>"Create a project"</strong></li>
+        <li>Configuración:
+            <ul>
+                <li><strong>Nombre del proyecto:</strong> <code>pepsico-fleet-prod</code></li>
+                <li><strong>Región:</strong> Elige la más cercana (US East o South America)</li>
+                <li><strong>PostgreSQL version:</strong> 15 o superior</li>
+            </ul>
+        </li>
+        <li>Click en <strong>"Create project"</strong></li>
+    </ol>
+    
+    <h3>1.2 Obtener Connection String</h3>
+    <ol>
+        <li>En el dashboard de Neon, verás tu proyecto</li>
+        <li>En la sección <strong>"Connection Details"</strong>, verás algo como:</li>
+    </ol>
+    <pre><code>postgresql://usuario:password@ep-xxxxx.us-east-2.aws.neon.tech/neondb?sslmode=require</code></pre>
+    <p><strong>COPIA esta URL completa</strong> - la necesitarás en el siguiente paso</p>
+    
+    <h3>1.3 Aplicar Migraciones a la Base de Datos de Producción</h3>
+    <p>Una vez que tengas el <code>DATABASE_URL</code> de Neon, ejecuta:</p>
+    <pre><code>cd backend
+
+# Reemplaza "TU_DATABASE_URL_DE_NEON" con la URL que copiaste
+DATABASE_URL="postgresql://usuario:password@ep-xxxxx.region.aws.neon.tech/neondb?sslmode=require" npx prisma migrate deploy</code></pre>
+    <p>Esto creará todas las tablas en tu base de datos de producción.</p>
+    
+    <h2>Paso 2: Desplegar Backend en Railway 🚂</h2>
+    
+    <h3>2.1 Crear cuenta en Railway</h3>
+    <ol>
+        <li>Ve a <a href="https://railway.app" target="_blank">https://railway.app</a></li>
+        <li>Click en <strong>"Start a New Project"</strong></li>
+        <li>Selecciona <strong>"Login with GitHub"</strong></li>
+        <li>Autoriza Railway para acceder a tus repositorios</li>
+    </ol>
+    
+    <h3>2.2 Crear Proyecto y Conectar Repositorio</h3>
+    <ol>
+        <li>Click en <strong>"New Project"</strong></li>
+        <li>Selecciona <strong>"Deploy from GitHub repo"</strong></li>
+        <li>Selecciona tu repositorio</li>
+        <li>Railway debería detectar automáticamente el <code>railway.json</code></li>
+    </ol>
+    
+    <h3>2.4 Configurar Variables de Entorno</h3>
+    <p>En Railway, ve a tu servicio backend → <strong>Variables</strong> y agrega:</p>
+    <pre><code># Base de Datos (USA LA URL DE NEON QUE COPIaste)
+DATABASE_URL=postgresql://usuario:password@ep-xxxxx.region.aws.neon.tech/neondb?sslmode=require
+
+# Servidor
+PORT=3000
+NODE_ENV=production
+
+# Frontend URL (actualiza con la URL real de tu frontend en Vercel)
+FRONTEND_URL=https://tu-frontend.vercel.app
+
+# JWT (GENERA UNO NUEVO Y SEGURO - NO USES EL DE DESARROLLO)
+JWT_SECRET=genera-un-secreto-muy-largo-y-seguro-minimo-32-caracteres
+JWT_EXPIRES_IN=15m
+JWT_REFRESH_EXPIRES_IN=7d
+
+# Email
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=imsuicideboys@gmail.com
+SMTP_PASS=wwlcqtagrfvuhrhf
+
+# Logs
+LOG_LEVEL=info</code></pre>
+    
+    <div class="warning">
+        <strong>⚠️ IMPORTANTE:</strong> Genera un <code>JWT_SECRET</code> nuevo y seguro (mínimo 32 caracteres)
+    </div>
+    
+    <h2>Paso 3: Actualizar Frontend en Vercel 🔄</h2>
+    
+    <h3>3.2 Configurar Variable de Entorno en Vercel</h3>
+    <ol>
+        <li>Ve a tu proyecto en <a href="https://vercel.com" target="_blank">https://vercel.com</a></li>
+        <li>Ve a <strong>Settings</strong> → <strong>Environment Variables</strong></li>
+        <li>Busca o crea la variable:
+            <ul>
+                <li><strong>Name:</strong> <code>VITE_API_URL</code></li>
+                <li><strong>Value:</strong> <code>https://tu-backend-url.up.railway.app/api</code></li>
+                <li><strong>Environments:</strong> Production, Preview, Development (marca todas)</li>
+            </ul>
+        </li>
+        <li>Click en <strong>"Save"</strong></li>
+    </ol>
+    
+    <h2>Paso 4: Verificar que Todo Funciona ✅</h2>
+    
+    <div class="checklist">
+        <h3>Checklist de Verificación</h3>
+        <ul>
+            <li>Backend Health Check funciona: <code>https://tu-backend-url.up.railway.app/health</code></li>
+            <li>Frontend carga correctamente: <code>https://tu-frontend.vercel.app</code></li>
+            <li>Login funciona con credenciales de prueba</li>
+            <li>CORS configurado correctamente</li>
+        </ul>
+    </div>
+    
+    <div class="success">
+        <strong>✅ Credenciales de Prueba:</strong><br>
+        Email: <code>admin@pepsico.cl</code><br>
+        Password: <code>admin123</code>
+    </div>
+    
+    <h2>Costos Estimados 💰</h2>
+    <ul>
+        <li><strong>Neon:</strong> $0/mes (free tier hasta 3GB)</li>
+        <li><strong>Railway:</strong> $5/mes (hobby plan)</li>
+        <li><strong>Vercel:</strong> $0/mes (hobby plan)</li>
+        <li><strong>Total:</strong> ~$5/mes</li>
+    </ul>
+    
+    <hr>
+    <p><em>Guía completa disponible en: <code>DEPLOYMENT_PASO_A_PASO.md</code></em></p>
+</body>
+</html>
