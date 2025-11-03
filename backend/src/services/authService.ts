@@ -270,24 +270,36 @@ export class AuthService {
 
     // Enviar email en segundo plano (no esperar respuesta para responder rápido al usuario)
     // Esto evita timeouts y mejora la experiencia del usuario
+    console.log(`📧 Iniciando envío de correo de recuperación a: ${user.email}`)
+    console.log(`📧 SMTP configurado - Host: ${process.env.SMTP_HOST || 'no configurado'}, User: ${process.env.SMTP_USER ? 'configurado' : 'NO CONFIGURADO'}`)
+    
     sendPasswordResetEmail(user.email, resetLink)
       .then(() => {
         console.log(`✅ Correo de recuperación enviado exitosamente a: ${user.email}`)
       })
       .catch((err: any) => {
-        console.error('❌ Error al enviar correo de restablecimiento:', err.message)
-        // En desarrollo, mostrar el error completo para depuración
-        if (process.env.NODE_ENV !== 'production') {
-          console.error('Detalles del error:', err)
-        }
+        // Siempre mostrar errores completos para diagnóstico
+        console.error('❌ Error al enviar correo de restablecimiento:')
+        console.error('   Mensaje:', err.message)
+        console.error('   Código:', err.code || 'N/A')
+        console.error('   Stack:', err.stack)
+        console.error('   Destinatario:', user.email)
+        console.error('   SMTP User:', process.env.SMTP_USER || 'NO CONFIGURADO')
+        console.error('   SMTP Pass:', process.env.SMTP_PASS ? '***configurado***' : 'NO CONFIGURADO')
+        console.error('   SMTP Host:', process.env.SMTP_HOST || 'no configurado')
+        
         // Intentar reenviar una vez más después de 2 segundos
+        console.log('🔄 Intentando reenvío automático en 2 segundos...')
         setTimeout(() => {
           sendPasswordResetEmail(user.email, resetLink)
             .then(() => {
               console.log(`✅ Correo de recuperación reenviado exitosamente a: ${user.email}`)
             })
             .catch((retryErr: any) => {
-              console.error('❌ Error al reenviar correo (segundo intento):', retryErr.message)
+              console.error('❌ Error al reenviar correo (segundo intento):')
+              console.error('   Mensaje:', retryErr.message)
+              console.error('   Código:', retryErr.code || 'N/A')
+              console.error('   Stack:', retryErr.stack)
             })
         }, 2000)
       })

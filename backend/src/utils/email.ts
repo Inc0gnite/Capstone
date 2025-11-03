@@ -7,8 +7,16 @@ const smtpPass = process.env.SMTP_PASS
 
 // Validar configuración de SMTP
 if (!smtpUser || !smtpPass) {
-  console.warn('⚠️  SMTP no configurado. Las variables SMTP_USER y SMTP_PASS son requeridas.')
-  console.warn('   Revisa el archivo .env y sigue las instrucciones en CONFIGURAR_GMAIL.md')
+  console.error('❌ SMTP NO CONFIGURADO')
+  console.error('   SMTP_USER:', smtpUser ? 'configurado' : 'NO CONFIGURADO')
+  console.error('   SMTP_PASS:', smtpPass ? 'configurado' : 'NO CONFIGURADO')
+  console.error('   Las variables SMTP_USER y SMTP_PASS son requeridas.')
+  console.error('   Revisa las variables de entorno en Railway y sigue las instrucciones en ACTUALIZAR_GMAIL_RAILWAY.md')
+} else {
+  console.log('✅ SMTP Configurado correctamente')
+  console.log('   Host:', smtpHost)
+  console.log('   Port:', smtpPort)
+  console.log('   User:', smtpUser)
 }
 
 const transporter = nodemailer.createTransport({
