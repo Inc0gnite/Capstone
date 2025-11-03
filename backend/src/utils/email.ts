@@ -169,6 +169,8 @@ export async function sendEmail(options: {
   
   // Fallback a SMTP si SendGrid/Resend no están configurados o fallaron
   if (useSMTP) {
+    console.log('⚠️  Usando SMTP como fallback (SendGrid y Resend no disponibles)')
+    console.log('   NOTA: Railway puede bloquear conexiones SMTP. Se recomienda usar SendGrid.')
     const fromEmail = options.fromEmail || smtpUser || 'no-reply@example.com'
     
     try {
@@ -188,10 +190,24 @@ export async function sendEmail(options: {
       
       // Mejorar mensajes de error comunes
       if (error.code === 'EAUTH') {
-        throw new Error('Error de autenticación SMTP. Verifica que SMTP_USER y SMTP_PASS sean correctos. Para Gmail, usa una contraseña de aplicación, no tu contraseña normal.')
+        console.error('❌ Error de autenticación SMTP')
+        console.error('   Solución: Verifica SMTP_USER y SMTP_PASS en Railway')
+        console.error('   Mejor opción: Configura SENDGRID_API_KEY (recomendado)')
+        throw new Error('Error de autenticación SMTP. Verifica que SMTP_USER y SMTP_PASS sean correctos. Para Gmail, usa una contraseña de aplicación. RECOMENDADO: Configura SENDGRID_API_KEY en Railway (funciona mejor y no requiere SMTP).')
       }
       if (error.code === 'ECONNECTION' || error.code === 'ETIMEDOUT') {
-        throw new Error('Error de conexión SMTP. Railway puede estar bloqueando conexiones SMTP. Considera usar Resend (RESEND_API_KEY) que funciona mejor con Railway.')
+        console.error('❌ Error de conexión SMTP - Railway bloquea conexiones SMTP')
+        console.error('   SENDGRID_API_KEY configurada?', useSendGrid ? '✅ Sí' : '❌ NO')
+        console.error('   RESEND_API_KEY configurada?', useResend ? '✅ Sí' : '❌ NO')
+        if (!useSendGrid && !useResend) {
+          console.error('   ⚠️  SOLUCIÓN: Configura SENDGRID_API_KEY en Railway')
+          console.error('   Pasos: https://app.sendgrid.com/settings/api_keys')
+          console.error('   1. Crea API Key en SendGrid')
+          console.error('   2. Agrega SENDGRID_API_KEY en Railway')
+          console.error('   3. Agrega SENDGRID_FROM_EMAIL=pepsicomanager@gmail.com en Railway')
+          console.error('   4. Haz redeploy')
+        }
+        throw new Error('Error de conexión SMTP. Railway bloquea conexiones SMTP (puertos 587/465). SOLUCIÓN: Configura SENDGRID_API_KEY en Railway (gratis hasta 100 emails/día, funciona sin dominio). Pasos: 1) Crea API Key en sendgrid.com, 2) Agrega SENDGRID_API_KEY en Railway Variables, 3) Agrega SENDGRID_FROM_EMAIL=pepsicomanager@gmail.com, 4) Redeploy.')
       }
       if (error.code === 'EENVELOPE') {
         throw new Error('Error en la dirección de correo. Verifica que el email sea válido.')
@@ -201,7 +217,18 @@ export async function sendEmail(options: {
   }
   
   // Si no hay configuración
-  throw new Error('Email no configurado. Configura RESEND_API_KEY (recomendado) o SMTP_USER/SMTP_PASS en Railway.')
+  console.error('❌ EMAIL NO CONFIGURADO - No se puede enviar correo')
+  console.error('   Configuración actual:')
+  console.error('   - SENDGRID_API_KEY:', sendgridApiKey ? '✅ Configurada' : '❌ NO configurada (RECOMENDADO)')
+  console.error('   - RESEND_API_KEY:', resendApiKey ? '✅ Configurada' : '❌ NO configurada')
+  console.error('   - SMTP_USER:', smtpUser ? '✅ Configurada' : '❌ NO configurada')
+  console.error('   SOLUCIÓN RÁPIDA: Configura SENDGRID_API_KEY en Railway')
+  console.error('   1. https://sendgrid.com → Crea cuenta gratuita')
+  console.error('   2. https://app.sendgrid.com/settings/api_keys → Crea API Key')
+  console.error('   3. Railway → Variables → Agrega SENDGRID_API_KEY')
+  console.error('   4. Railway → Variables → Agrega SENDGRID_FROM_EMAIL=pepsicomanager@gmail.com')
+  console.error('   5. Redeploy')
+  throw new Error('Email no configurado. RECOMENDADO: Configura SENDGRID_API_KEY y SENDGRID_FROM_EMAIL en Railway (gratis hasta 100 emails/día, funciona perfectamente con Railway). Alternativa: RESEND_API_KEY o SMTP_USER/SMTP_PASS (pero Railway bloquea SMTP).')
 }
 
 export async function sendPasswordResetEmail(to: string, resetLink: string) {
