@@ -3,6 +3,7 @@ import { Resend } from 'resend'
 
 // Configuración Resend (recomendado para Railway)
 const resendApiKey = process.env.RESEND_API_KEY
+// Resend permite usar onboarding@resend.dev sin verificación de dominio
 const resendFromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev'
 
 // Configuración SMTP (fallback)
@@ -66,7 +67,16 @@ export async function sendEmail(options: {
   // Usar Resend si está configurado (recomendado para Railway)
   if (useResend && resend) {
     try {
-      const fromEmail = options.fromEmail || resendFromEmail
+      // Resend requiere dominio verificado. Si el email es @gmail.com, usar el email de prueba de Resend
+      let fromEmail = options.fromEmail || resendFromEmail
+      
+      // Si el dominio no está verificado (gmail.com, etc), usar el email de prueba de Resend
+      // Resend permite usar "onboarding@resend.dev" sin verificación para pruebas
+      if (fromEmail.includes('@gmail.com') || fromEmail.includes('@yahoo.com') || 
+          fromEmail.includes('@hotmail.com') || fromEmail.includes('@outlook.com')) {
+        console.log('⚠️  Email personal no verificado en Resend, usando email de prueba')
+        fromEmail = 'onboarding@resend.dev'
+      }
       
       const { data, error } = await resend.emails.send({
         from: `${fromName} <${fromEmail}>`,
@@ -77,15 +87,32 @@ export async function sendEmail(options: {
       
       if (error) {
         console.error('❌ Error al enviar correo con Resend:', error.message)
+        // Si es error de dominio no verificado, intentar con SMTP como fallback
+        if (error.message.includes('domain is not verified') && useSMTP) {
+          console.log('🔄 Intentando fallback a SMTP...')
+          throw new Error('RESEND_DOMAIN_ERROR') // Error especial para detectar y hacer fallback
+        }
         throw new Error(`Error Resend: ${error.message}`)
       }
       
       console.log(`✅ Correo enviado exitosamente con Resend a: ${options.to}`)
       console.log(`📧 Message ID: ${data?.id}`)
+      console.log(`📧 From: ${fromEmail}`)
       return { messageId: data?.id, service: 'resend' }
     } catch (error: any) {
-      console.error('❌ Error al enviar correo con Resend:', error.message)
-      throw error
+      // Si es error de dominio y tenemos SMTP, hacer fallback
+      if (error.message === 'RESEND_DOMAIN_ERROR' && useSMTP) {
+        console.log('🔄 Fallback a SMTP debido a dominio no verificado en Resend')
+        // Continuar al código de SMTP abajo
+      } else {
+        console.error('❌ Error al enviar correo con Resend:', error.message)
+        // Si hay SMTP configurado, intentar fallback
+        if (useSMTP) {
+          console.log('🔄 Intentando fallback a SMTP...')
+        } else {
+          throw error
+        }
+      }
     }
   }
   

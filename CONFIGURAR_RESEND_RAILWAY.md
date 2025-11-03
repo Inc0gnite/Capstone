@@ -31,6 +31,11 @@ Railway bloquea conexiones SMTP salientes por seguridad, causando "Connection ti
    - Se muestra solo UNA vez
    - Formato: `re_xxxxxxxxxxxxx`
 
+**Tu API Key (que proporcionaste):**
+```
+re_YxmpJL4C_7LEARm1w6AGsdZo5cHjsQVCP
+```
+
 ---
 
 ## 🚂 PASO 3: Configurar Variables en Railway
@@ -41,19 +46,23 @@ Railway bloquea conexiones SMTP salientes por seguridad, causando "Connection ti
 
 ### Agregar Variables:
 
-#### Variable 1: `RESEND_API_KEY`
+#### Variable 1: `RESEND_API_KEY` (OBLIGATORIO)
 ```
 Name: RESEND_API_KEY
-Value: re_xxxxxxxxxxxxx (la API key que copiaste)
+Value: re_YxmpJL4C_7LEARm1w6AGsdZo5cHjsQVCP
 ```
 
-#### Variable 2: `RESEND_FROM_EMAIL` (Opcional)
+#### Variable 2: `RESEND_FROM_EMAIL` (OPCIONAL)
 ```
 Name: RESEND_FROM_EMAIL
-Value: pepsicomanager@gmail.com
+Value: onboarding@resend.dev
 ```
 
-**Nota**: Si no configuras `RESEND_FROM_EMAIL`, Resend usará un email de prueba por defecto. Para usar tu propio dominio después, necesitarás verificar tu dominio en Resend.
+**⚠️ IMPORTANTE sobre RESEND_FROM_EMAIL:**
+- Si usas `onboarding@resend.dev`: Funciona inmediatamente sin verificación
+- Si usas `pepsicomanager@gmail.com`: Requiere verificar el dominio gmail.com (no es posible)
+- **Recomendación**: Usa `onboarding@resend.dev` por ahora
+- El correo llegará desde ese remitente, pero funcionará perfectamente
 
 4. Guarda las variables (Railway guarda automáticamente)
 
@@ -75,7 +84,7 @@ En Railway → Deployments → Logs, deberías ver:
 
 ```
 ✅ Resend configurado (recomendado para Railway)
-   From Email: pepsicomanager@gmail.com
+   From Email: onboarding@resend.dev
 ```
 
 Si ves esto, ✅ está configurado correctamente.
@@ -93,53 +102,52 @@ En Railway → Logs, deberías ver:
 
 ```
 📧 Iniciando envío de correo de recuperación a: [email]
+⚠️  Email personal no verificado en Resend, usando email de prueba
 ✅ Correo enviado exitosamente con Resend a: [email]
 📧 Message ID: [id]
+📧 From: onboarding@resend.dev
 ```
 
 ### 5.4. Verificar el Correo
 
 1. Abre el correo del destinatario
 2. Revisa **Bandeja de entrada** y **Spam**
-3. Deberías recibir el correo con el enlace de recuperación
+3. El correo llegará desde: **onboarding@resend.dev**
+4. Deberías recibir el correo con el enlace de recuperación
 
 ---
 
-## 🔧 Verificar Email en Resend Dashboard
-
-1. Ve a: https://resend.com/emails
-2. Verás todos los correos enviados
-3. Puedes ver:
-   - Estado (Enviado, Entregado, Fallido)
-   - Destinatario
-   - Asunto
-   - Fecha y hora
-
----
-
-## 📝 Resumen de Variables
-
-En Railway, configura estas variables:
+## 📝 Resumen de Variables en Railway
 
 ```
-RESEND_API_KEY=re_xxxxxxxxxxxxx
-RESEND_FROM_EMAIL=pepsicomanager@gmail.com (opcional)
+RESEND_API_KEY=re_YxmpJL4C_7LEARm1w6AGsdZo5cHjsQVCP
+RESEND_FROM_EMAIL=onboarding@resend.dev
 ```
 
 **Eso es todo.** No necesitas configurar SMTP_HOST, SMTP_PORT, SMTP_USER, ni SMTP_PASS.
 
 ---
 
+## 📧 Sobre el Email Remitente
+
+**El correo llegará desde:** `PepsiCo Flota <onboarding@resend.dev>`
+
+Esto es normal y funciona perfectamente. Los usuarios recibirán el correo correctamente. Si más adelante quieres usar tu propio dominio:
+
+1. Verifica tu dominio en Resend (Dashboard → Domains)
+2. Actualiza `RESEND_FROM_EMAIL` con tu dominio verificado
+
+---
+
 ## ✅ Checklist Final
 
-- [ ] Cuenta creada en Resend
-- [ ] API Key generada y copiada
+- [x] API Key obtenida: `re_YxmpJL4C_7LEARm1w6AGsdZo5cHjsQVCP`
 - [ ] `RESEND_API_KEY` agregada en Railway
-- [ ] `RESEND_FROM_EMAIL` agregada en Railway (opcional)
+- [ ] `RESEND_FROM_EMAIL=onboarding@resend.dev` agregada en Railway
 - [ ] Redeploy completado en Railway
 - [ ] Logs muestran "✅ Resend configurado"
 - [ ] Prueba de recuperación de contraseña funciona
-- [ ] Correo llega correctamente
+- [ ] Correo llega correctamente desde onboarding@resend.dev
 
 ---
 
@@ -147,17 +155,17 @@ RESEND_FROM_EMAIL=pepsicomanager@gmail.com (opcional)
 
 ### Error: "Email no configurado"
 - Verifica que `RESEND_API_KEY` esté en Railway
-- Verifica que el valor sea correcto (empieza con `re_`)
+- Verifica que el valor sea correcto: `re_YxmpJL4C_7LEARm1w6AGsdZo5cHjsQVCP`
 - Haz redeploy después de agregar la variable
 
 ### Error: "Invalid API Key"
-- Genera una nueva API Key en Resend
+- Verifica que la API Key sea correcta
+- Genera una nueva API Key en Resend si es necesario
 - Actualiza `RESEND_API_KEY` en Railway
-- Haz redeploy
 
 ### Correo no llega
 - Revisa la carpeta Spam
-- Verifica en Resend Dashboard que el correo se envió
+- Verifica en Resend Dashboard (https://resend.com/emails) que el correo se envió
 - Verifica que el email del destinatario sea correcto
 
 ---
@@ -166,9 +174,4 @@ RESEND_FROM_EMAIL=pepsicomanager@gmail.com (opcional)
 
 Una vez configurado, Resend funcionará de forma automática y confiable. No tendrás más problemas de "Connection timeout" porque Resend usa HTTP/HTTPS en lugar de SMTP, que Railway no bloquea.
 
-**Ventajas adicionales:**
-- 📊 Dashboard con estadísticas de envío
-- 📈 Tracking de aperturas y clics (en planes pagos)
-- 🔒 Más seguro que SMTP
-- ⚡ Más rápido
-
+**El código detecta automáticamente si usar Resend o SMTP, y hace fallback si es necesario.**
