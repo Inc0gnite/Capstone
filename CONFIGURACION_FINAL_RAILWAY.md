@@ -36,8 +36,8 @@ JWT_EXPIRES_IN=15m
 JWT_REFRESH_EXPIRES_IN=7d
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
-SMTP_USER=imsuicideboys@gmail.com
-SMTP_PASS=wwlcqtagrfvuhrhf
+SMTP_USER=pepsicomanager@gmail.com
+SMTP_PASS=[GENERA_UNA_CONTRASEÑA_DE_APLICACIÓN_DE_16_CARACTERES]
 LOG_LEVEL=info
 ```
 

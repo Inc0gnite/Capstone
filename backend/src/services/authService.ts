@@ -268,14 +268,32 @@ export class AuthService {
       console.info('[DEV] Enlace de restablecimiento de contraseña:', resetLink)
     }
 
-    // Enviar email (no fallar si SMTP no está configurado)
-    try {
-      await sendPasswordResetEmail(user.email, resetLink)
-    } catch (err) {
-      console.warn('No se pudo enviar el correo de restablecimiento. Verifique SMTP:', err)
-      // Continuamos retornando respuesta genérica
-    }
+    // Enviar email en segundo plano (no esperar respuesta para responder rápido al usuario)
+    // Esto evita timeouts y mejora la experiencia del usuario
+    sendPasswordResetEmail(user.email, resetLink)
+      .then(() => {
+        console.log(`✅ Correo de recuperación enviado exitosamente a: ${user.email}`)
+      })
+      .catch((err: any) => {
+        console.error('❌ Error al enviar correo de restablecimiento:', err.message)
+        // En desarrollo, mostrar el error completo para depuración
+        if (process.env.NODE_ENV !== 'production') {
+          console.error('Detalles del error:', err)
+        }
+        // Intentar reenviar una vez más después de 2 segundos
+        setTimeout(() => {
+          sendPasswordResetEmail(user.email, resetLink)
+            .then(() => {
+              console.log(`✅ Correo de recuperación reenviado exitosamente a: ${user.email}`)
+            })
+            .catch((retryErr: any) => {
+              console.error('❌ Error al reenviar correo (segundo intento):', retryErr.message)
+            })
+        }, 2000)
+      })
 
+    // Responder inmediatamente sin esperar el correo
+    // El correo se enviará en segundo plano
     return {
       message: 'Si el email existe, recibirás instrucciones para recuperar tu contraseña',
     }

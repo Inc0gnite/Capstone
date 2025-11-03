@@ -1,15 +1,29 @@
 import nodemailer from 'nodemailer'
 
-const smtpHost = process.env.SMTP_HOST
+const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com'
 const smtpPort = Number(process.env.SMTP_PORT || 587)
 const smtpUser = process.env.SMTP_USER
 const smtpPass = process.env.SMTP_PASS
+
+// Validar configuración de SMTP
+if (!smtpUser || !smtpPass) {
+  console.warn('⚠️  SMTP no configurado. Las variables SMTP_USER y SMTP_PASS son requeridas.')
+  console.warn('   Revisa el archivo .env y sigue las instrucciones en CONFIGURAR_GMAIL.md')
+}
 
 const transporter = nodemailer.createTransport({
   host: smtpHost,
   port: smtpPort,
   secure: smtpPort === 465,
   auth: smtpUser && smtpPass ? { user: smtpUser, pass: smtpPass } : undefined,
+  // Agregar configuración adicional para Gmail
+  tls: {
+    rejectUnauthorized: false, // Solo para desarrollo, en producción usar true
+  },
+  // Timeouts para evitar que se quede esperando indefinidamente
+  connectionTimeout: 5000, // 5 segundos máximo para conectar
+  socketTimeout: 10000, // 10 segundos máximo para enviar
+  greetingTimeout: 5000, // 5 segundos máximo para el saludo SMTP
 })
 
 export async function sendEmail(options: {
@@ -19,14 +33,47 @@ export async function sendEmail(options: {
   fromName?: string
   fromEmail?: string
 }) {
+  // Validar que SMTP esté configurado
+  if (!smtpUser || !smtpPass) {
+    throw new Error('SMTP no está configurado. Por favor, configura SMTP_USER y SMTP_PASS en el archivo .env')
+  }
+
+  // Verificar que el transporter esté configurado correctamente
+  if (!transporter) {
+    throw new Error('Transporter SMTP no está inicializado correctamente')
+  }
+
   const fromName = options.fromName || 'PepsiCo Flota'
   const fromEmail = options.fromEmail || smtpUser || 'no-reply@example.com'
-  await transporter.sendMail({
-    from: `${fromName} <${fromEmail}>`,
-    to: options.to,
-    subject: options.subject,
-    html: options.html,
-  })
+  
+  try {
+    // Enviar correo directamente (los timeouts protegerán contra demoras)
+    const info = await transporter.sendMail({
+      from: `${fromName} <${fromEmail}>`,
+      to: options.to,
+      subject: options.subject,
+      html: options.html,
+    })
+    
+    console.log(`✅ Correo enviado exitosamente a: ${options.to}`)
+    console.log(`📧 Message ID: ${info.messageId}`)
+    return info
+  } catch (error: any) {
+    console.error('❌ Error al enviar correo:', error.message)
+    console.error('📧 Destinatario:', options.to)
+    
+    // Mejorar mensajes de error comunes
+    if (error.code === 'EAUTH') {
+      throw new Error('Error de autenticación SMTP. Verifica que SMTP_USER y SMTP_PASS sean correctos. Para Gmail, usa una contraseña de aplicación, no tu contraseña normal.')
+    }
+    if (error.code === 'ECONNECTION' || error.code === 'ETIMEDOUT') {
+      throw new Error('Error de conexión SMTP. Verifica tu conexión a internet y que el puerto no esté bloqueado.')
+    }
+    if (error.code === 'EENVELOPE') {
+      throw new Error('Error en la dirección de correo. Verifica que el email sea válido.')
+    }
+    throw error
+  }
 }
 
 export async function sendPasswordResetEmail(to: string, resetLink: string) {
