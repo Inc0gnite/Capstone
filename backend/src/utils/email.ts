@@ -1,37 +1,57 @@
 import nodemailer from 'nodemailer'
+import { Resend } from 'resend'
 
+// Configuración Resend (recomendado para Railway)
+const resendApiKey = process.env.RESEND_API_KEY
+const resendFromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev'
+
+// Configuración SMTP (fallback)
 const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com'
 const smtpPort = Number(process.env.SMTP_PORT || 587)
 const smtpUser = process.env.SMTP_USER
 const smtpPass = process.env.SMTP_PASS
 
-// Validar configuración de SMTP
-if (!smtpUser || !smtpPass) {
-  console.error('❌ SMTP NO CONFIGURADO')
-  console.error('   SMTP_USER:', smtpUser ? 'configurado' : 'NO CONFIGURADO')
-  console.error('   SMTP_PASS:', smtpPass ? 'configurado' : 'NO CONFIGURADO')
-  console.error('   Las variables SMTP_USER y SMTP_PASS son requeridas.')
-  console.error('   Revisa las variables de entorno en Railway y sigue las instrucciones en ACTUALIZAR_GMAIL_RAILWAY.md')
-} else {
+// Detectar qué servicio de email usar
+const useResend = !!resendApiKey
+const useSMTP = !useResend && !!smtpUser && !!smtpPass
+
+// Inicializar Resend si está configurado
+const resend = useResend ? new Resend(resendApiKey) : null
+
+// Logging de configuración
+if (useResend) {
+  console.log('✅ Resend configurado (recomendado para Railway)')
+  console.log('   From Email:', resendFromEmail)
+} else if (useSMTP) {
   console.log('✅ SMTP Configurado correctamente')
   console.log('   Host:', smtpHost)
   console.log('   Port:', smtpPort)
   console.log('   User:', smtpUser)
+} else {
+  console.error('❌ EMAIL NO CONFIGURADO')
+  console.error('   Opción 1 (Recomendado): Configura RESEND_API_KEY en Railway')
+  console.error('   Opción 2: Configura SMTP_USER y SMTP_PASS en Railway')
+  console.error('   Para configurar Resend: https://resend.com (gratis hasta 3,000 emails/mes)')
 }
 
 const transporter = nodemailer.createTransport({
   host: smtpHost,
   port: smtpPort,
-  secure: smtpPort === 465,
+  secure: smtpPort === 465, // true para puerto 465, false para 587
   auth: smtpUser && smtpPass ? { user: smtpUser, pass: smtpPass } : undefined,
-  // Agregar configuración adicional para Gmail
+  // Configuración adicional para Gmail
   tls: {
-    rejectUnauthorized: false, // Solo para desarrollo, en producción usar true
+    rejectUnauthorized: false, // Permitir certificados auto-firmados (necesario para Railway)
+    ciphers: 'SSLv3', // Forzar versión de TLS compatible
   },
-  // Timeouts para evitar que se quede esperando indefinidamente
-  connectionTimeout: 5000, // 5 segundos máximo para conectar
-  socketTimeout: 10000, // 10 segundos máximo para enviar
-  greetingTimeout: 5000, // 5 segundos máximo para el saludo SMTP
+  // Timeouts más largos para Railway (puede tener latencia de red)
+  connectionTimeout: 15000, // 15 segundos máximo para conectar
+  socketTimeout: 30000, // 30 segundos máximo para enviar
+  greetingTimeout: 10000, // 10 segundos máximo para el saludo SMTP
+  // Configuración adicional para Railway
+  pool: true, // Usar conexiones persistentes
+  maxConnections: 1,
+  maxMessages: 3,
 })
 
 export async function sendEmail(options: {
@@ -41,47 +61,69 @@ export async function sendEmail(options: {
   fromName?: string
   fromEmail?: string
 }) {
-  // Validar que SMTP esté configurado
-  if (!smtpUser || !smtpPass) {
-    throw new Error('SMTP no está configurado. Por favor, configura SMTP_USER y SMTP_PASS en el archivo .env')
-  }
-
-  // Verificar que el transporter esté configurado correctamente
-  if (!transporter) {
-    throw new Error('Transporter SMTP no está inicializado correctamente')
-  }
-
   const fromName = options.fromName || 'PepsiCo Flota'
-  const fromEmail = options.fromEmail || smtpUser || 'no-reply@example.com'
   
-  try {
-    // Enviar correo directamente (los timeouts protegerán contra demoras)
-    const info = await transporter.sendMail({
-      from: `${fromName} <${fromEmail}>`,
-      to: options.to,
-      subject: options.subject,
-      html: options.html,
-    })
-    
-    console.log(`✅ Correo enviado exitosamente a: ${options.to}`)
-    console.log(`📧 Message ID: ${info.messageId}`)
-    return info
-  } catch (error: any) {
-    console.error('❌ Error al enviar correo:', error.message)
-    console.error('📧 Destinatario:', options.to)
-    
-    // Mejorar mensajes de error comunes
-    if (error.code === 'EAUTH') {
-      throw new Error('Error de autenticación SMTP. Verifica que SMTP_USER y SMTP_PASS sean correctos. Para Gmail, usa una contraseña de aplicación, no tu contraseña normal.')
+  // Usar Resend si está configurado (recomendado para Railway)
+  if (useResend && resend) {
+    try {
+      const fromEmail = options.fromEmail || resendFromEmail
+      
+      const { data, error } = await resend.emails.send({
+        from: `${fromName} <${fromEmail}>`,
+        to: options.to,
+        subject: options.subject,
+        html: options.html,
+      })
+      
+      if (error) {
+        console.error('❌ Error al enviar correo con Resend:', error.message)
+        throw new Error(`Error Resend: ${error.message}`)
+      }
+      
+      console.log(`✅ Correo enviado exitosamente con Resend a: ${options.to}`)
+      console.log(`📧 Message ID: ${data?.id}`)
+      return { messageId: data?.id, service: 'resend' }
+    } catch (error: any) {
+      console.error('❌ Error al enviar correo con Resend:', error.message)
+      throw error
     }
-    if (error.code === 'ECONNECTION' || error.code === 'ETIMEDOUT') {
-      throw new Error('Error de conexión SMTP. Verifica tu conexión a internet y que el puerto no esté bloqueado.')
-    }
-    if (error.code === 'EENVELOPE') {
-      throw new Error('Error en la dirección de correo. Verifica que el email sea válido.')
-    }
-    throw error
   }
+  
+  // Fallback a SMTP si Resend no está configurado
+  if (useSMTP) {
+    const fromEmail = options.fromEmail || smtpUser || 'no-reply@example.com'
+    
+    try {
+      const info = await transporter.sendMail({
+        from: `${fromName} <${fromEmail}>`,
+        to: options.to,
+        subject: options.subject,
+        html: options.html,
+      })
+      
+      console.log(`✅ Correo enviado exitosamente con SMTP a: ${options.to}`)
+      console.log(`📧 Message ID: ${info.messageId}`)
+      return { messageId: info.messageId, service: 'smtp' }
+    } catch (error: any) {
+      console.error('❌ Error al enviar correo con SMTP:', error.message)
+      console.error('📧 Destinatario:', options.to)
+      
+      // Mejorar mensajes de error comunes
+      if (error.code === 'EAUTH') {
+        throw new Error('Error de autenticación SMTP. Verifica que SMTP_USER y SMTP_PASS sean correctos. Para Gmail, usa una contraseña de aplicación, no tu contraseña normal.')
+      }
+      if (error.code === 'ECONNECTION' || error.code === 'ETIMEDOUT') {
+        throw new Error('Error de conexión SMTP. Railway puede estar bloqueando conexiones SMTP. Considera usar Resend (RESEND_API_KEY) que funciona mejor con Railway.')
+      }
+      if (error.code === 'EENVELOPE') {
+        throw new Error('Error en la dirección de correo. Verifica que el email sea válido.')
+      }
+      throw error
+    }
+  }
+  
+  // Si no hay configuración
+  throw new Error('Email no configurado. Configura RESEND_API_KEY (recomendado) o SMTP_USER/SMTP_PASS en Railway.')
 }
 
 export async function sendPasswordResetEmail(to: string, resetLink: string) {
