@@ -39,7 +39,7 @@ router.post(
           error: 'Orden de trabajo es requerida',
         })
       }
-      next()
+      return next()
     } else {
       // Formato antiguo: un solo repuesto
       if (!req.body.workOrderId || !req.body.sparePartId || !req.body.quantity) {
@@ -48,7 +48,7 @@ router.post(
           error: 'Orden, repuesto y cantidad son requeridos',
         })
       }
-      next()
+      return next()
     }
   },
   auditLog('request', 'spare-parts'),
