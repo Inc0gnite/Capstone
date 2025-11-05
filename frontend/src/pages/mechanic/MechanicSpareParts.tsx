@@ -36,26 +36,36 @@ export default function MechanicSpareParts() {
         
         const response: any = await sparePartService.getAll(params)
         
-        // La API retorna { data, page, limit, total, totalPages } según sendPaginated
-        // El servicio getAll devuelve directamente response.data del axios, que es el objeto paginado
-        // Entonces response ya es { data: [...], page: 1, limit: 100, total: X, totalPages: Y }
-        const items: SparePart[] = response?.data ?? response?.items ?? []
+        // El backend devuelve según sendPaginated: { data: [...], page, limit, total, totalPages }
+        // sparePartService.getAll devuelve response.data del axios, que es el objeto paginado
+        // Entonces response = { data: [...], page: 1, limit: 100, total: X, totalPages: Y }
+        const items: SparePart[] = response?.data ?? response?.items ?? (Array.isArray(response) ? response : [])
         
-        console.log('Respuesta completa del backend:', response)
-        console.log('Items extraídos:', items.length)
-        console.log('Total según backend:', response?.total)
-        console.log('Repuestos cargados:', items)
+        console.log('🔍 Respuesta completa del backend:', response)
+        console.log('🔍 Tipo de response:', typeof response)
+        console.log('🔍 Es array?', Array.isArray(response))
+        console.log('🔍 Keys de response:', response ? Object.keys(response) : 'null')
+        console.log('🔍 Items extraídos:', items.length)
+        console.log('🔍 Total según backend:', response?.total)
+        console.log('🔍 Repuestos cargados:', items)
         
         if (items.length === 0 && response?.total > 0) {
           // Si no hay items pero hay total, puede que la estructura sea diferente
-          console.warn('No se encontraron items pero hay total:', response.total)
-          console.warn('Estructura de respuesta:', Object.keys(response))
+          console.warn('⚠️ No se encontraron items pero hay total:', response.total)
+          console.warn('⚠️ Estructura de respuesta:', Object.keys(response))
+          // Intentar acceder directamente a la respuesta si es un array
+          if (Array.isArray(response)) {
+            console.log('✅ La respuesta es un array directo, usando:', response.length, 'items')
+            setParts(response)
+            return
+          }
         }
         
-        if (items.length === 0 && response?.total === 0) {
-          console.info('No hay repuestos registrados en el sistema')
+        if (items.length === 0 && (!response?.total || response?.total === 0)) {
+          console.info('ℹ️ No hay repuestos registrados en el sistema')
         }
         
+        console.log('✅ Estableciendo', items.length, 'repuestos en el estado')
         setParts(items)
       } catch (err: any) {
         console.error('Error cargando repuestos:', err)
