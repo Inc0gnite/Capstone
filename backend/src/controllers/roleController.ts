@@ -102,6 +102,25 @@ export class RoleController {
       return sendError(res, error.message, 400)
     }
   }
+
+  /**
+   * POST /api/roles/assign-permission
+   * Asignar permiso a rol
+   */
+  async assignPermissionToRole(req: Request, res: Response) {
+    try {
+      const { roleName, resource, action } = req.body
+
+      if (!roleName || !resource || !action) {
+        return sendError(res, 'roleName, resource y action son requeridos', 400)
+      }
+
+      const result = await roleService.assignPermissionToRole(roleName, resource, action)
+      return sendSuccess(res, result, result.message)
+    } catch (error: any) {
+      return sendError(res, error.message, 400)
+    }
+  }
 }
 
 export default new RoleController()

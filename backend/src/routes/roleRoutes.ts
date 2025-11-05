@@ -35,6 +35,18 @@ router.post(
 )
 
 /**
+ * POST /api/roles/assign-permission
+ * Asignar permiso a rol
+ */
+router.post(
+  '/assign-permission',
+  requireAdmin,
+  validateBody(['roleName', 'resource', 'action']),
+  auditLog('assign-permission', 'roles'),
+  roleController.assignPermissionToRole
+)
+
+/**
  * GET /api/roles/:id
  * Obtener rol por ID
  */

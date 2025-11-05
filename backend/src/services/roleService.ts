@@ -184,6 +184,54 @@ export class RoleService {
   }
 
   /**
+   * Asignar permiso a rol
+   */
+  async assignPermissionToRole(roleName: string, resource: string, action: string) {
+    // Buscar el rol
+    const role = await prisma.role.findFirst({
+      where: { name: roleName }
+    })
+
+    if (!role) {
+      throw new Error(`Rol "${roleName}" no encontrado`)
+    }
+
+    // Buscar el permiso
+    const permission = await prisma.permission.findFirst({
+      where: {
+        resource,
+        action
+      }
+    })
+
+    if (!permission) {
+      throw new Error(`Permiso "${resource}:${action}" no encontrado`)
+    }
+
+    // Verificar si ya existe la asignación
+    const existing = await prisma.rolePermission.findFirst({
+      where: {
+        roleId: role.id,
+        permissionId: permission.id
+      }
+    })
+
+    if (existing) {
+      return { message: `El permiso ya está asignado al rol "${roleName}"`, role, permission }
+    }
+
+    // Crear la asignación
+    await prisma.rolePermission.create({
+      data: {
+        roleId: role.id,
+        permissionId: permission.id
+      }
+    })
+
+    return { message: `Permiso "${resource}:${action}" asignado exitosamente al rol "${roleName}"`, role, permission }
+  }
+
+  /**
    * Crear permiso
    */
   async createPermission(data: {
