@@ -23,6 +23,7 @@ import Diagnostic from './Diagnostic'
 import Reports from './pages/Reports'
 import ResetPassword from './pages/ResetPassword'
 import Inventory from './pages/Inventory'
+import Workshops from './pages/Workshops'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -159,6 +160,14 @@ function App() {
             element={
               <RoleBasedRoute allowedRoles={['Administrador', 'Jefe de Taller']}>
                 <Reports />
+              </RoleBasedRoute>
+            }
+          />
+          <Route
+            path="/workshops"
+            element={
+              <RoleBasedRoute allowedRoles={['Administrador']}>
+                <Workshops />
               </RoleBasedRoute>
             }
           />
