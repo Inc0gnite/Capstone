@@ -66,7 +66,7 @@ export default function Workshops() {
     try {
       setLoading(true)
       const res = await workshopService.getAll()
-      setWorkshops(res.data || [])
+      setWorkshops(res?.data || [])
     } finally {
       setLoading(false)
     }
