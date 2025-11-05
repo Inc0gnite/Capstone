@@ -29,28 +29,43 @@ export default function MechanicSpareParts() {
         const response: any = await sparePartService.getAll(params)
         
         // El backend devuelve según sendPaginated: { data: [...], page, limit, total, totalPages }
-        // sparePartService.getAll devuelve response.data del axios, que es el objeto paginado
+        // sparePartService.getAll() devuelve res.data del axios, que es el objeto paginado
         // Entonces response = { data: [...], page: 1, limit: 100, total: X, totalPages: Y }
-        const items: SparePart[] = response?.data ?? response?.items ?? (Array.isArray(response) ? response : [])
         
         console.log('🔍 Respuesta completa del backend:', response)
         console.log('🔍 Tipo de response:', typeof response)
         console.log('🔍 Es array?', Array.isArray(response))
         console.log('🔍 Keys de response:', response ? Object.keys(response) : 'null')
+        
+        // Extraer items de la respuesta paginada
+        let items: SparePart[] = []
+        
+        if (Array.isArray(response)) {
+          // Si la respuesta es directamente un array
+          items = response
+          console.log('✅ La respuesta es un array directo, usando:', items.length, 'items')
+        } else if (response?.data && Array.isArray(response.data)) {
+          // Si la respuesta tiene estructura { data: [...] }
+          items = response.data
+          console.log('✅ Items extraídos de response.data:', items.length)
+        } else if (response?.items && Array.isArray(response.items)) {
+          // Si la respuesta tiene estructura { items: [...] }
+          items = response.items
+          console.log('✅ Items extraídos de response.items:', items.length)
+        } else if (response?.success && response?.data && Array.isArray(response.data)) {
+          // Si la respuesta tiene estructura { success: true, data: [...] }
+          items = response.data
+          console.log('✅ Items extraídos de response.data (con success):', items.length)
+        } else {
+          console.warn('⚠️ No se pudo extraer items de la respuesta:', response)
+        }
+        
         console.log('🔍 Items extraídos:', items.length)
         console.log('🔍 Total según backend:', response?.total)
-        console.log('🔍 Repuestos cargados:', items)
         
         if (items.length === 0 && response?.total > 0) {
-          // Si no hay items pero hay total, puede que la estructura sea diferente
           console.warn('⚠️ No se encontraron items pero hay total:', response.total)
-          console.warn('⚠️ Estructura de respuesta:', Object.keys(response))
-          // Intentar acceder directamente a la respuesta si es un array
-          if (Array.isArray(response)) {
-            console.log('✅ La respuesta es un array directo, usando:', response.length, 'items')
-            setParts(response)
-            return
-          }
+          console.warn('⚠️ Estructura de respuesta completa:', JSON.stringify(response, null, 2))
         }
         
         if (items.length === 0 && (!response?.total || response?.total === 0)) {
