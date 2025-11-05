@@ -36,22 +36,40 @@ export default function MechanicSpareParts() {
         
         const response: any = await sparePartService.getAll(params)
         
-        // Usar la misma lógica de extracción que Inventory.tsx
+        // La API retorna { data, page, limit, total, totalPages } según sendPaginated
+        // El servicio getAll devuelve directamente response.data del axios, que es el objeto paginado
+        // Entonces response ya es { data: [...], page: 1, limit: 100, total: X, totalPages: Y }
         const items: SparePart[] = response?.data ?? response?.items ?? []
         
-        console.log('Repuestos cargados del sistema:', items.length, items)
+        console.log('Respuesta completa del backend:', response)
+        console.log('Items extraídos:', items.length)
+        console.log('Total según backend:', response?.total)
+        console.log('Repuestos cargados:', items)
+        
+        if (items.length === 0 && response?.total > 0) {
+          // Si no hay items pero hay total, puede que la estructura sea diferente
+          console.warn('No se encontraron items pero hay total:', response.total)
+          console.warn('Estructura de respuesta:', Object.keys(response))
+        }
+        
+        if (items.length === 0 && response?.total === 0) {
+          console.info('No hay repuestos registrados en el sistema')
+        }
         
         setParts(items)
       } catch (err: any) {
         console.error('Error cargando repuestos:', err)
-        setError('Error al cargar los repuestos: ' + (err.message || 'Error desconocido'))
+        const errorMessage = err?.response?.data?.error || err?.message || 'Error desconocido'
+        setError('Error al cargar los repuestos: ' + errorMessage)
         setParts([])
       } finally {
         setLoading(false)
       }
     }
 
-    loadSpareParts()
+    if (user) {
+      loadSpareParts()
+    }
   }, [user])
 
   const filteredParts = parts.filter(part => {
@@ -233,6 +251,14 @@ export default function MechanicSpareParts() {
                         <span className="text-gray-600">Proveedor:</span>
                         <span className="font-medium text-gray-900">
                           {part.supplier}
+                        </span>
+                      </div>
+                    )}
+                    {part.location && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Ubicación:</span>
+                        <span className="font-medium text-gray-900">
+                          {part.location}
                         </span>
                       </div>
                     )}
