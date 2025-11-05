@@ -683,69 +683,110 @@ export default function MechanicOrders() {
                       </div>
                     </div>
 
-                    {/* Tabla de repuestos */}
-                    <div className="mb-6 bg-white rounded-lg shadow overflow-hidden">
-                      <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
-                          <thead className="bg-gray-50">
-                            <tr>
-                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Código</th>
-                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
-                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categoría</th>
-                              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
-                              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Mínimo</th>
-                              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Precio</th>
-                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ubicación</th>
-                              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acción</th>
-                            </tr>
-                          </thead>
-                          <tbody className="bg-white divide-y divide-gray-200">
-                            {filteredSpareParts.length === 0 ? (
-                              <tr>
-                                <td colSpan={8} className="px-4 py-8 text-center text-gray-500">
-                                  {spareParts.length === 0 
-                                    ? 'No hay repuestos disponibles' 
-                                    : 'No se encontraron repuestos con los filtros aplicados'}
-                                </td>
-                              </tr>
-                            ) : (
-                              displayParts.map((part) => {
-                                const isLow = part.currentStock <= part.minStock
-                                const out = part.currentStock === 0
-                                return (
-                                  <tr key={part.id} className="hover:bg-gray-50">
-                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{part.code}</td>
-                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{part.name}</td>
-                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">{part.category}</td>
-                                    <td className={`px-4 py-3 whitespace-nowrap text-sm text-right font-medium ${out ? 'text-red-600' : isLow ? 'text-yellow-600' : 'text-green-600'}`}>
-                                      {part.currentStock}
-                                    </td>
-                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-right text-gray-700">{part.minStock}</td>
-                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-right text-gray-900">
-                                      {(part as any).unitPrice ? `$${(part as any).unitPrice.toLocaleString('es-CL')}` : '—'}
-                                    </td>
-                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">{part.location || '—'}</td>
-                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-center">
-                                      {part.currentStock > 0 ? (
-                                        <button
-                                          onClick={() => handleAddFromTable(part.id)}
-                                          className="px-3 py-1 rounded bg-blue-600 text-white hover:bg-blue-700 transition-colors text-sm font-medium"
-                                        >
-                                          + Agregar
-                                        </button>
-                                      ) : (
-                                        <span className="px-3 py-1 rounded bg-gray-300 text-gray-600 text-sm font-medium cursor-not-allowed">
-                                          Sin Stock
-                                        </span>
-                                      )}
-                                    </td>
-                                  </tr>
-                                )
-                              })
-                            )}
-                          </tbody>
-                        </table>
-                      </div>
+                    {/* Lista de Repuestos en formato de tarjetas */}
+                    <div className="mb-6">
+                      {filteredSpareParts.length === 0 ? (
+                        <div className="text-center py-12 bg-white rounded-lg border-2 border-dashed border-gray-300">
+                          <div className="text-gray-400 text-6xl mb-4">🔧</div>
+                          <h3 className="text-lg font-medium text-gray-900 mb-2">
+                            {spareParts.length === 0 
+                              ? 'No hay repuestos disponibles' 
+                              : 'No se encontraron repuestos con los filtros aplicados'}
+                          </h3>
+                          <p className="text-gray-500 text-sm">
+                            {spareParts.length === 0
+                              ? 'No hay repuestos registrados en el sistema'
+                              : 'Intenta ajustar los filtros de búsqueda'}
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {displayParts.map((part) => {
+                            const isLow = part.currentStock <= part.minStock
+                            const out = part.currentStock === 0
+                            const stockStatus = out 
+                              ? { text: 'Sin Stock', color: 'bg-red-100 text-red-800' }
+                              : isLow 
+                              ? { text: 'Stock Bajo', color: 'bg-yellow-100 text-yellow-800' }
+                              : { text: 'Disponible', color: 'bg-green-100 text-green-800' }
+                            const stockColor = out 
+                              ? 'text-red-600'
+                              : isLow 
+                              ? 'text-yellow-600'
+                              : 'text-green-600'
+                            
+                            return (
+                              <div key={part.id} className="bg-white rounded-lg shadow p-4 hover:shadow-md transition-shadow border border-gray-200">
+                                <div className="flex items-start justify-between mb-3">
+                                  <div className="flex-1">
+                                    <h3 className="text-base font-semibold text-gray-900 mb-1">
+                                      {part.name}
+                                    </h3>
+                                    <p className="text-xs text-gray-600 mb-1">
+                                      Código: {part.code}
+                                    </p>
+                                    <p className="text-xs text-gray-600">
+                                      Categoría: {part.category}
+                                    </p>
+                                  </div>
+                                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${stockStatus.color}`}>
+                                    {stockStatus.text}
+                                  </span>
+                                </div>
+                                
+                                <div className="space-y-1.5 text-xs mb-3">
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-600">Stock Actual:</span>
+                                    <span className={`font-medium ${stockColor}`}>
+                                      {part.currentStock} unidades
+                                    </span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-600">Stock Mínimo:</span>
+                                    <span className="font-medium text-gray-900">
+                                      {part.minStock} unidades
+                                    </span>
+                                  </div>
+                                  {part.location && (
+                                    <div className="flex justify-between">
+                                      <span className="text-gray-600">Ubicación:</span>
+                                      <span className="font-medium text-gray-900">
+                                        {part.location}
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                                
+                                {part.description && (
+                                  <div className="mb-3 pt-2 border-t border-gray-200">
+                                    <p className="text-xs text-gray-600 line-clamp-2">
+                                      {part.description}
+                                    </p>
+                                  </div>
+                                )}
+                                
+                                <div className="pt-2 border-t border-gray-200">
+                                  {part.currentStock > 0 ? (
+                                    <button
+                                      onClick={() => handleAddFromTable(part.id)}
+                                      className="w-full px-3 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors text-sm font-medium"
+                                    >
+                                      + Agregar
+                                    </button>
+                                  ) : (
+                                    <button
+                                      disabled
+                                      className="w-full px-3 py-2 rounded-lg bg-gray-300 text-gray-600 cursor-not-allowed text-sm font-medium"
+                                    >
+                                      Sin Stock
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )}
                     </div>
 
                     {/* Lista de repuestos seleccionados */}
