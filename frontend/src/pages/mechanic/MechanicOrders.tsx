@@ -591,8 +591,8 @@ export default function MechanicOrders() {
                           const selectedPart = spareParts.find(p => p.id === item.sparePartId)
                           const availableStock = selectedPart?.currentStock || 0
                           const isStockExceeded = item.quantity > availableStock
+                          // Mostrar todos los repuestos del sistema, evitando solo duplicados en la misma solicitud
                           const availableParts = spareParts.filter(part => 
-                            part.currentStock > 0 && 
                             !requestedItems.some((ri, riIndex) => riIndex !== index && ri.sparePartId === part.id)
                           )
 
@@ -610,11 +610,23 @@ export default function MechanicOrders() {
                                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                                     >
                                       <option value="">Selecciona un repuesto</option>
-                                      {availableParts.map(part => (
-                                        <option key={part.id} value={part.id}>
-                                          {part.name} ({part.code}) - Stock: {part.currentStock}
-                                        </option>
-                                      ))}
+                                      {availableParts.map(part => {
+                                        const stockStatus = part.currentStock === 0 
+                                          ? 'Sin Stock' 
+                                          : part.currentStock <= part.minStock 
+                                            ? 'Stock Bajo' 
+                                            : 'Disponible'
+                                        const stockColor = part.currentStock === 0 
+                                          ? 'text-red-600' 
+                                          : part.currentStock <= part.minStock 
+                                            ? 'text-yellow-600' 
+                                            : 'text-green-600'
+                                        return (
+                                          <option key={part.id} value={part.id}>
+                                            {part.name} ({part.code}) - Stock: {part.currentStock} - {stockStatus}
+                                          </option>
+                                        )
+                                      })}
                                     </select>
                                   </div>
                                   <div>
@@ -657,10 +669,10 @@ export default function MechanicOrders() {
                       </div>
                     )}
 
-                    {spareParts.filter(part => part.currentStock > 0).length === 0 && (
+                    {spareParts.length === 0 && (
                       <div className="mt-3 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
                         <p className="text-sm text-yellow-800">
-                          ⚠️ No hay repuestos con stock disponible en este momento
+                          ⚠️ No hay repuestos registrados en el sistema
                         </p>
                       </div>
                     )}
