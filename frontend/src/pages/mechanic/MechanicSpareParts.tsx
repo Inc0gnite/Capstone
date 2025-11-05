@@ -259,12 +259,6 @@ export default function MechanicSpareParts() {
                         {part.minStock} unidades
                       </span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Precio:</span>
-                      <span className="font-medium text-gray-900">
-                        ${(part as any).unitPrice ? (part as any).unitPrice.toLocaleString('es-CL') : 'N/A'}
-                      </span>
-                    </div>
                     {part.supplier && (
                       <div className="flex justify-between">
                         <span className="text-gray-600">Proveedor:</span>
