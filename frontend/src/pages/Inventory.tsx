@@ -94,12 +94,14 @@ export default function Inventory() {
       if (lowStockOnly) params.lowStock = true
 
       const response: PaginatedResponse<SparePart> | any = await sparePartService.getAll(params as any)
-      // La API retorna { success, data, pagination }. Aseguramos compatibilidad flexible
-      const items: SparePart[] = response?.data ?? response?.items ?? []
-      const pagination = response?.pagination ?? { total: items.length, page, limit }
+      // sendPaginated devuelve { data: [...], page, limit, total, totalPages }
+      // sparePartService.getAll() devuelve res.data del axios, que es el objeto paginado
+      const items: SparePart[] = response?.data ?? response?.items ?? (Array.isArray(response) ? response : [])
+      const totalCount = response?.total ?? items.length
+      const currentPage = response?.page ?? page
 
       setParts(items)
-      setTotal(pagination.total || items.length)
+      setTotal(totalCount)
     } catch (err: any) {
       console.error('Error cargando inventario:', err)
       setError('No se pudo cargar el inventario')
