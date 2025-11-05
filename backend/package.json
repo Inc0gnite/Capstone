@@ -23,7 +23,11 @@
     "db:test-port": "node scripts/test-port-only.js",
     "lint": "eslint . --ext .ts",
     "format": "prettier --write \"src/**/*.ts\"",
-    "test": "echo \"Tests pendientes\" && exit 0"
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "fix:guardia-permissions": "tsx scripts/add-regions-permission-guardia.ts",
+    "fix:mecanico-spare-parts-permission": "tsx scripts/add-spare-parts-update-permission-to-mecanico.ts"
   },
   "keywords": [
     "pepsico",
@@ -69,8 +73,11 @@
     "prettier": "^3.3.3",
     "prisma": "^5.20.0",
     "ts-node": "^10.9.2",
+    "ts-jest": "^29.1.2",
     "tsx": "^4.19.1",
-    "typescript": "^5.6.2"
+    "typescript": "^5.6.2",
+    "@types/jest": "^29.5.12",
+    "jest": "^29.7.0"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
