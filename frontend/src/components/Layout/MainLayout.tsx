@@ -51,6 +51,7 @@ export function MainLayout({ children }: MainLayoutProps) {
       Mecánico: [
         { name: 'Mis Órdenes', href: '/mechanic/orders', icon: '🔨' },
         { name: 'Repuestos', href: '/mechanic/spare-parts', icon: '🔧' },
+        { name: 'Inventario', href: '/inventory', icon: '📦' },
       ],
       'Jefe de Taller': [
         { name: 'Inicio', href: '/dashboard/jefe-taller', icon: '🏠' },

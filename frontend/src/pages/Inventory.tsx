@@ -211,12 +211,15 @@ export default function Inventory() {
             <p className="text-gray-600">Listado y búsqueda de repuestos</p>
           </div>
           <div className="flex items-center gap-3">
-            <button
-              onClick={openCreate}
-              className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors"
-            >
-              + Agregar repuesto
-            </button>
+            {/* Solo mostrar botón de crear si no es mecánico */}
+            {((user as any)?.role?.name || '') !== 'Mecánico' && (
+              <button
+                onClick={openCreate}
+                className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+              >
+                + Agregar repuesto
+              </button>
+            )}
             <div className="text-sm text-gray-500">{total} repuestos</div>
           </div>
         </div>
@@ -310,12 +313,18 @@ export default function Inventory() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900">{typeof (p as any).unitPrice === 'number' ? `$${(p as any).unitPrice.toLocaleString('es-CL')}` : '—'}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{p.location || '—'}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-right">
-                        <button
-                          onClick={() => openEdit(p)}
-                          className="px-3 py-1 rounded bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
-                        >
-                          Editar
-                        </button>
+                        {/* Solo mostrar botón de editar si no es mecánico */}
+                        {((user as any)?.role?.name || '') !== 'Mecánico' && (
+                          <button
+                            onClick={() => openEdit(p)}
+                            className="px-3 py-1 rounded bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
+                          >
+                            Editar
+                          </button>
+                        )}
+                        {((user as any)?.role?.name || '') === 'Mecánico' && (
+                          <span className="text-gray-400 text-sm">Solo lectura</span>
+                        )}
                       </td>
                     </tr>
                   )
