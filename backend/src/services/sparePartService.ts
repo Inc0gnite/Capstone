@@ -292,6 +292,26 @@ export class SparePartService {
   }
 
   /**
+   * Obtener categorías únicas de repuestos
+   */
+  async getCategories() {
+    const categories = await prisma.sparePart.findMany({
+      where: {
+        isActive: true,
+      },
+      select: {
+        category: true,
+      },
+      distinct: ['category'],
+      orderBy: {
+        category: 'asc',
+      },
+    })
+
+    return categories.map((c) => c.category)
+  }
+
+  /**
    * Obtener estadísticas de inventario
    */
   async getStats() {

@@ -44,6 +44,18 @@ export class SparePartController {
   }
 
   /**
+   * GET /api/spare-parts/categories
+   */
+  async getCategories(_req: Request, res: Response) {
+    try {
+      const categories = await sparePartService.getCategories()
+      return sendSuccess(res, categories)
+    } catch (error: any) {
+      return sendError(res, error.message, 500)
+    }
+  }
+
+  /**
    * GET /api/spare-parts/:id
    */
   async getById(req: Request, res: Response) {

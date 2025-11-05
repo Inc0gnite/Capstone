@@ -21,6 +21,11 @@ router.get('/stats', authorize('spare-parts', 'read'), sparePartController.getSt
 router.get('/low-stock', authorize('spare-parts', 'read'), sparePartController.getLowStock)
 
 /**
+ * GET /api/spare-parts/categories
+ */
+router.get('/categories', authorize('spare-parts', 'read'), sparePartController.getCategories)
+
+/**
  * POST /api/spare-parts/request
  * Acepta:
  * - Un solo repuesto: { workOrderId, sparePartId, quantity, observations? }
