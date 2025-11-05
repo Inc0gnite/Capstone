@@ -756,11 +756,19 @@ export default function MechanicOrders() {
                               ? 'text-yellow-600'
                               : 'text-green-600'
                             
+                            const isOutOfStock = part.currentStock === 0
+                            
                             return (
-                              <div key={part.id} className="bg-white rounded-lg shadow p-4 hover:shadow-md transition-shadow border border-gray-200">
+                              <div key={part.id} className={`rounded-lg shadow p-4 hover:shadow-md transition-shadow border ${
+                                isOutOfStock 
+                                  ? 'bg-red-50 border-2 border-red-200' 
+                                  : 'bg-white border-gray-200'
+                              }`}>
                                 <div className="flex items-start justify-between mb-3">
                                   <div className="flex-1">
-                                    <h3 className="text-base font-semibold text-gray-900 mb-1">
+                                    <h3 className={`text-base font-semibold mb-1 ${
+                                      isOutOfStock ? 'text-red-900' : 'text-gray-900'
+                                    }`}>
                                       {part.name}
                                     </h3>
                                     <p className="text-xs text-gray-600 mb-1">

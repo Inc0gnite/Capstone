@@ -227,17 +227,29 @@ export default function MechanicSpareParts() {
               const stockStatus = getStockStatus(part.currentStock, part.minStock)
               const stockColor = getStockColor(part.currentStock, part.minStock)
               
+              const isOutOfStock = part.currentStock === 0
+              
               return (
-                <div key={part.id} className="bg-white rounded-lg shadow p-6 hover:shadow-md transition-shadow">
+                <div key={part.id} className={`rounded-lg shadow p-6 hover:shadow-md transition-shadow ${
+                  isOutOfStock 
+                    ? 'bg-red-50 border-2 border-red-200' 
+                    : 'bg-white'
+                }`}>
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                      <h3 className={`text-lg font-semibold mb-2 ${
+                        isOutOfStock ? 'text-red-900' : 'text-gray-900'
+                      }`}>
                         {part.name}
                       </h3>
-                      <p className="text-sm text-gray-600 mb-2">
+                      <p className={`text-sm mb-2 ${
+                        isOutOfStock ? 'text-red-700' : 'text-gray-600'
+                      }`}>
                         Código: {part.code}
                       </p>
-                      <p className="text-sm text-gray-600 mb-3">
+                      <p className={`text-sm mb-3 ${
+                        isOutOfStock ? 'text-red-700' : 'text-gray-600'
+                      }`}>
                         Categoría: {part.category}
                       </p>
                     </div>
