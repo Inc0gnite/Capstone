@@ -20,29 +20,39 @@ export default function MechanicSpareParts() {
         setLoading(true)
         setError(null)
         
-        // Obtener repuestos del taller del usuario
-        const response = await sparePartService.getAll({
-          page: 1,
-          limit: 100,
-          workshopId
-        })
+        // Obtener workshopId del usuario o del taller asociado
+        const workshopIdToUse = (user as any)?.workshopId || (user as any)?.workshop?.id
         
-        setParts(response.data || [])
+        // Usar la misma lógica que Inventory.tsx para cargar los datos
+        const params: any = { 
+          page: 1, 
+          limit: 100 // El backend tiene un límite máximo de 100
+        }
+        
+        // Si el usuario tiene workshopId, filtrar por ese taller
+        if (workshopIdToUse) {
+          params.workshopId = workshopIdToUse
+        }
+        
+        const response: any = await sparePartService.getAll(params)
+        
+        // Usar la misma lógica de extracción que Inventory.tsx
+        const items: SparePart[] = response?.data ?? response?.items ?? []
+        
+        console.log('Repuestos cargados del sistema:', items.length, items)
+        
+        setParts(items)
       } catch (err: any) {
         console.error('Error cargando repuestos:', err)
-        setError('Error al cargar los repuestos')
+        setError('Error al cargar los repuestos: ' + (err.message || 'Error desconocido'))
+        setParts([])
       } finally {
         setLoading(false)
       }
     }
 
-    if (workshopId) {
-      loadSpareParts()
-    } else {
-      setError('No se pudo identificar el taller')
-      setLoading(false)
-    }
-  }, [workshopId])
+    loadSpareParts()
+  }, [user])
 
   const filteredParts = parts.filter(part => {
     // Filtro por búsqueda
@@ -215,7 +225,7 @@ export default function MechanicSpareParts() {
                     <div className="flex justify-between">
                       <span className="text-gray-600">Precio:</span>
                       <span className="font-medium text-gray-900">
-                        ${part.price?.toLocaleString('es-CL') || 'N/A'}
+                        ${(part as any).unitPrice ? (part as any).unitPrice.toLocaleString('es-CL') : 'N/A'}
                       </span>
                     </div>
                     {part.supplier && (
