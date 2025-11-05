@@ -213,12 +213,24 @@ export default function MechanicOrders() {
     return matchesSearch && matchesCategory && matchesStock && notAlreadyAdded
   })
 
+  // Filtrar repuestos para mostrar solo los que tienen stock (opcional: mostrar todos pero deshabilitar los sin stock)
+  const displayParts = filteredSpareParts // Mostramos todos, pero deshabilitamos los sin stock
+
   const handleAddFromTable = (sparePartId: string) => {
     const part = spareParts.find(p => p.id === sparePartId)
     if (!part) return
     
     // Verificar si ya está agregado
     if (requestedItems.some(ri => ri.sparePartId === sparePartId)) {
+      setError('Este repuesto ya está agregado a la solicitud')
+      setTimeout(() => setError(null), 3000)
+      return
+    }
+    
+    // Validar que el repuesto tenga stock disponible
+    if (part.currentStock <= 0) {
+      setError(`No se puede solicitar ${part.name} porque no tiene stock disponible`)
+      setTimeout(() => setError(null), 3000)
       return
     }
     
@@ -697,7 +709,7 @@ export default function MechanicOrders() {
                                 </td>
                               </tr>
                             ) : (
-                              filteredSpareParts.map((part) => {
+                              displayParts.map((part) => {
                                 const isLow = part.currentStock <= part.minStock
                                 const out = part.currentStock === 0
                                 return (
@@ -714,12 +726,18 @@ export default function MechanicOrders() {
                                     </td>
                                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">{part.location || '—'}</td>
                                     <td className="px-4 py-3 whitespace-nowrap text-sm text-center">
-                                      <button
-                                        onClick={() => handleAddFromTable(part.id)}
-                                        className="px-3 py-1 rounded bg-blue-600 text-white hover:bg-blue-700 transition-colors text-sm font-medium"
-                                      >
-                                        + Agregar
-                                      </button>
+                                      {part.currentStock > 0 ? (
+                                        <button
+                                          onClick={() => handleAddFromTable(part.id)}
+                                          className="px-3 py-1 rounded bg-blue-600 text-white hover:bg-blue-700 transition-colors text-sm font-medium"
+                                        >
+                                          + Agregar
+                                        </button>
+                                      ) : (
+                                        <span className="px-3 py-1 rounded bg-gray-300 text-gray-600 text-sm font-medium cursor-not-allowed">
+                                          Sin Stock
+                                        </span>
+                                      )}
                                     </td>
                                   </tr>
                                 )
