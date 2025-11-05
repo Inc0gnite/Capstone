@@ -771,10 +771,14 @@ export default function MechanicOrders() {
                                     }`}>
                                       {part.name}
                                     </h3>
-                                    <p className="text-xs text-gray-600 mb-1">
+                                    <p className={`text-xs mb-1 ${
+                                      isOutOfStock ? 'text-red-700' : 'text-gray-600'
+                                    }`}>
                                       Código: {part.code}
                                     </p>
-                                    <p className="text-xs text-gray-600">
+                                    <p className={`text-xs ${
+                                      isOutOfStock ? 'text-red-700' : 'text-gray-600'
+                                    }`}>
                                       Categoría: {part.category}
                                     </p>
                                   </div>
