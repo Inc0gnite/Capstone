@@ -239,7 +239,7 @@ async function main() {
     prisma.rolePermission.create({
       data: {
         roleId: roles[1].id,
-        permissionId: permissions[17].id, // regions:read
+        permissionId: permissions[19].id, // regions:read
       },
     }),
   ])
@@ -320,6 +320,12 @@ async function main() {
       data: {
         roleId: roles[3].id, // Mecánico
         permissionId: permissions[15].id, // spare-parts:read
+      },
+    }),
+    prisma.rolePermission.create({
+      data: {
+        roleId: roles[3].id, // Mecánico
+        permissionId: permissions[17].id, // spare-parts:update (para solicitar repuestos)
       },
     }),
   ])

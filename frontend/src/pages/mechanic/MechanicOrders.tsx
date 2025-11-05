@@ -1,6 +1,7 @@
 import { MainLayout } from '../../components/Layout/MainLayout'
 import { useAuthStore } from '../../store/authStore'
 import { workOrderService, WorkOrder } from '../../services/workOrderService'
+import { sparePartService, SparePart } from '../../services/sparePartService'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 
@@ -10,6 +11,16 @@ export default function MechanicOrders() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [filter, setFilter] = useState<'all' | 'pending' | 'in_progress' | 'completed'>('all')
+  
+  // Estados para solicitud de repuestos
+  const [showRequestModal, setShowRequestModal] = useState(false)
+  const [selectedOrder, setSelectedOrder] = useState<WorkOrder | null>(null)
+  const [spareParts, setSpareParts] = useState<SparePart[]>([])
+  const [loadingSpareParts, setLoadingSpareParts] = useState(false)
+  const [selectedSparePart, setSelectedSparePart] = useState<string>('')
+  const [quantity, setQuantity] = useState<number>(1)
+  const [observations, setObservations] = useState<string>('')
+  const [submittingRequest, setSubmittingRequest] = useState(false)
   
   // Verificar si hay una orden en progreso
   const hasOrderInProgress = orders.some(order => order.currentStatus === 'en_progreso')
@@ -51,6 +62,30 @@ export default function MechanicOrders() {
 
     loadOrders()
   }, [user?.id])
+
+  // Cargar repuestos cuando se abre el modal
+  useEffect(() => {
+    const loadSpareParts = async () => {
+      if (!showRequestModal || !user?.workshopId) return
+      
+      try {
+        setLoadingSpareParts(true)
+        const response = await sparePartService.getAll({
+          page: 1,
+          limit: 100,
+          workshopId: (user as any).workshopId
+        })
+        setSpareParts(response.data || [])
+      } catch (err: any) {
+        console.error('Error cargando repuestos:', err)
+        setError('Error al cargar los repuestos')
+      } finally {
+        setLoadingSpareParts(false)
+      }
+    }
+
+    loadSpareParts()
+  }, [showRequestModal, user?.workshopId])
 
   const filteredOrders = orders.filter(order => {
     switch (filter) {
@@ -106,6 +141,66 @@ export default function MechanicOrders() {
       setTimeout(() => setError(null), 5000)
       
       alert(`Error: ${errorMessage}`)
+    }
+  }
+
+  const handleOpenRequestModal = (order: WorkOrder) => {
+    setSelectedOrder(order)
+    setShowRequestModal(true)
+    setSelectedSparePart('')
+    setQuantity(1)
+    setObservations('')
+  }
+
+  const handleCloseRequestModal = () => {
+    setShowRequestModal(false)
+    setSelectedOrder(null)
+    setSelectedSparePart('')
+    setQuantity(1)
+    setObservations('')
+  }
+
+  const handleSubmitRequest = async () => {
+    if (!selectedOrder || !selectedSparePart || !quantity || quantity <= 0) {
+      setError('Por favor completa todos los campos requeridos')
+      setTimeout(() => setError(null), 5000)
+      return
+    }
+
+    try {
+      setSubmittingRequest(true)
+      setError(null)
+
+      await sparePartService.requestForWorkOrder(
+        selectedOrder.id,
+        selectedSparePart,
+        quantity,
+        observations || undefined
+      )
+
+      alert('Repuesto solicitado exitosamente')
+      handleCloseRequestModal()
+      
+      // Recargar órdenes para ver actualizaciones
+      const response = await workOrderService.getAll({
+        assignedToId: user?.id,
+        page: 1,
+        limit: 100
+      })
+      const priorityOrder: Record<string, number> = { urgente: 0, alta: 1, normal: 2, baja: 3 }
+      const sortedOrders = (response.data || []).sort((a, b) => {
+        const priorityDiff = (priorityOrder[a.priority] || 99) - (priorityOrder[b.priority] || 99)
+        if (priorityDiff !== 0) return priorityDiff
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      })
+      setOrders(sortedOrders)
+    } catch (err: any) {
+      console.error('Error solicitando repuesto:', err)
+      const errorMessage = err.response?.data?.error || err.response?.data?.message || err.message || 'Error al solicitar repuesto'
+      setError(errorMessage)
+      setTimeout(() => setError(null), 5000)
+    } finally {
+      setSubmittingRequest(false)
     }
   }
 
@@ -355,12 +450,20 @@ export default function MechanicOrders() {
                       </button>
                     )}
                     {(order.currentStatus === 'en_progreso' || order.currentStatus === 'pausado') && (
-                      <button 
-                        onClick={() => handleStatusChange(order.id, 'completado')}
-                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium text-sm"
-                      >
-                        ✅ Completar
-                      </button>
+                      <>
+                        <button 
+                          onClick={() => handleOpenRequestModal(order)}
+                          className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium text-sm"
+                        >
+                          🔧 Solicitar Repuesto
+                        </button>
+                        <button 
+                          onClick={() => handleStatusChange(order.id, 'completado')}
+                          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium text-sm"
+                        >
+                          ✅ Completar
+                        </button>
+                      </>
                     )}
                   </div>
                 </div>
@@ -381,6 +484,126 @@ export default function MechanicOrders() {
             </div>
           )}
         </div>
+
+        {/* Modal para solicitar repuesto */}
+        {showRequestModal && selectedOrder && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-bold text-gray-900">Solicitar Repuesto</h3>
+                <button
+                  onClick={handleCloseRequestModal}
+                  className="text-gray-400 hover:text-gray-600 text-2xl"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="mb-4">
+                <p className="text-sm text-gray-600 mb-2">
+                  <span className="font-medium">Orden:</span> {selectedOrder.orderNumber}
+                </p>
+                <p className="text-sm text-gray-600">
+                  <span className="font-medium">Vehículo:</span> {selectedOrder.vehicle?.licensePlate || 'N/A'}
+                </p>
+              </div>
+
+              {loadingSpareParts ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                  <p className="text-gray-600">Cargando repuestos...</p>
+                </div>
+              ) : (
+                <>
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Repuesto <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={selectedSparePart}
+                      onChange={(e) => setSelectedSparePart(e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="">Selecciona un repuesto</option>
+                      {spareParts
+                        .filter(part => part.currentStock > 0)
+                        .map(part => (
+                          <option key={part.id} value={part.id}>
+                            {part.name} ({part.code}) - Stock: {part.currentStock}
+                          </option>
+                        ))}
+                    </select>
+                    {spareParts.filter(part => part.currentStock > 0).length === 0 && (
+                      <p className="text-sm text-red-600 mt-2">
+                        No hay repuestos con stock disponible
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Cantidad <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={quantity}
+                      onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                    {selectedSparePart && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        Stock disponible: {
+                          spareParts.find(p => p.id === selectedSparePart)?.currentStock || 0
+                        } unidades
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="mb-6">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Observaciones (opcional)
+                    </label>
+                    <textarea
+                      value={observations}
+                      onChange={(e) => setObservations(e.target.value)}
+                      rows={3}
+                      placeholder="Observaciones adicionales sobre la solicitud..."
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  {error && (
+                    <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-3">
+                      <p className="text-sm text-red-600">{error}</p>
+                    </div>
+                  )}
+
+                  <div className="flex space-x-3">
+                    <button
+                      onClick={handleCloseRequestModal}
+                      className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium"
+                      disabled={submittingRequest}
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      onClick={handleSubmitRequest}
+                      disabled={submittingRequest || !selectedSparePart || !quantity || quantity <= 0}
+                      className={`flex-1 px-4 py-2 rounded-lg font-medium ${
+                        submittingRequest || !selectedSparePart || !quantity || quantity <= 0
+                          ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                          : 'bg-blue-600 text-white hover:bg-blue-700'
+                      }`}
+                    >
+                      {submittingRequest ? 'Enviando...' : 'Solicitar'}
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </MainLayout>
   )

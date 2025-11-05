@@ -122,5 +122,16 @@ export const sparePartService = {
   async delete(id: string) {
     const response = await api.delete(`/spare-parts/${id}`)
     return response.data
+  },
+
+  // Solicitar repuesto para orden de trabajo
+  async requestForWorkOrder(workOrderId: string, sparePartId: string, quantity: number, observations?: string) {
+    const response = await api.post('/spare-parts/request', {
+      workOrderId,
+      sparePartId,
+      quantity,
+      observations
+    })
+    return response.data
   }
 }
