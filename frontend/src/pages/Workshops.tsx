@@ -48,8 +48,10 @@ export default function Workshops() {
           workshopService.getAll(),
           regionService.getAll(),
         ])
-        setWorkshops(wsRes.data || [])
-        setRegions(regionsRes.data || [])
+        // El backend devuelve { success: true, data: [...] }
+        // workshopService.getAll() devuelve res.data del axios, que es { success: true, data: [...] }
+        setWorkshops(wsRes?.data || [])
+        setRegions(regionsRes?.data || [])
       } catch (err: any) {
         console.error('❌ Error cargando talleres:', err)
         setError('No fue posible cargar los talleres.')
@@ -527,7 +529,7 @@ export default function Workshops() {
                             payload.capacity = parseInt(createWorkshop.capacity)
                           }
                           const created = await workshopService.create(payload)
-                          setWorkshops((prev) => [...(prev || []), created.data || created])
+                          setWorkshops((prev) => [...(prev || []), created?.data || created])
                           setShowCreate(false)
                           setCreateWorkshop({
                             code: '',
