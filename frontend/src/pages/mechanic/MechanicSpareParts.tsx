@@ -59,8 +59,25 @@ export default function MechanicSpareParts() {
         setParts(items)
       } catch (err: any) {
         console.error('Error cargando repuestos:', err)
-        const errorMessage = err?.response?.data?.error || err?.message || 'Error desconocido'
-        setError('Error al cargar los repuestos: ' + errorMessage)
+        console.error('Error response:', err?.response)
+        console.error('Error status:', err?.response?.status)
+        console.error('Error data:', err?.response?.data)
+        
+        let errorMessage = 'Error desconocido al cargar los repuestos'
+        
+        if (err?.response?.status === 401) {
+          errorMessage = 'No estás autenticado. Por favor, inicia sesión nuevamente.'
+        } else if (err?.response?.status === 403) {
+          errorMessage = 'No tienes permisos para ver los repuestos. Contacta al administrador.'
+        } else if (err?.response?.status === 404) {
+          errorMessage = 'El endpoint de repuestos no fue encontrado. Verifica la configuración del servidor.'
+        } else if (err?.response?.data?.error) {
+          errorMessage = err.response.data.error
+        } else if (err?.message) {
+          errorMessage = err.message
+        }
+        
+        setError(errorMessage)
         setParts([])
       } finally {
         setLoading(false)
