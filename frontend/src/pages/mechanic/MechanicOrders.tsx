@@ -77,27 +77,50 @@ export default function MechanicOrders() {
         setLoadingSpareParts(true)
         setError(null)
         
-        // Obtener workshopId del usuario o del taller asociado
-        const workshopId = (user as any)?.workshopId || (user as any)?.workshop?.id
-        
-        // Usar la misma lógica que Inventory.tsx para cargar los datos
+        // NO filtrar por workshopId - el mecánico debe ver TODOS los repuestos disponibles
+        // Usar la misma lógica que MechanicSpareParts.tsx para cargar los datos
         const params: any = { 
           page: 1, 
           limit: 100 // El backend tiene un límite máximo de 100
         }
         
-        // Si el usuario tiene workshopId, filtrar por ese taller
-        if (workshopId) {
-          params.workshopId = workshopId
-        }
+        // No filtrar por taller - mostrar todos los repuestos del sistema
         
         const response: any = await sparePartService.getAll(params)
         
-        // Usar la misma lógica de extracción que Inventory.tsx
-        const items: SparePart[] = response?.data ?? response?.items ?? []
+        // El backend devuelve según sendPaginated: { data: [...], page, limit, total, totalPages }
+        // sparePartService.getAll devuelve response.data del axios, que es el objeto paginado
+        // Entonces response = { data: [...], page: 1, limit: 100, total: X, totalPages: Y }
+        const items: SparePart[] = response?.data ?? response?.items ?? (Array.isArray(response) ? response : [])
         
-        console.log('Repuestos cargados del sistema:', items.length, items)
+        console.log('🔍 Respuesta completa del backend:', response)
+        console.log('🔍 Tipo de response:', typeof response)
+        console.log('🔍 Es array?', Array.isArray(response))
+        console.log('🔍 Keys de response:', response ? Object.keys(response) : 'null')
+        console.log('🔍 Items extraídos:', items.length)
+        console.log('🔍 Total según backend:', response?.total)
+        console.log('🔍 Repuestos cargados:', items)
         
+        if (items.length === 0 && response?.total > 0) {
+          // Si no hay items pero hay total, puede que la estructura sea diferente
+          console.warn('⚠️ No se encontraron items pero hay total:', response.total)
+          console.warn('⚠️ Estructura de respuesta:', Object.keys(response))
+          // Intentar acceder directamente a la respuesta si es un array
+          if (Array.isArray(response)) {
+            console.log('✅ La respuesta es un array directo, usando:', response.length, 'items')
+            setSpareParts(response)
+            // Extraer categorías únicas
+            const uniqueCategories = Array.from(new Set(response.map((p: SparePart) => p.category))).sort()
+            setCategories(uniqueCategories)
+            return
+          }
+        }
+        
+        if (items.length === 0 && (!response?.total || response?.total === 0)) {
+          console.info('ℹ️ No hay repuestos registrados en el sistema')
+        }
+        
+        console.log('✅ Estableciendo', items.length, 'repuestos en el estado')
         setSpareParts(items)
         
         // Extraer categorías únicas de los repuestos cargados
@@ -105,7 +128,25 @@ export default function MechanicOrders() {
         setCategories(uniqueCategories)
       } catch (err: any) {
         console.error('Error cargando repuestos:', err)
-        setError('Error al cargar los repuestos: ' + (err.message || 'Error desconocido'))
+        console.error('Error response:', err?.response)
+        console.error('Error status:', err?.response?.status)
+        console.error('Error data:', err?.response?.data)
+        
+        let errorMessage = 'Error desconocido al cargar los repuestos'
+        
+        if (err?.response?.status === 401) {
+          errorMessage = 'No estás autenticado. Por favor, inicia sesión nuevamente.'
+        } else if (err?.response?.status === 403) {
+          errorMessage = 'No tienes permisos para ver los repuestos. Contacta al administrador.'
+        } else if (err?.response?.status === 404) {
+          errorMessage = 'El endpoint de repuestos no fue encontrado. Verifica la configuración del servidor.'
+        } else if (err?.response?.data?.error) {
+          errorMessage = err.response.data.error
+        } else if (err?.message) {
+          errorMessage = err.message
+        }
+        
+        setError(errorMessage)
         setSpareParts([])
         setCategories([])
       } finally {
