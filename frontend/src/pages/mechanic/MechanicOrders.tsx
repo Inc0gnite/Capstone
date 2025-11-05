@@ -78,7 +78,7 @@ export default function MechanicOrders() {
         
         const response = await sparePartService.getAll({
           page: 1,
-          limit: 1000,
+          limit: 100, // El backend tiene un límite máximo de 100
           ...(workshopId && { workshopId })
         })
         
