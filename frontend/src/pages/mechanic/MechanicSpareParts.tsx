@@ -17,19 +17,14 @@ export default function MechanicSpareParts() {
         setLoading(true)
         setError(null)
         
-        // Obtener workshopId del usuario o del taller asociado
-        const workshopIdToUse = (user as any)?.workshopId || (user as any)?.workshop?.id
-        
+        // NO filtrar por workshopId - el mecánico debe ver TODOS los repuestos disponibles
         // Usar la misma lógica que Inventory.tsx para cargar los datos
         const params: any = { 
           page: 1, 
           limit: 100 // El backend tiene un límite máximo de 100
         }
         
-        // Si el usuario tiene workshopId, filtrar por ese taller
-        if (workshopIdToUse) {
-          params.workshopId = workshopIdToUse
-        }
+        // No filtrar por taller - mostrar todos los repuestos del sistema
         
         const response: any = await sparePartService.getAll(params)
         
