@@ -4,7 +4,7 @@
     {
       "name": "backend",
       "rootDirectory": "backend",
-      "buildCommand": "npm ci && npm run build && npm run db:generate",
+      "buildCommand": "npm ci --include=dev && npm run build && npm run db:generate",
       "startCommand": "npm start",
       "envVars": {
         "NODE_ENV": "production"
