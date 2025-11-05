@@ -381,8 +381,12 @@ export class SparePartService {
       throw new Error('Repuesto no encontrado')
     }
 
+    if (sparePart.currentStock <= 0) {
+      throw new Error(`No se puede solicitar ${sparePart.name} porque no tiene stock disponible (Stock: ${sparePart.currentStock})`)
+    }
+
     if (sparePart.currentStock < quantity) {
-      throw new Error('Stock insuficiente')
+      throw new Error(`Stock insuficiente para ${sparePart.name}. Disponible: ${sparePart.currentStock}, Solicitado: ${quantity}`)
     }
 
     // Crear solicitud y descontar stock en transacción
@@ -392,8 +396,16 @@ export class SparePartService {
         where: { id: sparePartId },
       })
 
-      if (!currentSparePart || currentSparePart.currentStock < quantity) {
-        throw new Error('Stock insuficiente')
+      if (!currentSparePart) {
+        throw new Error('Repuesto no encontrado')
+      }
+
+      if (currentSparePart.currentStock <= 0) {
+        throw new Error(`No se puede solicitar ${currentSparePart.name} porque no tiene stock disponible (Stock: ${currentSparePart.currentStock})`)
+      }
+
+      if (currentSparePart.currentStock < quantity) {
+        throw new Error(`Stock insuficiente para ${currentSparePart.name}. Disponible: ${currentSparePart.currentStock}, Solicitado: ${quantity}`)
       }
 
       // Crear solicitud
@@ -474,6 +486,11 @@ export class SparePartService {
       if (!sparePart) {
         throw new Error(`Repuesto ${request.sparePartId} no encontrado`)
       }
+      if (sparePart.currentStock <= 0) {
+        throw new Error(
+          `No se puede solicitar ${sparePart.name} porque no tiene stock disponible (Stock: ${sparePart.currentStock})`
+        )
+      }
       if (sparePart.currentStock < request.quantity) {
         throw new Error(
           `Stock insuficiente para ${sparePart.name}. Disponible: ${sparePart.currentStock}, Solicitado: ${request.quantity}`
@@ -491,9 +508,19 @@ export class SparePartService {
           where: { id: request.sparePartId },
         })
 
-        if (!currentSparePart || currentSparePart.currentStock < request.quantity) {
+        if (!currentSparePart) {
+          throw new Error(`Repuesto ${request.sparePartId} no encontrado`)
+        }
+        
+        if (currentSparePart.currentStock <= 0) {
           throw new Error(
-            `Stock insuficiente para ${currentSparePart?.name || request.sparePartId}`
+            `No se puede solicitar ${currentSparePart.name} porque no tiene stock disponible (Stock: ${currentSparePart.currentStock})`
+          )
+        }
+        
+        if (currentSparePart.currentStock < request.quantity) {
+          throw new Error(
+            `Stock insuficiente para ${currentSparePart.name}. Disponible: ${currentSparePart.currentStock}, Solicitado: ${request.quantity}`
           )
         }
 
