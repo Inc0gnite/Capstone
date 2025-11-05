@@ -98,7 +98,6 @@ export default function Inventory() {
       // sparePartService.getAll() devuelve res.data del axios, que es el objeto paginado
       const items: SparePart[] = response?.data ?? response?.items ?? (Array.isArray(response) ? response : [])
       const totalCount = response?.total ?? items.length
-      const currentPage = response?.page ?? page
 
       setParts(items)
       setTotal(totalCount)
