@@ -65,26 +65,52 @@ export default function MechanicOrders() {
   // Cargar repuestos cuando se abre el modal
   useEffect(() => {
     const loadSpareParts = async () => {
-      if (!showRequestModal || !user?.workshopId) return
+      if (!showRequestModal) return
       
       try {
         setLoadingSpareParts(true)
+        setError(null)
+        
+        // Obtener workshopId del usuario o del taller asociado
+        const workshopId = (user as any)?.workshopId || (user as any)?.workshop?.id
+        
+        console.log('Cargando repuestos para workshopId:', workshopId)
+        
         const response = await sparePartService.getAll({
           page: 1,
-          limit: 100,
-          workshopId: (user as any).workshopId
+          limit: 1000,
+          ...(workshopId && { workshopId })
         })
-        setSpareParts(response.data || [])
+        
+        console.log('Respuesta completa del servicio:', response)
+        
+        // La respuesta paginada viene como { data: [...], page, limit, total, totalPages }
+        // O podría venir como { success: true, data: { data: [...] } }
+        let parts = []
+        if (Array.isArray(response)) {
+          parts = response
+        } else if (response?.data && Array.isArray(response.data)) {
+          parts = response.data
+        } else if (response?.spareParts && Array.isArray(response.spareParts)) {
+          parts = response.spareParts
+        } else if (response?.success && response?.data?.data && Array.isArray(response.data.data)) {
+          parts = response.data.data
+        }
+        
+        console.log('Repuestos procesados:', parts.length, parts)
+        
+        setSpareParts(parts)
       } catch (err: any) {
         console.error('Error cargando repuestos:', err)
-        setError('Error al cargar los repuestos')
+        setError('Error al cargar los repuestos: ' + (err.message || 'Error desconocido'))
+        setSpareParts([])
       } finally {
         setLoadingSpareParts(false)
       }
     }
 
     loadSpareParts()
-  }, [showRequestModal, user?.workshopId])
+  }, [showRequestModal, user])
 
   const filteredOrders = orders.filter(order => {
     switch (filter) {
@@ -610,24 +636,30 @@ export default function MechanicOrders() {
                                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                                     >
                                       <option value="">Selecciona un repuesto</option>
-                                      {availableParts.map(part => {
-                                        const stockStatus = part.currentStock === 0 
-                                          ? 'Sin Stock' 
-                                          : part.currentStock <= part.minStock 
-                                            ? 'Stock Bajo' 
-                                            : 'Disponible'
-                                        const stockColor = part.currentStock === 0 
-                                          ? 'text-red-600' 
-                                          : part.currentStock <= part.minStock 
-                                            ? 'text-yellow-600' 
-                                            : 'text-green-600'
-                                        return (
-                                          <option key={part.id} value={part.id}>
-                                            {part.name} ({part.code}) - Stock: {part.currentStock} - {stockStatus}
-                                          </option>
-                                        )
-                                      })}
+                                      {availableParts.length > 0 ? (
+                                        availableParts.map(part => {
+                                          const stockStatus = part.currentStock === 0 
+                                            ? 'Sin Stock' 
+                                            : part.currentStock <= (part.minStock || 0)
+                                              ? 'Stock Bajo' 
+                                              : 'Disponible'
+                                          return (
+                                            <option key={part.id} value={part.id}>
+                                              {part.name} ({part.code}) - Stock: {part.currentStock} - {stockStatus}
+                                            </option>
+                                          )
+                                        })
+                                      ) : (
+                                        <option value="" disabled>
+                                          No hay repuestos disponibles
+                                        </option>
+                                      )}
                                     </select>
+                                    {availableParts.length === 0 && spareParts.length > 0 && (
+                                      <p className="text-xs text-gray-500 mt-1">
+                                        Todos los repuestos ya están agregados
+                                      </p>
+                                    )}
                                   </div>
                                   <div>
                                     <label className="block text-xs font-medium text-gray-700 mb-1">
