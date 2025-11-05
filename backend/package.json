@@ -9,7 +9,7 @@
   },
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc",
+    "build": "npm install && tsc",
     "postinstall": "npm run db:generate",
     "prestart": "npm run db:migrate:deploy",
     "start": "node dist/index.js",
