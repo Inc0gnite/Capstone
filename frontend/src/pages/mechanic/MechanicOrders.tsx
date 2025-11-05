@@ -21,6 +21,12 @@ export default function MechanicOrders() {
   const [observations, setObservations] = useState<string>('')
   const [submittingRequest, setSubmittingRequest] = useState(false)
   
+  // Filtros para la tabla de repuestos
+  const [searchParts, setSearchParts] = useState('')
+  const [categoryFilter, setCategoryFilter] = useState('')
+  const [categories, setCategories] = useState<string[]>([])
+  const [lowStockOnly, setLowStockOnly] = useState(false)
+  
   // Verificar si hay una orden en progreso
   const hasOrderInProgress = orders.some(order => order.currentStatus === 'en_progreso')
 
@@ -100,6 +106,10 @@ export default function MechanicOrders() {
         console.log('Repuestos procesados:', parts.length, parts)
         
         setSpareParts(parts)
+        
+        // Extraer categorías únicas
+        const uniqueCategories = Array.from(new Set(parts.map((p: SparePart) => p.category))).sort()
+        setCategories(uniqueCategories)
       } catch (err: any) {
         console.error('Error cargando repuestos:', err)
         setError('Error al cargar los repuestos: ' + (err.message || 'Error desconocido'))
@@ -174,6 +184,9 @@ export default function MechanicOrders() {
     setShowRequestModal(true)
     setRequestedItems([])
     setObservations('')
+    setSearchParts('')
+    setCategoryFilter('')
+    setLowStockOnly(false)
   }
 
   const handleCloseRequestModal = () => {
@@ -181,6 +194,42 @@ export default function MechanicOrders() {
     setSelectedOrder(null)
     setRequestedItems([])
     setObservations('')
+    setSearchParts('')
+    setCategoryFilter('')
+    setLowStockOnly(false)
+  }
+
+  // Filtrar repuestos para la tabla
+  const filteredSpareParts = spareParts.filter(part => {
+    // Filtrar por búsqueda
+    const matchesSearch = !searchParts.trim() || 
+      part.name.toLowerCase().includes(searchParts.toLowerCase()) ||
+      part.code.toLowerCase().includes(searchParts.toLowerCase()) ||
+      part.category.toLowerCase().includes(searchParts.toLowerCase())
+    
+    // Filtrar por categoría
+    const matchesCategory = !categoryFilter || part.category === categoryFilter
+    
+    // Filtrar por stock bajo
+    const matchesStock = !lowStockOnly || part.currentStock <= part.minStock
+    
+    // Excluir repuestos ya agregados
+    const notAlreadyAdded = !requestedItems.some(ri => ri.sparePartId === part.id)
+    
+    return matchesSearch && matchesCategory && matchesStock && notAlreadyAdded
+  })
+
+  const handleAddFromTable = (sparePartId: string) => {
+    const part = spareParts.find(p => p.id === sparePartId)
+    if (!part) return
+    
+    // Verificar si ya está agregado
+    if (requestedItems.some(ri => ri.sparePartId === sparePartId)) {
+      return
+    }
+    
+    // Agregar con cantidad inicial de 1
+    setRequestedItems([...requestedItems, { sparePartId, quantity: 1 }])
   }
 
   const handleAddItem = () => {
@@ -564,10 +613,17 @@ export default function MechanicOrders() {
 
         {/* Modal para solicitar repuestos */}
         {showRequestModal && selectedOrder && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg shadow-xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-bold text-gray-900">Solicitar Repuestos</h3>
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl max-h-[90vh] flex flex-col">
+              {/* Header del Modal */}
+              <div className="flex justify-between items-center p-6 border-b">
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">Solicitar Repuestos</h3>
+                  <div className="mt-2 text-sm text-gray-600">
+                    <span className="font-medium">Orden:</span> {selectedOrder.orderNumber} | 
+                    <span className="font-medium ml-1">Vehículo:</span> {selectedOrder.vehicle?.licensePlate || 'N/A'}
+                  </div>
+                </div>
                 <button
                   onClick={handleCloseRequestModal}
                   className="text-gray-400 hover:text-gray-600 text-2xl"
@@ -576,181 +632,238 @@ export default function MechanicOrders() {
                 </button>
               </div>
 
-              <div className="mb-4">
-                <p className="text-sm text-gray-600 mb-2">
-                  <span className="font-medium">Orden:</span> {selectedOrder.orderNumber}
-                </p>
-                <p className="text-sm text-gray-600">
-                  <span className="font-medium">Vehículo:</span> {selectedOrder.vehicle?.licensePlate || 'N/A'}
-                </p>
-              </div>
-
-              {loadingSpareParts ? (
-                <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                  <p className="text-gray-600">Cargando repuestos...</p>
-                </div>
-              ) : (
-                <>
-                  {/* Lista de repuestos a solicitar */}
-                  <div className="mb-4">
-                    <div className="flex justify-between items-center mb-3">
-                      <label className="block text-sm font-medium text-gray-700">
-                        Repuestos a Solicitar <span className="text-red-500">*</span>
-                      </label>
-                      <button
-                        onClick={handleAddItem}
-                        className="px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 font-medium"
-                      >
-                        + Agregar Repuesto
-                      </button>
+              <div className="flex-1 overflow-y-auto p-6">
+                {loadingSpareParts ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <p className="text-gray-600">Cargando repuestos...</p>
+                  </div>
+                ) : (
+                  <>
+                    {/* Filtros de búsqueda */}
+                    <div className="mb-4 bg-gray-50 rounded-lg p-4">
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                        <div className="md:col-span-2">
+                          <input
+                            type="text"
+                            placeholder="Buscar por nombre, código o categoría..."
+                            value={searchParts}
+                            onChange={(e) => setSearchParts(e.target.value)}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                          />
+                        </div>
+                        <div>
+                          <select
+                            value={categoryFilter}
+                            onChange={(e) => setCategoryFilter(e.target.value)}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-sm"
+                          >
+                            <option value="">Todas las categorías</option>
+                            {categories.map((c) => (
+                              <option key={c} value={c}>{c}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <input
+                            id="lowStockFilter"
+                            type="checkbox"
+                            checked={lowStockOnly}
+                            onChange={(e) => setLowStockOnly(e.target.checked)}
+                            className="h-4 w-4 text-blue-600 border-gray-300 rounded"
+                          />
+                          <label htmlFor="lowStockFilter" className="text-sm text-gray-700">Solo stock bajo</label>
+                        </div>
+                      </div>
                     </div>
 
-                    {requestedItems.length === 0 ? (
-                      <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-                        <p className="text-gray-500 text-sm">No hay repuestos agregados</p>
-                        <p className="text-gray-400 text-xs mt-1">Haz clic en "Agregar Repuesto" para comenzar</p>
+                    {/* Tabla de repuestos */}
+                    <div className="mb-6 bg-white rounded-lg shadow overflow-hidden">
+                      <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-200">
+                          <thead className="bg-gray-50">
+                            <tr>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Código</th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categoría</th>
+                              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
+                              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Mínimo</th>
+                              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Precio</th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ubicación</th>
+                              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acción</th>
+                            </tr>
+                          </thead>
+                          <tbody className="bg-white divide-y divide-gray-200">
+                            {filteredSpareParts.length === 0 ? (
+                              <tr>
+                                <td colSpan={8} className="px-4 py-8 text-center text-gray-500">
+                                  {spareParts.length === 0 
+                                    ? 'No hay repuestos disponibles' 
+                                    : 'No se encontraron repuestos con los filtros aplicados'}
+                                </td>
+                              </tr>
+                            ) : (
+                              filteredSpareParts.map((part) => {
+                                const isLow = part.currentStock <= part.minStock
+                                const out = part.currentStock === 0
+                                return (
+                                  <tr key={part.id} className="hover:bg-gray-50">
+                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{part.code}</td>
+                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{part.name}</td>
+                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">{part.category}</td>
+                                    <td className={`px-4 py-3 whitespace-nowrap text-sm text-right font-medium ${out ? 'text-red-600' : isLow ? 'text-yellow-600' : 'text-green-600'}`}>
+                                      {part.currentStock}
+                                    </td>
+                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-right text-gray-700">{part.minStock}</td>
+                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-right text-gray-900">
+                                      {(part as any).unitPrice ? `$${(part as any).unitPrice.toLocaleString('es-CL')}` : '—'}
+                                    </td>
+                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">{part.location || '—'}</td>
+                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-center">
+                                      <button
+                                        onClick={() => handleAddFromTable(part.id)}
+                                        className="px-3 py-1 rounded bg-blue-600 text-white hover:bg-blue-700 transition-colors text-sm font-medium"
+                                      >
+                                        + Agregar
+                                      </button>
+                                    </td>
+                                  </tr>
+                                )
+                              })
+                            )}
+                          </tbody>
+                        </table>
                       </div>
-                    ) : (
-                      <div className="space-y-3">
-                        {requestedItems.map((item, index) => {
-                          const selectedPart = spareParts.find(p => p.id === item.sparePartId)
-                          const availableStock = selectedPart?.currentStock || 0
-                          const isStockExceeded = item.quantity > availableStock
-                          // Mostrar todos los repuestos del sistema, evitando solo duplicados en la misma solicitud
-                          const availableParts = spareParts.filter(part => 
-                            !requestedItems.some((ri, riIndex) => riIndex !== index && ri.sparePartId === part.id)
-                          )
+                    </div>
 
-                          return (
-                            <div key={index} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                              <div className="flex items-start gap-3">
-                                <div className="flex-1 space-y-3">
-                                  <div>
-                                    <label className="block text-xs font-medium text-gray-700 mb-1">
-                                      Repuesto {index + 1} <span className="text-red-500">*</span>
-                                    </label>
-                                    <select
-                                      value={item.sparePartId}
-                                      onChange={(e) => handleUpdateItem(index, 'sparePartId', e.target.value)}
-                                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                                    >
-                                      <option value="">Selecciona un repuesto</option>
-                                      {availableParts.length > 0 ? (
-                                        availableParts.map(part => {
-                                          const stockStatus = part.currentStock === 0 
-                                            ? 'Sin Stock' 
-                                            : part.currentStock <= (part.minStock || 0)
-                                              ? 'Stock Bajo' 
-                                              : 'Disponible'
-                                          return (
-                                            <option key={part.id} value={part.id}>
-                                              {part.name} ({part.code}) - Stock: {part.currentStock} - {stockStatus}
-                                            </option>
-                                          )
-                                        })
-                                      ) : (
-                                        <option value="" disabled>
-                                          No hay repuestos disponibles
-                                        </option>
-                                      )}
-                                    </select>
-                                    {availableParts.length === 0 && spareParts.length > 0 && (
-                                      <p className="text-xs text-gray-500 mt-1">
-                                        Todos los repuestos ya están agregados
-                                      </p>
-                                    )}
+                    {/* Lista de repuestos seleccionados */}
+                    <div className="mb-4">
+                      <div className="flex justify-between items-center mb-3">
+                        <label className="block text-sm font-medium text-gray-700">
+                          Repuestos Seleccionados <span className="text-red-500">*</span> ({requestedItems.length})
+                        </label>
+                      </div>
+
+                      {requestedItems.length === 0 ? (
+                        <div className="text-center py-6 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                          <p className="text-gray-500 text-sm">No hay repuestos seleccionados</p>
+                          <p className="text-gray-400 text-xs mt-1">Usa la tabla superior para agregar repuestos</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          {requestedItems.map((item, index) => {
+                            const selectedPart = spareParts.find(p => p.id === item.sparePartId)
+                            const availableStock = selectedPart?.currentStock || 0
+                            const isStockExceeded = item.quantity > availableStock
+
+                            return (
+                              <div key={index} className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                                <div className="flex items-center justify-between gap-4">
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-3">
+                                      <div className="flex-1">
+                                        <p className="text-sm font-medium text-gray-900">
+                                          {selectedPart?.name || 'Repuesto no encontrado'}
+                                        </p>
+                                        <p className="text-xs text-gray-600">
+                                          {selectedPart?.code || 'N/A'} - {selectedPart?.category || 'N/A'}
+                                        </p>
+                                      </div>
+                                      <div className="text-right">
+                                        <p className="text-xs text-gray-500">Stock disponible:</p>
+                                        <p className={`text-sm font-medium ${
+                                          availableStock === 0 ? 'text-red-600' : 
+                                          availableStock <= (selectedPart?.minStock || 0) ? 'text-yellow-600' : 
+                                          'text-green-600'
+                                        }`}>
+                                          {availableStock} unidades
+                                        </p>
+                                      </div>
+                                    </div>
                                   </div>
-                                  <div>
-                                    <label className="block text-xs font-medium text-gray-700 mb-1">
-                                      Cantidad <span className="text-red-500">*</span>
-                                    </label>
-                                    <div className="flex items-center gap-2">
+                                  <div className="flex items-center gap-2">
+                                    <div>
+                                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                                        Cantidad <span className="text-red-500">*</span>
+                                      </label>
                                       <input
                                         type="number"
                                         min="1"
                                         max={availableStock}
                                         value={item.quantity}
                                         onChange={(e) => handleUpdateItem(index, 'quantity', parseInt(e.target.value) || 1)}
-                                        className={`flex-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm ${
+                                        className={`w-20 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm ${
                                           isStockExceeded ? 'border-red-300 bg-red-50' : 'border-gray-300'
                                         }`}
                                       />
-                                      <button
-                                        onClick={() => handleRemoveItem(index)}
-                                        className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm font-medium"
-                                        title="Eliminar repuesto"
-                                      >
-                                        ×
-                                      </button>
                                     </div>
-                                    {selectedPart && (
-                                      <p className={`text-xs mt-1 ${
-                                        isStockExceeded ? 'text-red-600 font-medium' : 'text-gray-500'
-                                      }`}>
-                                        Stock disponible: {availableStock} unidades
-                                        {isStockExceeded && ` (Solicitado: ${item.quantity})`}
-                                      </p>
-                                    )}
+                                    <button
+                                      onClick={() => handleRemoveItem(index)}
+                                      className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm font-medium mt-6"
+                                      title="Eliminar repuesto"
+                                    >
+                                      ×
+                                    </button>
                                   </div>
                                 </div>
+                                {isStockExceeded && (
+                                  <p className="text-xs text-red-600 font-medium mt-2">
+                                    ⚠️ Cantidad excede el stock disponible ({availableStock} unidades)
+                                  </p>
+                                )}
                               </div>
-                            </div>
-                          )
-                        })}
-                      </div>
-                    )}
-
-                    {spareParts.length === 0 && (
-                      <div className="mt-3 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                        <p className="text-sm text-yellow-800">
-                          ⚠️ No hay repuestos registrados en el sistema
-                        </p>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="mb-6">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Observaciones (opcional)
-                    </label>
-                    <textarea
-                      value={observations}
-                      onChange={(e) => setObservations(e.target.value)}
-                      rows={3}
-                      placeholder="Observaciones adicionales sobre la solicitud..."
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
-
-                  {error && (
-                    <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-3">
-                      <p className="text-sm text-red-600">{error}</p>
+                            )
+                          })}
+                        </div>
+                      )}
                     </div>
-                  )}
 
-                  <div className="flex space-x-3">
-                    <button
-                      onClick={handleCloseRequestModal}
-                      className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium"
-                      disabled={submittingRequest}
-                    >
-                      Cancelar
-                    </button>
-                    <button
-                      onClick={handleSubmitRequest}
-                      disabled={submittingRequest || requestedItems.length === 0}
-                      className={`flex-1 px-4 py-2 rounded-lg font-medium ${
-                        submittingRequest || requestedItems.length === 0
-                          ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                          : 'bg-blue-600 text-white hover:bg-blue-700'
-                      }`}
-                    >
-                      {submittingRequest ? 'Enviando...' : `Solicitar ${requestedItems.length} repuesto(s)`}
-                    </button>
-                  </div>
-                </>
-              )}
+                    {/* Observaciones */}
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Observaciones (opcional)
+                      </label>
+                      <textarea
+                        value={observations}
+                        onChange={(e) => setObservations(e.target.value)}
+                        rows={3}
+                        placeholder="Observaciones adicionales sobre la solicitud..."
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+
+                    {error && (
+                      <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-3">
+                        <p className="text-sm text-red-600">{error}</p>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+
+              {/* Footer del Modal con botones */}
+              <div className="border-t p-6 bg-gray-50">
+                <div className="flex space-x-3">
+                  <button
+                    onClick={handleCloseRequestModal}
+                    className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium"
+                    disabled={submittingRequest}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={handleSubmitRequest}
+                    disabled={submittingRequest || requestedItems.length === 0}
+                    className={`flex-1 px-4 py-2 rounded-lg font-medium ${
+                      submittingRequest || requestedItems.length === 0
+                        ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                        : 'bg-blue-600 text-white hover:bg-blue-700'
+                    }`}
+                  >
+                    {submittingRequest ? 'Enviando...' : `Solicitar ${requestedItems.length} repuesto(s)`}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         )}
