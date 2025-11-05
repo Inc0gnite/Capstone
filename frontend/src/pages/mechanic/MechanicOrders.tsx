@@ -80,40 +80,34 @@ export default function MechanicOrders() {
         // Obtener workshopId del usuario o del taller asociado
         const workshopId = (user as any)?.workshopId || (user as any)?.workshop?.id
         
-        console.log('Cargando repuestos para workshopId:', workshopId)
-        
-        const response = await sparePartService.getAll({
-          page: 1,
-          limit: 100, // El backend tiene un límite máximo de 100
-          ...(workshopId && { workshopId })
-        })
-        
-        console.log('Respuesta completa del servicio:', response)
-        
-        // La respuesta paginada viene como { data: [...], page, limit, total, totalPages }
-        // O podría venir como { success: true, data: { data: [...] } }
-        let parts = []
-        if (Array.isArray(response)) {
-          parts = response
-        } else if (response?.data && Array.isArray(response.data)) {
-          parts = response.data
-        } else if (response?.spareParts && Array.isArray(response.spareParts)) {
-          parts = response.spareParts
-        } else if (response?.success && response?.data?.data && Array.isArray(response.data.data)) {
-          parts = response.data.data
+        // Usar la misma lógica que Inventory.tsx para cargar los datos
+        const params: any = { 
+          page: 1, 
+          limit: 100 // El backend tiene un límite máximo de 100
         }
         
-        console.log('Repuestos procesados:', parts.length, parts)
+        // Si el usuario tiene workshopId, filtrar por ese taller
+        if (workshopId) {
+          params.workshopId = workshopId
+        }
         
-        setSpareParts(parts)
+        const response: any = await sparePartService.getAll(params)
         
-        // Extraer categorías únicas
-        const uniqueCategories = Array.from(new Set(parts.map((p: SparePart) => p.category))).sort()
+        // Usar la misma lógica de extracción que Inventory.tsx
+        const items: SparePart[] = response?.data ?? response?.items ?? []
+        
+        console.log('Repuestos cargados del sistema:', items.length, items)
+        
+        setSpareParts(items)
+        
+        // Extraer categorías únicas de los repuestos cargados
+        const uniqueCategories = Array.from(new Set(items.map((p: SparePart) => p.category))).sort()
         setCategories(uniqueCategories)
       } catch (err: any) {
         console.error('Error cargando repuestos:', err)
         setError('Error al cargar los repuestos: ' + (err.message || 'Error desconocido'))
         setSpareParts([])
+        setCategories([])
       } finally {
         setLoadingSpareParts(false)
       }
