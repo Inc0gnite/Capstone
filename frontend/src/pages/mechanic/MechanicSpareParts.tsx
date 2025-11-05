@@ -10,9 +10,6 @@ export default function MechanicSpareParts() {
   const [searchTerm, setSearchTerm] = useState('')
   const [filter, setFilter] = useState<'all' | 'low_stock' | 'available'>('all')
   const { user } = useAuthStore()
-  
-  // Obtener workshopId del usuario actual
-  const workshopId = (user as any)?.workshopId
 
   useEffect(() => {
     const loadSpareParts = async () => {
