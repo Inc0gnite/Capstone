@@ -17,8 +17,7 @@ export default function MechanicOrders() {
   const [selectedOrder, setSelectedOrder] = useState<WorkOrder | null>(null)
   const [spareParts, setSpareParts] = useState<SparePart[]>([])
   const [loadingSpareParts, setLoadingSpareParts] = useState(false)
-  const [selectedSparePart, setSelectedSparePart] = useState<string>('')
-  const [quantity, setQuantity] = useState<number>(1)
+  const [requestedItems, setRequestedItems] = useState<Array<{ sparePartId: string; quantity: number }>>([])
   const [observations, setObservations] = useState<string>('')
   const [submittingRequest, setSubmittingRequest] = useState(false)
   
@@ -147,22 +146,66 @@ export default function MechanicOrders() {
   const handleOpenRequestModal = (order: WorkOrder) => {
     setSelectedOrder(order)
     setShowRequestModal(true)
-    setSelectedSparePart('')
-    setQuantity(1)
+    setRequestedItems([])
     setObservations('')
   }
 
   const handleCloseRequestModal = () => {
     setShowRequestModal(false)
     setSelectedOrder(null)
-    setSelectedSparePart('')
-    setQuantity(1)
+    setRequestedItems([])
     setObservations('')
   }
 
+  const handleAddItem = () => {
+    setRequestedItems([...requestedItems, { sparePartId: '', quantity: 1 }])
+  }
+
+  const handleRemoveItem = (index: number) => {
+    setRequestedItems(requestedItems.filter((_, i) => i !== index))
+  }
+
+  const handleUpdateItem = (index: number, field: 'sparePartId' | 'quantity', value: string | number) => {
+    const updated = [...requestedItems]
+    updated[index] = { ...updated[index], [field]: value }
+    setRequestedItems(updated)
+  }
+
+  const validateItems = () => {
+    for (let i = 0; i < requestedItems.length; i++) {
+      const item = requestedItems[i]
+      if (!item.sparePartId) {
+        setError(`El repuesto en la línea ${i + 1} es requerido`)
+        return false
+      }
+      if (!item.quantity || item.quantity <= 0) {
+        setError(`La cantidad en la línea ${i + 1} debe ser mayor a 0`)
+        return false
+      }
+      
+      const sparePart = spareParts.find(p => p.id === item.sparePartId)
+      if (sparePart && item.quantity > sparePart.currentStock) {
+        setError(`Stock insuficiente para ${sparePart.name}. Disponible: ${sparePart.currentStock}, Solicitado: ${item.quantity}`)
+        return false
+      }
+    }
+    return true
+  }
+
   const handleSubmitRequest = async () => {
-    if (!selectedOrder || !selectedSparePart || !quantity || quantity <= 0) {
-      setError('Por favor completa todos los campos requeridos')
+    if (!selectedOrder) {
+      setError('No se ha seleccionado una orden')
+      setTimeout(() => setError(null), 5000)
+      return
+    }
+
+    if (requestedItems.length === 0) {
+      setError('Debe agregar al menos un repuesto')
+      setTimeout(() => setError(null), 5000)
+      return
+    }
+
+    if (!validateItems()) {
       setTimeout(() => setError(null), 5000)
       return
     }
@@ -171,32 +214,40 @@ export default function MechanicOrders() {
       setSubmittingRequest(true)
       setError(null)
 
-      await sparePartService.requestForWorkOrder(
+      await sparePartService.requestMultipleForWorkOrder(
         selectedOrder.id,
-        selectedSparePart,
-        quantity,
+        requestedItems,
         observations || undefined
       )
 
-      alert('Repuesto solicitado exitosamente')
+      alert(`${requestedItems.length} repuesto(s) solicitado(s) exitosamente`)
       handleCloseRequestModal()
       
-      // Recargar órdenes para ver actualizaciones
-      const response = await workOrderService.getAll({
-        assignedToId: user?.id,
-        page: 1,
-        limit: 100
-      })
+      // Recargar órdenes y repuestos para ver actualizaciones
+      const [ordersResponse, sparePartsResponse] = await Promise.all([
+        workOrderService.getAll({
+          assignedToId: user?.id,
+          page: 1,
+          limit: 100
+        }),
+        sparePartService.getAll({
+          page: 1,
+          limit: 100,
+          workshopId: (user as any).workshopId
+        })
+      ])
+      
       const priorityOrder: Record<string, number> = { urgente: 0, alta: 1, normal: 2, baja: 3 }
-      const sortedOrders = (response.data || []).sort((a, b) => {
+      const sortedOrders = (ordersResponse.data || []).sort((a, b) => {
         const priorityDiff = (priorityOrder[a.priority] || 99) - (priorityOrder[b.priority] || 99)
         if (priorityDiff !== 0) return priorityDiff
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       })
       setOrders(sortedOrders)
+      setSpareParts(sparePartsResponse.data || [])
     } catch (err: any) {
-      console.error('Error solicitando repuesto:', err)
-      const errorMessage = err.response?.data?.error || err.response?.data?.message || err.message || 'Error al solicitar repuesto'
+      console.error('Error solicitando repuestos:', err)
+      const errorMessage = err.response?.data?.error || err.response?.data?.message || err.message || 'Error al solicitar repuestos'
       setError(errorMessage)
       setTimeout(() => setError(null), 5000)
     } finally {
@@ -485,12 +536,12 @@ export default function MechanicOrders() {
           )}
         </div>
 
-        {/* Modal para solicitar repuesto */}
+        {/* Modal para solicitar repuestos */}
         {showRequestModal && selectedOrder && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-lg shadow-xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-bold text-gray-900">Solicitar Repuesto</h3>
+                <h3 className="text-xl font-bold text-gray-900">Solicitar Repuestos</h3>
                 <button
                   onClick={handleCloseRequestModal}
                   className="text-gray-400 hover:text-gray-600 text-2xl"
@@ -515,48 +566,103 @@ export default function MechanicOrders() {
                 </div>
               ) : (
                 <>
+                  {/* Lista de repuestos a solicitar */}
                   <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Repuesto <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      value={selectedSparePart}
-                      onChange={(e) => setSelectedSparePart(e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    >
-                      <option value="">Selecciona un repuesto</option>
-                      {spareParts
-                        .filter(part => part.currentStock > 0)
-                        .map(part => (
-                          <option key={part.id} value={part.id}>
-                            {part.name} ({part.code}) - Stock: {part.currentStock}
-                          </option>
-                        ))}
-                    </select>
-                    {spareParts.filter(part => part.currentStock > 0).length === 0 && (
-                      <p className="text-sm text-red-600 mt-2">
-                        No hay repuestos con stock disponible
-                      </p>
-                    )}
-                  </div>
+                    <div className="flex justify-between items-center mb-3">
+                      <label className="block text-sm font-medium text-gray-700">
+                        Repuestos a Solicitar <span className="text-red-500">*</span>
+                      </label>
+                      <button
+                        onClick={handleAddItem}
+                        className="px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 font-medium"
+                      >
+                        + Agregar Repuesto
+                      </button>
+                    </div>
 
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Cantidad <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      min="1"
-                      value={quantity}
-                      onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                    {selectedSparePart && (
-                      <p className="text-xs text-gray-500 mt-1">
-                        Stock disponible: {
-                          spareParts.find(p => p.id === selectedSparePart)?.currentStock || 0
-                        } unidades
-                      </p>
+                    {requestedItems.length === 0 ? (
+                      <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                        <p className="text-gray-500 text-sm">No hay repuestos agregados</p>
+                        <p className="text-gray-400 text-xs mt-1">Haz clic en "Agregar Repuesto" para comenzar</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {requestedItems.map((item, index) => {
+                          const selectedPart = spareParts.find(p => p.id === item.sparePartId)
+                          const availableStock = selectedPart?.currentStock || 0
+                          const isStockExceeded = item.quantity > availableStock
+                          const availableParts = spareParts.filter(part => 
+                            part.currentStock > 0 && 
+                            !requestedItems.some((ri, riIndex) => riIndex !== index && ri.sparePartId === part.id)
+                          )
+
+                          return (
+                            <div key={index} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                              <div className="flex items-start gap-3">
+                                <div className="flex-1 space-y-3">
+                                  <div>
+                                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                                      Repuesto {index + 1} <span className="text-red-500">*</span>
+                                    </label>
+                                    <select
+                                      value={item.sparePartId}
+                                      onChange={(e) => handleUpdateItem(index, 'sparePartId', e.target.value)}
+                                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                                    >
+                                      <option value="">Selecciona un repuesto</option>
+                                      {availableParts.map(part => (
+                                        <option key={part.id} value={part.id}>
+                                          {part.name} ({part.code}) - Stock: {part.currentStock}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                  <div>
+                                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                                      Cantidad <span className="text-red-500">*</span>
+                                    </label>
+                                    <div className="flex items-center gap-2">
+                                      <input
+                                        type="number"
+                                        min="1"
+                                        max={availableStock}
+                                        value={item.quantity}
+                                        onChange={(e) => handleUpdateItem(index, 'quantity', parseInt(e.target.value) || 1)}
+                                        className={`flex-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm ${
+                                          isStockExceeded ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                                        }`}
+                                      />
+                                      <button
+                                        onClick={() => handleRemoveItem(index)}
+                                        className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm font-medium"
+                                        title="Eliminar repuesto"
+                                      >
+                                        ×
+                                      </button>
+                                    </div>
+                                    {selectedPart && (
+                                      <p className={`text-xs mt-1 ${
+                                        isStockExceeded ? 'text-red-600 font-medium' : 'text-gray-500'
+                                      }`}>
+                                        Stock disponible: {availableStock} unidades
+                                        {isStockExceeded && ` (Solicitado: ${item.quantity})`}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
+
+                    {spareParts.filter(part => part.currentStock > 0).length === 0 && (
+                      <div className="mt-3 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                        <p className="text-sm text-yellow-800">
+                          ⚠️ No hay repuestos con stock disponible en este momento
+                        </p>
+                      </div>
                     )}
                   </div>
 
@@ -589,14 +695,14 @@ export default function MechanicOrders() {
                     </button>
                     <button
                       onClick={handleSubmitRequest}
-                      disabled={submittingRequest || !selectedSparePart || !quantity || quantity <= 0}
+                      disabled={submittingRequest || requestedItems.length === 0}
                       className={`flex-1 px-4 py-2 rounded-lg font-medium ${
-                        submittingRequest || !selectedSparePart || !quantity || quantity <= 0
+                        submittingRequest || requestedItems.length === 0
                           ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
                           : 'bg-blue-600 text-white hover:bg-blue-700'
                       }`}
                     >
-                      {submittingRequest ? 'Enviando...' : 'Solicitar'}
+                      {submittingRequest ? 'Enviando...' : `Solicitar ${requestedItems.length} repuesto(s)`}
                     </button>
                   </div>
                 </>

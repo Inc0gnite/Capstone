@@ -22,11 +22,35 @@ router.get('/low-stock', authorize('spare-parts', 'read'), sparePartController.g
 
 /**
  * POST /api/spare-parts/request
+ * Acepta:
+ * - Un solo repuesto: { workOrderId, sparePartId, quantity, observations? }
+ * - Múltiples repuestos: { workOrderId, requests: [{ sparePartId, quantity }], observations? }
  */
 router.post(
   '/request',
   authorize('spare-parts', 'update'),
-  validateBody(['workOrderId', 'sparePartId', 'quantity']),
+  (req, res, next) => {
+    // Validación flexible: acepta formato antiguo o nuevo
+    if (req.body.requests && Array.isArray(req.body.requests)) {
+      // Formato nuevo: múltiples repuestos
+      if (!req.body.workOrderId) {
+        return res.status(400).json({
+          success: false,
+          error: 'Orden de trabajo es requerida',
+        })
+      }
+      next()
+    } else {
+      // Formato antiguo: un solo repuesto
+      if (!req.body.workOrderId || !req.body.sparePartId || !req.body.quantity) {
+        return res.status(400).json({
+          success: false,
+          error: 'Orden, repuesto y cantidad son requeridos',
+        })
+      }
+      next()
+    }
+  },
   auditLog('request', 'spare-parts'),
   sparePartController.requestForWorkOrder
 )

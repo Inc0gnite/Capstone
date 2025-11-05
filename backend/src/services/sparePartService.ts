@@ -365,20 +365,159 @@ export class SparePartService {
       throw new Error('Stock insuficiente')
     }
 
-    // Crear solicitud
-    const request = await prisma.workOrderSparePart.create({
-      data: {
-        workOrderId,
-        sparePartId,
-        quantityRequested: quantity,
-        observations,
-      },
-      include: {
-        sparePart: true,
+    // Crear solicitud y descontar stock en transacción
+    const result = await prisma.$transaction(async (tx) => {
+      // Verificar stock nuevamente dentro de la transacción
+      const currentSparePart = await tx.sparePart.findUnique({
+        where: { id: sparePartId },
+      })
+
+      if (!currentSparePart || currentSparePart.currentStock < quantity) {
+        throw new Error('Stock insuficiente')
+      }
+
+      // Crear solicitud
+      const request = await tx.workOrderSparePart.create({
+        data: {
+          workOrderId,
+          sparePartId,
+          quantityRequested: quantity,
+          observations,
+          status: 'solicitado',
+        },
+        include: {
+          sparePart: true,
+        },
+      })
+
+      // Descontar stock
+      const newStock = currentSparePart.currentStock - quantity
+      await tx.sparePart.update({
+        where: { id: sparePartId },
+        data: { currentStock: newStock },
+      })
+
+      // Registrar movimiento
+      await tx.sparePartMovement.create({
+        data: {
+          sparePartId,
+          movementType: 'salida',
+          quantity,
+          previousStock: currentSparePart.currentStock,
+          newStock,
+          reason: 'Solicitud para orden de trabajo',
+          reference: workOrder.orderNumber,
+        },
+      })
+
+      return request
+    })
+
+    return result
+  }
+
+  /**
+   * Solicitar múltiples repuestos para orden de trabajo
+   */
+  async requestMultipleForWorkOrder(
+    workOrderId: string,
+    requests: Array<{ sparePartId: string; quantity: number }>,
+    observations?: string
+  ) {
+    // Verificar que la orden existe
+    const workOrder = await prisma.workOrder.findUnique({
+      where: { id: workOrderId },
+    })
+
+    if (!workOrder) {
+      throw new Error('Orden de trabajo no encontrada')
+    }
+
+    if (!requests || requests.length === 0) {
+      throw new Error('Debe solicitar al menos un repuesto')
+    }
+
+    // Verificar todos los repuestos y stock antes de procesar
+    const spareParts = await prisma.sparePart.findMany({
+      where: {
+        id: { in: requests.map((r) => r.sparePartId) },
       },
     })
 
-    return request
+    if (spareParts.length !== requests.length) {
+      throw new Error('Uno o más repuestos no fueron encontrados')
+    }
+
+    // Validar stock para cada repuesto
+    for (const request of requests) {
+      const sparePart = spareParts.find((p) => p.id === request.sparePartId)
+      if (!sparePart) {
+        throw new Error(`Repuesto ${request.sparePartId} no encontrado`)
+      }
+      if (sparePart.currentStock < request.quantity) {
+        throw new Error(
+          `Stock insuficiente para ${sparePart.name}. Disponible: ${sparePart.currentStock}, Solicitado: ${request.quantity}`
+        )
+      }
+    }
+
+    // Procesar todas las solicitudes en una transacción
+    const result = await prisma.$transaction(async (tx) => {
+      const createdRequests = []
+
+      for (const request of requests) {
+        // Verificar stock nuevamente dentro de la transacción
+        const currentSparePart = await tx.sparePart.findUnique({
+          where: { id: request.sparePartId },
+        })
+
+        if (!currentSparePart || currentSparePart.currentStock < request.quantity) {
+          throw new Error(
+            `Stock insuficiente para ${currentSparePart?.name || request.sparePartId}`
+          )
+        }
+
+        // Crear solicitud
+        const createdRequest = await tx.workOrderSparePart.create({
+          data: {
+            workOrderId,
+            sparePartId: request.sparePartId,
+            quantityRequested: request.quantity,
+            observations,
+            status: 'solicitado',
+          },
+          include: {
+            sparePart: true,
+          },
+        })
+
+        // Descontar stock
+        const newStock = currentSparePart.currentStock - request.quantity
+        await tx.sparePart.update({
+          where: { id: request.sparePartId },
+          data: { currentStock: newStock },
+        })
+
+        // Registrar movimiento
+        await tx.sparePartMovement.create({
+          data: {
+            sparePartId: request.sparePartId,
+            movementType: 'salida',
+            quantity: request.quantity,
+            previousStock: currentSparePart.currentStock,
+            newStock,
+            reason: 'Solicitud para orden de trabajo',
+            reference: workOrder.orderNumber,
+          },
+        })
+
+        createdRequests.push(createdRequest)
+      }
+
+      return createdRequests
+    })
+
+    return result
   }
 
   /**

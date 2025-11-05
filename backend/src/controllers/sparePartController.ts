@@ -114,8 +114,39 @@ export class SparePartController {
    */
   async requestForWorkOrder(req: Request, res: Response) {
     try {
-      const { workOrderId, sparePartId, quantity, observations } = req.body
+      const { workOrderId, sparePartId, quantity, observations, requests } = req.body
 
+      // Si viene un array de requests, usar el método para múltiples repuestos
+      if (requests && Array.isArray(requests) && requests.length > 0) {
+        if (!workOrderId) {
+          return sendError(res, 'Orden de trabajo es requerida', 400)
+        }
+
+        // Validar que todos los requests tengan los campos necesarios
+        for (const reqItem of requests) {
+          if (!reqItem.sparePartId || !reqItem.quantity) {
+            return sendError(res, 'Cada repuesto debe tener ID y cantidad', 400)
+          }
+          if (reqItem.quantity <= 0) {
+            return sendError(res, 'La cantidad debe ser mayor a 0', 400)
+          }
+        }
+
+        const result = await sparePartService.requestMultipleForWorkOrder(
+          workOrderId,
+          requests,
+          observations
+        )
+
+        return sendSuccess(
+          res,
+          result,
+          `${result.length} repuesto(s) solicitado(s) exitosamente`,
+          201
+        )
+      }
+
+      // Si viene un solo repuesto (retrocompatibilidad)
       if (!workOrderId || !sparePartId || !quantity) {
         return sendError(res, 'Orden, repuesto y cantidad son requeridos', 400)
       }

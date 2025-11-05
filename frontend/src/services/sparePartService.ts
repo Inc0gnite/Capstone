@@ -124,12 +124,26 @@ export const sparePartService = {
     return response.data
   },
 
-  // Solicitar repuesto para orden de trabajo
+  // Solicitar repuesto para orden de trabajo (un solo repuesto)
   async requestForWorkOrder(workOrderId: string, sparePartId: string, quantity: number, observations?: string) {
     const response = await api.post('/spare-parts/request', {
       workOrderId,
       sparePartId,
       quantity,
+      observations
+    })
+    return response.data
+  },
+
+  // Solicitar múltiples repuestos para orden de trabajo
+  async requestMultipleForWorkOrder(
+    workOrderId: string,
+    requests: Array<{ sparePartId: string; quantity: number }>,
+    observations?: string
+  ) {
+    const response = await api.post('/spare-parts/request', {
+      workOrderId,
+      requests,
       observations
     })
     return response.data
