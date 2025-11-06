@@ -3,6 +3,7 @@ import { useAuthStore } from '../../store/authStore'
 import { dashboardService } from '../../services/dashboardService'
 import { workOrderService, WorkOrder } from '../../services/workOrderService'
 import { useEffect, useState } from 'react'
+import { sortWorkOrders } from '../../utils/workOrderSorting'
 import { Link } from 'react-router-dom'
 
 interface MechanicStats {
@@ -57,23 +58,9 @@ export default function MecanicoDashboard() {
         ])
         
         setStats(mechanicStats)
-        // Ordenar órdenes por prioridad (urgente > alta > normal > baja) y luego por fecha
-        const priorityOrder: Record<string, number> = { urgente: 0, alta: 1, normal: 2, baja: 3 }
-        
-        const sortedInProgress = (inProgressResponse.data || []).sort((a, b) => {
-          const priorityDiff = (priorityOrder[a.priority] || 99) - (priorityOrder[b.priority] || 99)
-          if (priorityDiff !== 0) return priorityDiff
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        })
-        
-        const sortedPending = (pendingResponse.data || []).sort((a, b) => {
-          const priorityDiff = (priorityOrder[a.priority] || 99) - (priorityOrder[b.priority] || 99)
-          if (priorityDiff !== 0) return priorityDiff
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        })
-        
-        setInProgressOrders(sortedInProgress)
-        setPendingOrders(sortedPending)
+        // Ordenar órdenes usando la función común de ordenamiento
+        setInProgressOrders(sortWorkOrders(inProgressResponse.data || []))
+        setPendingOrders(sortWorkOrders(pendingResponse.data || []))
       } catch (err: any) {
         console.error('Error cargando estadísticas:', err)
         setError('Error al cargar las estadísticas')

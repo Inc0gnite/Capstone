@@ -3,6 +3,7 @@ import { useAuthStore } from '../../store/authStore'
 import { workOrderService, WorkOrder } from '../../services/workOrderService'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { sortWorkOrders } from '../../utils/workOrderSorting'
 
 export default function MechanicOrders() {
   const { user } = useAuthStore()
@@ -29,16 +30,8 @@ export default function MechanicOrders() {
           limit: 100
         })
         
-        // Ordenar órdenes por prioridad (urgente > alta > normal > baja) y luego por fecha
-        const priorityOrder: Record<string, number> = { urgente: 0, alta: 1, normal: 2, baja: 3 }
-        const sortedOrders = (response.data || []).sort((a, b) => {
-          const priorityDiff = (priorityOrder[a.priority] || 99) - (priorityOrder[b.priority] || 99)
-          if (priorityDiff !== 0) {
-            return priorityDiff
-          }
-          // Si tienen la misma prioridad, ordenar por fecha ascendente (más nuevas primero)
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        })
+        // Ordenar órdenes usando la función común de ordenamiento
+        const sortedOrders = sortWorkOrders(response.data || [])
         
         setOrders(sortedOrders)
       } catch (err: any) {
@@ -66,15 +59,7 @@ export default function MechanicOrders() {
   })
   
   // Asegurar que las órdenes filtradas también estén ordenadas
-  const priorityOrder: Record<string, number> = { urgente: 0, alta: 1, normal: 2, baja: 3 }
-  const sortedFilteredOrders = filteredOrders.sort((a, b) => {
-    const priorityDiff = (priorityOrder[a.priority] || 99) - (priorityOrder[b.priority] || 99)
-    if (priorityDiff !== 0) {
-      return priorityDiff
-    }
-    // Ordenar por fecha ascendente (más nuevas primero)
-    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  })
+  const sortedFilteredOrders = sortWorkOrders(filteredOrders)
 
   const handleStatusChange = async (orderId: string, newStatus: string) => {
     try {

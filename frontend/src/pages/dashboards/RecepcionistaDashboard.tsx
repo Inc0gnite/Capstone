@@ -3,6 +3,7 @@ import { MainLayout } from '../../components/Layout/MainLayout'
 import { useRecepcionista } from '../../hooks/useRecepcionista'
 import { PendingVehicleCard } from '../../components/recepcionista/PendingVehicleCard'
 import { ActiveOrderCard } from '../../components/recepcionista/ActiveOrderCard'
+import { sortWorkOrders } from '../../utils/workOrderSorting'
 import { ReadyVehicleCard } from '../../components/recepcionista/ReadyVehicleCard'
 import { CancelledOrderCard } from '../../components/recepcionista/CancelledOrderCard'
 import { SearchVehicles } from '../../components/recepcionista/SearchVehicles'
@@ -223,7 +224,7 @@ export default function RecepcionistaDashboard() {
             
             {activeOrders.length > 0 ? (
               <div className="space-y-3">
-                {activeOrders.map((order) => (
+                {sortWorkOrders(activeOrders).map((order) => (
                   <ActiveOrderCard
                     key={order.id}
                     order={order}
@@ -276,7 +277,7 @@ export default function RecepcionistaDashboard() {
             
             {cancelledOrders.length > 0 ? (
               <div className="space-y-3">
-                {cancelledOrders.map((order) => (
+                {sortWorkOrders(cancelledOrders).map((order) => (
                   <CancelledOrderCard
                     key={order.id}
                     order={order}

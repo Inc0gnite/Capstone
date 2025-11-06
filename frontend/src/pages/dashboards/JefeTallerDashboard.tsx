@@ -6,6 +6,7 @@ import { workOrderService } from '../../services/workOrderService'
 import { useAuthStore } from '../../store/authStore'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { sortWorkOrders } from '../../utils/workOrderSorting'
 
 export default function JefeTallerDashboard() {
   const { user } = useAuthStore()
@@ -174,7 +175,7 @@ export default function JefeTallerDashboard() {
               </div>
             ) : workOrders.length > 0 ? (
               <div className="space-y-3">
-                {workOrders.map((order) => (
+                {sortWorkOrders(workOrders).map((order) => (
                   <OrderProgress
                     key={order.id}
                     orderNumber={order.orderNumber}

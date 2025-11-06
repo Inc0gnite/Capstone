@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { MainLayout } from '../components/Layout/MainLayout'
 import { useWorkOrders } from '../hooks/useWorkOrders'
 import { ActiveOrderCard } from '../components/recepcionista/ActiveOrderCard'
 import { CreateWorkOrderFromVehicleModal } from '../components/modals/CreateWorkOrderFromVehicleModal'
 import { useAuthStore } from '../store/authStore'
 import { mechanicService, MechanicWorkload } from '../services/mechanicService'
+import { sortWorkOrders } from '../utils/workOrderSorting'
 
 export default function WorkOrders() {
   const [filter, setFilter] = useState<'all' | 'pendiente' | 'en_progreso' | 'pausado' | 'completado' | 'cancelado'>('all')
@@ -308,11 +309,12 @@ export default function WorkOrders() {
           {/* Lista de órdenes */}
           {workOrders.length > 0 ? (
             <div className="space-y-3">
-              {workOrders.map((order) => (
+              {useMemo(() => sortWorkOrders(workOrders), [workOrders]).map((order) => (
                 <ActiveOrderCard
                   key={order.id}
                   order={order}
                   onUpdate={() => handleFilterChange(filter)}
+                  workshopId={workshopId}
                 />
               ))}
             </div>

@@ -42,6 +42,11 @@ export default function WorkOrderDetail() {
       console.log('🔄 Cargando orden de trabajo:', id)
       const order = await workOrderService.getById(id)
       console.log('✅ Orden cargada:', order)
+      console.log('📅 Fechas de la orden:', {
+        createdAt: order.createdAt,
+        updatedAt: order.updatedAt,
+        completedAt: order.completedAt
+      })
       setWorkOrder(order)
     } catch (err: any) {
       console.error('❌ Error cargando orden de trabajo:', err)
@@ -212,14 +217,22 @@ export default function WorkOrderDetail() {
     return configs[workType] || configs.otro
   }
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-CL', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return 'No disponible'
+    try {
+      const date = new Date(dateString)
+      if (isNaN(date.getTime())) return 'Fecha inválida'
+      return date.toLocaleDateString('es-CL', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      })
+    } catch (error) {
+      return 'Fecha inválida'
+    }
   }
 
   const formatDateShort = (dateString: string) => {
@@ -267,114 +280,118 @@ export default function WorkOrderDetail() {
 
   return (
     <MainLayout>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         {/* Header con navegación */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={() => navigate('/work-orders')}
-              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              ← Volver
-            </button>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">{workOrder.orderNumber}</h1>
-              <p className="text-gray-600">Detalle de orden de trabajo</p>
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center space-x-3 sm:space-x-4">
+              <button
+                onClick={() => navigate('/work-orders')}
+                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
+                aria-label="Volver"
+              >
+                <span className="hidden sm:inline">←</span>
+                <span className="sm:hidden">← Volver</span>
+              </button>
+              <div className="min-w-0 flex-1">
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 truncate">{workOrder.orderNumber}</h1>
+                <p className="text-sm sm:text-base text-gray-600">Detalle de orden de trabajo</p>
+              </div>
             </div>
-          </div>
-          
-          <div className="flex items-center space-x-3">
-            <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${statusConfig.bgColor} ${statusConfig.color}`}>
-              <span className="mr-2">{statusConfig.icon}</span>
-              {statusConfig.label}
-            </span>
-            <button
-              onClick={() => setShowStatusModal(true)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors"
-            >
-              Cambiar Estado
-            </button>
+            
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
+              <span className={`inline-flex items-center justify-center px-3 py-2 rounded-full text-sm font-medium ${statusConfig.bgColor} ${statusConfig.color}`}>
+                <span className="mr-2">{statusConfig.icon}</span>
+                {statusConfig.label}
+              </span>
+              <button
+                onClick={() => setShowStatusModal(true)}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors text-sm sm:text-base whitespace-nowrap"
+              >
+                Cambiar Estado
+              </button>
+            </div>
           </div>
         </div>
 
         {/* Error */}
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <p className="text-red-600">{error}</p>
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4">
+            <p className="text-sm sm:text-base text-red-600">{error}</p>
           </div>
         )}
 
         {/* Información Principal */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-          {/* Información de la Orden */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Card Principal */}
+          {/* Información de la Orden - Columna Principal */}
+          <div className="lg:col-span-2 space-y-4 sm:space-y-6">
+            {/* Card Principal - Información General */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
-              <div className="flex items-start justify-between mb-6">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 mb-4 sm:mb-6 pb-4 sm:pb-6 border-b border-gray-200">
                 <div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Información General</h3>
-                  <p className="text-gray-600">Detalles principales de la orden de trabajo</p>
+                  <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-1 sm:mb-2">Información General</h3>
+                  <p className="text-xs sm:text-sm text-gray-600">Detalles principales de la orden de trabajo</p>
                 </div>
-                <div className="text-right">
-                  <div className="text-sm text-gray-500">Creado</div>
-                  <div className="font-medium">{formatDateShort(workOrder.createdAt)}</div>
+                <div className="text-left sm:text-right">
+                  <div className="text-xs sm:text-sm text-gray-500">Creado</div>
+                  <div className="text-sm sm:text-base font-medium text-gray-900">{formatDateShort(workOrder.createdAt)}</div>
                 </div>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de Trabajo</label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                <div className="space-y-3 sm:space-y-4">
+                  <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-500 mb-1.5 sm:mb-2">Tipo de Trabajo</label>
                     <div className="flex items-center space-x-2">
-                      <span className="text-lg">{workTypeConfig.icon}</span>
-                      <span className="text-gray-900 capitalize">{workTypeConfig.label}</span>
+                      <span className="text-base sm:text-lg">{workTypeConfig.icon}</span>
+                      <span className="text-sm sm:text-base text-gray-900 font-medium capitalize">{workTypeConfig.label}</span>
                     </div>
                   </div>
                   
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Prioridad</label>
+                  <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-500 mb-1.5 sm:mb-2">Prioridad</label>
                     <div className="flex items-center space-x-2">
-                      <span className="text-lg">{priorityConfig.icon}</span>
-                      <span className={`px-2 py-1 rounded text-sm font-medium ${priorityConfig.bgColor} ${priorityConfig.color}`}>
+                      <span className="text-base sm:text-lg">{priorityConfig.icon}</span>
+                      <span className={`px-2.5 py-1 rounded text-xs sm:text-sm font-medium ${priorityConfig.bgColor} ${priorityConfig.color}`}>
                         {priorityConfig.label}
                       </span>
                     </div>
                   </div>
                 </div>
                 
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   {workOrder.estimatedHours && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Horas Estimadas</label>
+                    <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
+                      <label className="block text-xs sm:text-sm font-medium text-gray-500 mb-1.5 sm:mb-2">Horas Estimadas</label>
                       <div className="flex items-center space-x-2">
-                        <span className="text-lg">⏱️</span>
-                        <span className="text-gray-900 font-medium">{workOrder.estimatedHours}h</span>
+                        <span className="text-base sm:text-lg">⏱️</span>
+                        <span className="text-sm sm:text-base text-gray-900 font-medium">{workOrder.estimatedHours}h</span>
                       </div>
                     </div>
                   )}
                   
                   {workOrder.totalHours && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Horas Totales</label>
+                    <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
+                      <label className="block text-xs sm:text-sm font-medium text-gray-500 mb-1.5 sm:mb-2">Horas Totales</label>
                       <div className="flex items-center space-x-2">
-                        <span className="text-lg">⏰</span>
-                        <span className="text-gray-900 font-medium">{workOrder.totalHours}h</span>
+                        <span className="text-base sm:text-lg">⏰</span>
+                        <span className="text-sm sm:text-base text-gray-900 font-medium">{workOrder.totalHours}h</span>
                       </div>
                     </div>
                   )}
                   
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Última Actualización</label>
+                  <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-500 mb-1.5 sm:mb-2">Última Actualización</label>
                     <div className="flex items-center space-x-2">
-                      <span className="text-lg">🔄</span>
-                      <span className="text-gray-900">{formatDate(workOrder.updatedAt)}</span>
+                      <span className="text-base sm:text-lg">🔄</span>
+                      <span className="text-xs sm:text-sm text-gray-900">{formatDate(workOrder.updatedAt)}</span>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="mt-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Descripción del Trabajo</label>
+              <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-200">
+                <label className="block text-sm sm:text-base font-medium text-gray-700 mb-2 sm:mb-3">Descripción del Trabajo</label>
                 <WorkOrderChecklist
                   description={workOrder.description}
                   onChecklistChange={handleChecklistChange}
@@ -386,40 +403,36 @@ export default function WorkOrderDetail() {
 
             {/* Información del Vehículo */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <span className="mr-2">🚗</span>
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 sm:mb-6 flex items-center pb-3 sm:pb-4 border-b border-gray-200">
+                <span className="mr-2 text-lg sm:text-xl">🚗</span>
                 Información del Vehículo
               </h3>
               
               {workOrder.vehicle && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Patente</label>
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                        <span className="text-blue-900 font-bold text-xl">{workOrder.vehicle.licensePlate}</span>
-                      </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  <div className="space-y-3 sm:space-y-4">
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
+                      <label className="block text-xs sm:text-sm font-medium text-blue-700 mb-1.5 sm:mb-2">Patente</label>
+                      <span className="text-blue-900 font-bold text-lg sm:text-xl">{workOrder.vehicle.licensePlate}</span>
                     </div>
                     
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Marca y Modelo</label>
-                      <p className="text-gray-900 font-medium">{workOrder.vehicle.brand} {workOrder.vehicle.model}</p>
+                    <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
+                      <label className="block text-xs sm:text-sm font-medium text-gray-500 mb-1.5 sm:mb-2">Marca y Modelo</label>
+                      <p className="text-sm sm:text-base text-gray-900 font-medium">{workOrder.vehicle.brand} {workOrder.vehicle.model}</p>
                     </div>
                   </div>
                   
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Año</label>
-                      <p className="text-gray-900 font-medium">{workOrder.vehicle.year}</p>
+                  <div className="space-y-3 sm:space-y-4">
+                    <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
+                      <label className="block text-xs sm:text-sm font-medium text-gray-500 mb-1.5 sm:mb-2">Año</label>
+                      <p className="text-sm sm:text-base text-gray-900 font-medium">{workOrder.vehicle.year}</p>
                     </div>
                     
                     {workOrder.entry && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Conductor</label>
-                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
-                          <p className="font-medium text-gray-900">{workOrder.entry.driverName}</p>
-                          <p className="text-sm text-gray-600">RUT: {workOrder.entry.driverRut}</p>
-                        </div>
+                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 sm:p-4">
+                        <label className="block text-xs sm:text-sm font-medium text-gray-500 mb-1.5 sm:mb-2">Conductor</label>
+                        <p className="text-sm sm:text-base font-medium text-gray-900 mb-1">{workOrder.entry.driverName}</p>
+                        <p className="text-xs sm:text-sm text-gray-600">RUT: {workOrder.entry.driverRut}</p>
                       </div>
                     )}
                   </div>
@@ -427,19 +440,19 @@ export default function WorkOrderDetail() {
               )}
 
               {workOrder.entry && (
-                <div className="mt-6 pt-6 border-t border-gray-200">
-                  <h4 className="font-medium text-gray-900 mb-3 flex items-center">
+                <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-200">
+                  <h4 className="text-sm sm:text-base font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center">
                     <span className="mr-2">📋</span>
                     Información del Ingreso
                   </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <span className="text-sm font-medium text-gray-700">Código:</span>
-                      <span className="ml-2 text-gray-900 font-mono">{workOrder.entry.entryCode}</span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
+                      <span className="block text-xs sm:text-sm font-medium text-gray-500 mb-1">Código</span>
+                      <span className="text-sm sm:text-base text-gray-900 font-mono font-medium">{workOrder.entry.entryCode}</span>
                     </div>
-                    <div>
-                      <span className="text-sm font-medium text-gray-700">Fecha de Ingreso:</span>
-                      <span className="ml-2 text-gray-900">{formatDate(workOrder.entry.entryDate)}</span>
+                    <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
+                      <span className="block text-xs sm:text-sm font-medium text-gray-500 mb-1">Fecha de Ingreso</span>
+                      <span className="text-xs sm:text-sm text-gray-900">{formatDate(workOrder.entry.entryDate)}</span>
                     </div>
                   </div>
                 </div>
@@ -449,31 +462,31 @@ export default function WorkOrderDetail() {
             {/* Mecánico Asignado */}
             {workOrder.assignedTo && (
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                    <span className="mr-2">👷</span>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-4 sm:mb-6 pb-4 sm:pb-6 border-b border-gray-200">
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
+                    <span className="mr-2 text-lg sm:text-xl">👷</span>
                     Mecánico Asignado
                   </h3>
                   
                   <MechanicInfoDropdown mechanic={workOrder.assignedTo}>
-                    <button className="px-3 py-1 bg-green-100 text-green-700 rounded text-sm hover:bg-green-200 transition-colors">
+                    <button className="px-3 py-1.5 bg-green-100 text-green-700 rounded-lg text-xs sm:text-sm hover:bg-green-200 transition-colors font-medium">
                       👨‍🔧 Ver Mecánico
                     </button>
                   </MechanicInfoDropdown>
                 </div>
                 
-                <div className="flex items-center space-x-4">
-                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-                    <span className="text-blue-600 font-bold text-xl">
+                <div className="flex items-center space-x-3 sm:space-x-4">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-blue-600 font-bold text-base sm:text-xl">
                       {workOrder.assignedTo.firstName.charAt(0)}{workOrder.assignedTo.lastName.charAt(0)}
                     </span>
                   </div>
                   
-                  <div className="flex-1">
-                    <p className="font-semibold text-gray-900 text-lg">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-gray-900 text-base sm:text-lg truncate">
                       {workOrder.assignedTo.firstName} {workOrder.assignedTo.lastName}
                     </p>
-                    <p className="text-gray-600">{workOrder.assignedTo.email}</p>
+                    <p className="text-xs sm:text-sm text-gray-600 truncate">{workOrder.assignedTo.email}</p>
                   </div>
                 </div>
               </div>
@@ -481,11 +494,11 @@ export default function WorkOrderDetail() {
 
             {/* Repuestos Solicitados */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <span className="mr-2">📦</span>
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 sm:mb-6 flex items-center pb-3 sm:pb-4 border-b border-gray-200">
+                <span className="mr-2 text-lg sm:text-xl">📦</span>
                 Repuestos Solicitados
                 {workOrder.spareParts && workOrder.spareParts.length > 0 && (
-                  <span className="ml-2 text-sm font-normal text-gray-500">({workOrder.spareParts.length})</span>
+                  <span className="ml-2 text-xs sm:text-sm font-normal text-gray-500">({workOrder.spareParts.length})</span>
                 )}
               </h3>
               
@@ -626,23 +639,23 @@ export default function WorkOrderDetail() {
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {/* Estado y Acciones */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Estado Actual</h3>
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 sm:mb-6 pb-3 sm:pb-4 border-b border-gray-200">Estado Actual</h3>
               
-              <div className="text-center mb-6">
-                <div className={`inline-flex items-center px-4 py-2 rounded-full text-lg font-medium ${statusConfig.bgColor} ${statusConfig.color} mb-2`}>
-                  <span className="mr-2 text-2xl">{statusConfig.icon}</span>
+              <div className="text-center mb-4 sm:mb-6">
+                <div className={`inline-flex items-center px-3 sm:px-4 py-2 rounded-full text-sm sm:text-base font-medium ${statusConfig.bgColor} ${statusConfig.color}`}>
+                  <span className="mr-2 text-lg sm:text-xl">{statusConfig.icon}</span>
                   {statusConfig.label}
                 </div>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3">
                 {workOrder.currentStatus === 'pendiente' && (
                   <button
                     onClick={() => handleStatusChange('en_progreso')}
-                    className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors"
+                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors"
                   >
                     ▶️ Iniciar Trabajo
                   </button>
@@ -652,14 +665,14 @@ export default function WorkOrderDetail() {
                   <>
                     <button
                       onClick={() => handleStatusChange('pausado')}
-                      className="w-full px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-medium transition-colors"
+                      className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-medium transition-colors"
                     >
                       ⏸️ Pausar
                     </button>
                     <button
                       onClick={() => handleStatusChange('completado')}
                       disabled={!checklistCompleted}
-                      className={`w-full px-4 py-2 font-medium transition-colors ${
+                      className={`w-full px-3 sm:px-4 py-2 text-sm sm:text-base font-medium transition-colors ${
                         checklistCompleted
                           ? 'bg-green-600 text-white rounded-lg hover:bg-green-700'
                           : 'bg-gray-400 text-gray-200 rounded-lg cursor-not-allowed'
@@ -674,7 +687,7 @@ export default function WorkOrderDetail() {
                 {canRequestSpareParts() && canRequestSparePartsForOrder() && (
                   <button
                     onClick={() => setShowRequestSparePartsModal(true)}
-                    className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium transition-colors flex items-center justify-center space-x-2"
+                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium transition-colors flex items-center justify-center space-x-2"
                   >
                     <span>📦</span>
                     <span>Solicitar Repuestos</span>
@@ -684,7 +697,7 @@ export default function WorkOrderDetail() {
                 {workOrder.currentStatus === 'pausado' && (
                   <button
                     onClick={() => handleStatusChange('en_progreso')}
-                    className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors"
+                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors"
                   >
                     ▶️ Reanudar
                   </button>
@@ -692,39 +705,46 @@ export default function WorkOrderDetail() {
               </div>
             </div>
 
-            {/* Fechas */}
+            {/* Cronología */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Cronología</h3>
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 sm:mb-6 pb-3 sm:pb-4 border-b border-gray-200">Cronología</h3>
               
-              <div className="space-y-4">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                    <span className="text-blue-600 text-sm">📅</span>
+              <div className="space-y-3 sm:space-y-4">
+                {/* Fecha de Creación */}
+                {workOrder.createdAt && (
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                      <span className="text-blue-600 text-sm sm:text-base">📅</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm sm:text-base font-medium text-gray-900">Creado</p>
+                      <p className="text-xs sm:text-sm text-gray-600">{formatDate(workOrder.createdAt)}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">Creado</p>
-                    <p className="text-xs text-gray-600">{formatDate(workOrder.createdAt)}</p>
-                  </div>
-                </div>
+                )}
                 
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                    <span className="text-gray-600 text-sm">🔄</span>
+                {/* Última Actualización */}
+                {workOrder.updatedAt && (
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0">
+                      <span className="text-gray-600 text-sm sm:text-base">🔄</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm sm:text-base font-medium text-gray-900">Última Actualización</p>
+                      <p className="text-xs sm:text-sm text-gray-600">{formatDate(workOrder.updatedAt)}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">Última Actualización</p>
-                    <p className="text-xs text-gray-600">{formatDate(workOrder.updatedAt)}</p>
-                  </div>
-                </div>
+                )}
                 
+                {/* Fecha de Completado */}
                 {workOrder.completedAt && (
                   <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                      <span className="text-green-600 text-sm">✅</span>
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                      <span className="text-green-600 text-sm sm:text-base">✅</span>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">Completado</p>
-                      <p className="text-xs text-gray-600">{formatDate(workOrder.completedAt)}</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm sm:text-base font-medium text-gray-900">Completado</p>
+                      <p className="text-xs sm:text-sm text-gray-600">{formatDate(workOrder.completedAt)}</p>
                     </div>
                   </div>
                 )}
