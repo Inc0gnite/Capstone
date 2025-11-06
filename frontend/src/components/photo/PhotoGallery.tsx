@@ -87,14 +87,14 @@ export function PhotoGallery({
           <button
             key={type.value}
             onClick={() => setSelectedPhotoType(type.value)}
-            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+            className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${
               selectedPhotoType === type.value 
                 ? `${type.color} text-white shadow-lg` 
                 : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
             }`}
           >
-            <span>{type.icon}</span>
-            <span>{type.label}</span>
+            <span className="text-sm sm:text-base">{type.icon}</span>
+            <span className="hidden sm:inline">{type.label}</span>
             <span className="text-xs">
               ({getPhotosByType(type.value).length})
             </span>
@@ -105,9 +105,11 @@ export function PhotoGallery({
       {/* Botón para tomar foto */}
       <button
         onClick={() => setShowCamera(true)}
-        className="w-full bg-blue-500 hover:bg-blue-600 text-white p-3 rounded-lg flex items-center justify-center gap-2 font-medium transition-colors"
+        className="w-full bg-blue-500 hover:bg-blue-600 text-white p-2.5 sm:p-3 rounded-lg flex items-center justify-center gap-2 font-medium transition-colors text-sm sm:text-base"
       >
-        📸 Tomar Foto - {getPhotoTypeInfo(selectedPhotoType).label}
+        <span className="text-lg sm:text-xl">📸</span>
+        <span className="hidden sm:inline">Tomar Foto - </span>
+        <span>{getPhotoTypeInfo(selectedPhotoType).label}</span>
       </button>
 
       {/* Galería de fotos por tipo */}
@@ -122,13 +124,13 @@ export function PhotoGallery({
               {type.label} ({typePhotos.length})
             </h4>
             
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3">
               {typePhotos.map(photo => (
                 <div key={photo.id} className="relative group">
                   <img 
                     src={photo.url} 
                     alt={photo.description} 
-                    className="w-full h-32 object-cover rounded-lg border-2 border-gray-200"
+                    className="w-full h-24 sm:h-32 md:h-40 object-cover rounded-lg border-2 border-gray-200"
                   />
                   
                   {/* Overlay con controles */}
@@ -165,8 +167,8 @@ export function PhotoGallery({
       {/* Modal de edición */}
       {editingPhoto && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-4">Editar Descripción</h3>
+          <div className="bg-white rounded-lg p-4 sm:p-6 w-full max-w-md">
+            <h3 className="text-base sm:text-lg font-semibold mb-4">Editar Descripción</h3>
             <textarea
               value={editDescription}
               onChange={(e) => setEditDescription(e.target.value)}
