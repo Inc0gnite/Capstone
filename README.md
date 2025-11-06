@@ -5,7 +5,7 @@ Sistema web para la gestión y control de ingresos de vehículos al taller de la
 ## 🎯 Estado del Proyecto
 
 **✅ COMPLETADO** - Fase de Construcción y Documentación Técnica  
-**📅 Fecha:** Octubre 15, 2024  
+**📅 Fecha:** Enero 15, 2025  
 **🏆 Progreso:** 100% de funcionalidades implementadas  
 **📚 Documentación:** ~1,600 páginas de documentación técnica  
 
@@ -416,7 +416,7 @@ npm run test:e2e
 ## 📅 Cronograma
 
 - **Inicio**: 01 Septiembre 2024
-- **Término**: 28 Noviembre 2024
+- **Término**: 28 Noviembre 2025
 - **Duración**: 12 semanas
 
 ### Fases
@@ -441,7 +441,7 @@ Para consultas sobre el proyecto:
 
 **Institución**: Duoc UC  
 **Asignatura**: Capstone  
-**Año**: 2024
+**Año**: 2025
 
 
 

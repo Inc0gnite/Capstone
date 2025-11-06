@@ -713,7 +713,7 @@ async function main() {
   const entries = await Promise.all([
     prisma.vehicleEntry.create({
       data: {
-        entryCode: 'ING-20241015-0001',
+        entryCode: 'ING-20250115-0001',
         vehicleId: vehicles[3].id,
         workshopId: workshops[0].id,
         driverRut: '11.111.111-1',
@@ -747,7 +747,7 @@ async function main() {
 
   const workOrder = await prisma.workOrder.create({
     data: {
-      orderNumber: 'OT-20241015-0001',
+      orderNumber: 'OT-20250115-0001',
       vehicleId: vehicles[3].id,
       entryId: entries[0].id,
       workshopId: workshops[0].id,

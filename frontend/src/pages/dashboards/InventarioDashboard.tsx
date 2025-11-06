@@ -134,7 +134,7 @@ export default function InventarioDashboard() {
             </h3>
             <div className="space-y-3">
               <SparePartRequest
-                orderNumber="OT-2024-105"
+                orderNumber="OT-2025-105"
                 mechanic="Carlos Silva"
                 items={[
                   { name: 'Filtro de aceite', qty: 1 },
@@ -143,13 +143,13 @@ export default function InventarioDashboard() {
                 status="pendiente"
               />
               <SparePartRequest
-                orderNumber="OT-2024-106"
+                orderNumber="OT-2025-106"
                 mechanic="Ana Martínez"
                 items={[{ name: 'Pastillas de freno', qty: 1 }]}
                 status="pendiente"
               />
               <SparePartRequest
-                orderNumber="OT-2024-104"
+                orderNumber="OT-2025-104"
                 mechanic="Pedro López"
                 items={[{ name: 'Batería 12V', qty: 1 }]}
                 status="entregado"
@@ -168,7 +168,7 @@ export default function InventarioDashboard() {
               type="salida"
               item="Filtro de aceite"
               quantity={1}
-              reason="Orden OT-2024-105"
+              reason="Orden OT-2025-105"
               time="Hace 30 min"
             />
             <Movement
@@ -182,7 +182,7 @@ export default function InventarioDashboard() {
               type="salida"
               item="Pastillas de freno"
               quantity={2}
-              reason="Orden OT-2024-103"
+              reason="Orden OT-2025-103"
               time="Hace 4 horas"
             />
             <Movement

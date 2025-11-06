@@ -169,7 +169,7 @@ export function SearchVehicles({ onSearch, onVehicleSelected }: SearchVehiclesPr
           <p className="mb-2">💡 <strong>Sugerencias de búsqueda:</strong></p>
           <ul className="list-disc list-inside space-y-1">
             <li>Patente del vehículo (ej: ABCD-12)</li>
-            <li>Código de ingreso (ej: ING-2024-001)</li>
+            <li>Código de ingreso (ej: ING-2025-001)</li>
             <li>Nombre del conductor</li>
             <li>RUT del conductor</li>
           </ul>

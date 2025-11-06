@@ -210,7 +210,7 @@ function Login() {
 
         {/* Footer */}
         <p className="text-center text-sm text-gray-600 mt-4">
-          © 2024 PepsiCo Chile - Todos los derechos reservados
+          © 2025 PepsiCo Chile - Todos los derechos reservados
         </p>
       </div>
 

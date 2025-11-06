@@ -498,6 +498,6 @@ TOTAL:                 $5-60/mes
 ---
 
 **Creado para:** Proyecto Capstone - PepsiCo Fleet Management  
-**Fecha:** 2024  
+**Fecha:** 2025  
 **Versión:** 1.0
 

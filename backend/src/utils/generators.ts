@@ -7,7 +7,7 @@ import { counterService } from '../services/counterService'
 /**
  * Genera un código de ingreso único secuencial
  * Formato: ING-YYYYMMDD-XXXX
- * Ejemplo: ING-20241015-0001
+ * Ejemplo: ING-20250115-0001
  */
 export async function generateEntryCode(): Promise<string> {
   return await counterService.getNextEntryNumber()
@@ -16,7 +16,7 @@ export async function generateEntryCode(): Promise<string> {
 /**
  * Genera un número de orden de trabajo único secuencial
  * Formato: OT-YYYYMMDD-XXXX
- * Ejemplo: OT-20241015-0001
+ * Ejemplo: OT-20250115-0001
  */
 export async function generateWorkOrderNumber(): Promise<string> {
   return await counterService.getNextWorkOrderNumber()
