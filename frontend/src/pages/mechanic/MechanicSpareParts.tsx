@@ -11,6 +11,14 @@ interface SparePartFilters {
   lowStock?: boolean
 }
 
+interface PaginatedResponse<T> {
+  data: T[]
+  page: number
+  limit: number
+  total: number
+  totalPages: number
+}
+
 export default function MechanicSpareParts() {
   const [parts, setParts] = useState<SparePart[]>([])
   const [loading, setLoading] = useState(true)
@@ -92,50 +100,11 @@ export default function MechanicSpareParts() {
       if (category.trim()) params.category = category.trim()
       if (lowStockOnly) params.lowStock = true
 
-      const response: any = await sparePartService.getAll(params as any)
-      
-      console.log('📦 Respuesta completa del servicio:', response)
-      console.log('📦 Tipo de respuesta:', typeof response)
-      console.log('📦 Es array?', Array.isArray(response))
-      
-      // El servicio getAll devuelve response.data del axios
-      // El backend con sendPaginated devuelve: { data: [...], page, limit, total, totalPages }
-      let items: SparePart[] = []
-      let totalCount = 0
-      
-      if (response) {
-        // Estructura paginada estándar (sendPaginated)
-        if (response.data && Array.isArray(response.data)) {
-          items = response.data
-          totalCount = response.total ?? items.length
-          console.log('✅ Items extraídos de response.data:', items.length, 'Total:', totalCount)
-        }
-        // Si tiene spareParts (estructura del servicio)
-        else if (response.spareParts && Array.isArray(response.spareParts)) {
-          items = response.spareParts
-          totalCount = response.total ?? items.length
-          console.log('✅ Items extraídos de response.spareParts:', items.length, 'Total:', totalCount)
-        }
-        // Si es directamente un array
-        else if (Array.isArray(response)) {
-          items = response
-          totalCount = items.length
-          console.log('✅ Respuesta es array directo:', items.length)
-        }
-        // Si tiene items
-        else if (response.items && Array.isArray(response.items)) {
-          items = response.items
-          totalCount = response.total ?? items.length
-          console.log('✅ Items extraídos de response.items:', items.length)
-        }
-        else {
-          console.warn('⚠️ No se pudo extraer items. Estructura de respuesta:', Object.keys(response))
-        }
-      }
-
-      if (items.length === 0 && totalCount === 0) {
-        console.info('ℹ️ No hay repuestos disponibles')
-      }
+      const response: PaginatedResponse<SparePart> | any = await sparePartService.getAll(params as any)
+      // sendPaginated devuelve { data: [...], page, limit, total, totalPages }
+      // sparePartService.getAll() devuelve res.data del axios, que es el objeto paginado
+      const items: SparePart[] = response?.data ?? response?.items ?? (Array.isArray(response) ? response : [])
+      const totalCount = response?.total ?? items.length
 
       setParts(items)
       setTotal(totalCount)
@@ -281,9 +250,28 @@ export default function MechanicSpareParts() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {parts.length === 0 && (
+                {!loading && parts.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-6 py-8 text-center text-gray-500">Sin resultados</td>
+                    <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
+                      {error ? (
+                        <span className="text-red-600">{error}</span>
+                      ) : (
+                        <div>
+                          <p className="text-gray-500 mb-2">No hay repuestos registrados</p>
+                          <p className="text-sm text-gray-400">Contacta al administrador para agregar repuestos al inventario</p>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                )}
+                {loading && parts.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
+                      <div className="flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mr-3"></div>
+                        <span>Cargando repuestos...</span>
+                      </div>
+                    </td>
                   </tr>
                 )}
                 {parts.map((p) => {
