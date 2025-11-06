@@ -5,6 +5,9 @@ import type { SparePart, SparePartFilters, PaginatedResponse } from '../../../sh
 import { useAuthStore } from '../store/authStore'
 
 export default function Inventory() {
+  // Log para verificar que se está ejecutando el código nuevo
+  console.log('✅ Inventory.tsx - Versión actualizada con unitOfMeasure - v2.0')
+  
   const { user } = useAuthStore()
   const [parts, setParts] = useState<SparePart[]>([])
   const [loading, setLoading] = useState(true)
