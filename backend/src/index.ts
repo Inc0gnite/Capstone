@@ -13,6 +13,10 @@ dotenv.config()
 const app = express()
 const PORT = process.env.PORT || 3000
 
+// Trust proxy para Railway y otros servicios con proxy reverso
+// Esto permite que express-rate-limit funcione correctamente con headers X-Forwarded-For
+app.set('trust proxy', 1)
+
 // Middlewares de seguridad
 app.use(helmet())
 

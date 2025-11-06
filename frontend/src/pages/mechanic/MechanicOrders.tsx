@@ -346,6 +346,7 @@ export default function MechanicOrders() {
       handleCloseRequestModal()
       
       // Recargar órdenes y repuestos para ver actualizaciones
+      // NO filtrar por workshopId - el mecánico debe ver TODOS los repuestos disponibles
       const [ordersResponse, sparePartsResponse] = await Promise.all([
         workOrderService.getAll({
           assignedToId: user?.id,
@@ -354,8 +355,8 @@ export default function MechanicOrders() {
         }),
         sparePartService.getAll({
           page: 1,
-          limit: 100,
-          workshopId: (user as any).workshopId
+          limit: 100
+          // NO incluir workshopId - mostrar todos los repuestos del sistema
         })
       ])
       
@@ -366,7 +367,9 @@ export default function MechanicOrders() {
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       })
       setOrders(sortedOrders)
-      setSpareParts(sparePartsResponse.data || [])
+      // Extraer datos de la respuesta paginada
+      const sparePartsData = sparePartsResponse?.data ?? sparePartsResponse?.items ?? (Array.isArray(sparePartsResponse) ? sparePartsResponse : [])
+      setSpareParts(sparePartsData)
     } catch (err: any) {
       console.error('Error solicitando repuestos:', err)
       const errorMessage = err.response?.data?.error || err.response?.data?.message || err.message || 'Error al solicitar repuestos'
