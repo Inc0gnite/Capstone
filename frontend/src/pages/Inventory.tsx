@@ -129,6 +129,11 @@ export default function Inventory() {
   const handleCreate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const form = e.currentTarget as any
+    
+    // Asegurar que unitOfMeasure y unitPrice siempre tengan valores
+    const unitOfMeasure = form.unitOfMeasure?.value?.trim() || 'unidad'
+    const unitPrice = form.unitPrice?.value ? Number(form.unitPrice.value) : 0
+    
     const data = {
       code: form.code.value.trim(),
       name: form.name.value.trim(),
@@ -137,18 +142,24 @@ export default function Inventory() {
       currentStock: Number(form.currentStock.value || 0),
       minStock: Number(form.minStock.value || 0),
       maxStock: form.maxStock.value ? Number(form.maxStock.value) : undefined,
-      unitOfMeasure: form.unitOfMeasure.value.trim() || 'unidad',
-      unitPrice: Number(form.unitPrice.value || 0),
-      supplier: form.supplier.value.trim() || undefined,
-      location: form.location.value.trim() || undefined,
+      unitOfMeasure: unitOfMeasure,
+      unitPrice: unitPrice,
+      supplier: form.supplier?.value?.trim() || undefined,
+      location: form.location?.value?.trim() || undefined,
       workshopId: (user as any)?.workshopId || (user as any)?.workshop?.id
     }
+    
+    console.log('📦 Datos a enviar al crear repuesto:', data)
+    console.log('🔍 unitOfMeasure:', unitOfMeasure, 'unitPrice:', unitPrice)
+    
     try {
       await sparePartService.create(data as any)
       closeModals()
       await loadParts()
-    } catch (err) {
-      alert('No se pudo crear el repuesto')
+    } catch (err: any) {
+      console.error('❌ Error al crear repuesto:', err)
+      const errorMessage = err?.response?.data?.error || err?.message || 'No se pudo crear el repuesto'
+      alert(errorMessage)
     }
   }
 
