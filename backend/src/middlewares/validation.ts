@@ -7,7 +7,8 @@ import { validateRUT, validateEmail, validatePassword } from '../utils/validatio
  */
 export function validateBody(requiredFields: string[]) {
   return (req: Request, res: Response, next: NextFunction): void => {
-    const missingFields = requiredFields.filter((field) => !req.body[field])
+    // Verificar que el campo exista (no undefined/null), permitiendo valores falsy válidos como 0, false, ""
+    const missingFields = requiredFields.filter((field) => req.body[field] === undefined || req.body[field] === null)
 
     if (missingFields.length > 0) {
       sendError(
