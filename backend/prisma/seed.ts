@@ -849,12 +849,6 @@ async function main() {
   console.log(`   - ${spareParts.length} repuestos`)
   console.log(`   - ${entries.length} ingresos`)
   console.log(`   - 1 orden de trabajo`)
-  console.log('\n🔐 Credenciales de prueba:')
-  console.log('   Admin:        admin@pepsico.cl / admin123')
-  console.log('   Guardia:      guardia@pepsico.cl / admin123')
-  console.log('   Recepción:    recepcion@pepsico.cl / admin123')
-  console.log('   Mecánico:     mecanico1@pepsico.cl / admin123')
-  console.log('   Jefe Taller:  jefe@pepsico.cl / admin123')
 }
 
 main()

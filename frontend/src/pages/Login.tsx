@@ -194,18 +194,6 @@ function Login() {
             </div>
           </form>
 
-          {/* Credenciales de prueba */}
-          <div className="pt-4 border-t border-gray-200">
-            <p className="text-xs text-gray-500 text-center mb-2">Credenciales de prueba:</p>
-            <div className="text-xs text-gray-600 space-y-1">
-              <p>
-                <span className="font-medium">Admin:</span> admin@pepsico.cl / admin123
-              </p>
-              <p>
-                <span className="font-medium">Guardia:</span> guardia@pepsico.cl / admin123
-              </p>
-            </div>
-          </div>
         </div>
 
         {/* Footer */}
