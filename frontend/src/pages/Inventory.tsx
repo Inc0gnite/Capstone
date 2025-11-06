@@ -6,7 +6,9 @@ import { useAuthStore } from '../store/authStore'
 
 export default function Inventory() {
   // Log para verificar que se está ejecutando el código nuevo
-  console.log('✅ Inventory.tsx - Versión actualizada con unitOfMeasure - v2.0')
+  console.log('✅ Inventory.tsx - Versión actualizada con unitOfMeasure - v3.0')
+  console.log('🔍 Si NO ves el campo "Unidad de Medida" en el formulario, el navegador tiene caché')
+  console.log('🔍 Solución: Ctrl+Shift+Delete → Borrar caché → Reiniciar navegador')
   
   const { user } = useAuthStore()
   const [parts, setParts] = useState<SparePart[]>([])
