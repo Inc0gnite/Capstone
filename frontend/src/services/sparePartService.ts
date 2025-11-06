@@ -50,8 +50,9 @@ export const sparePartService = {
     workshopId?: string
   }) {
     const searchParams = new URLSearchParams()
-    if (params?.page) searchParams.append('page', params.page.toString())
-    if (params?.limit) searchParams.append('limit', params.limit.toString())
+    // Siempre incluir page y limit (valores por defecto si no se proporcionan)
+    searchParams.append('page', (params?.page || 1).toString())
+    searchParams.append('limit', (params?.limit || 10).toString())
     if (params?.category) searchParams.append('category', params.category)
     if (params?.lowStock) searchParams.append('lowStock', params.lowStock.toString())
     if (params?.search) searchParams.append('search', params.search)
