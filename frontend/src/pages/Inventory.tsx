@@ -133,9 +133,25 @@ export default function Inventory() {
     e.preventDefault()
     const form = e.currentTarget as any
     
-    // Asegurar que unitOfMeasure y unitPrice siempre tengan valores
-    const unitOfMeasure = form.unitOfMeasure?.value?.trim() || 'unidad'
-    const unitPrice = form.unitPrice?.value ? Number(form.unitPrice.value) : 0
+    // Validar y obtener unitOfMeasure - asegurar que siempre tenga un valor válido
+    const unitOfMeasureElement = form.unitOfMeasure || form['create-unitOfMeasure']
+    const unitOfMeasure = unitOfMeasureElement?.value?.trim() || 'unidad'
+    
+    // Validar y obtener unitPrice - asegurar que siempre sea un número válido
+    const unitPriceElement = form.unitPrice || form['create-price']
+    const unitPriceValue = unitPriceElement?.value
+    const unitPrice = unitPriceValue && unitPriceValue !== '' ? Number(unitPriceValue) : 0
+    
+    // Validar que los campos obligatorios estén presentes
+    if (!unitOfMeasure || unitOfMeasure === '') {
+      alert('Por favor selecciona una unidad de medida')
+      return
+    }
+    
+    if (unitPrice < 0 || isNaN(unitPrice)) {
+      alert('Por favor ingresa un precio válido (mayor o igual a 0)')
+      return
+    }
     
     const data = {
       code: form.code.value.trim(),
@@ -152,8 +168,13 @@ export default function Inventory() {
       workshopId: (user as any)?.workshopId || (user as any)?.workshop?.id
     }
     
-    console.log('📦 Datos a enviar al crear repuesto:', data)
+    console.log('📦 Datos a enviar al crear repuesto:', JSON.stringify(data, null, 2))
     console.log('🔍 unitOfMeasure:', unitOfMeasure, 'unitPrice:', unitPrice)
+    console.log('🔍 Form elements:', {
+      unitOfMeasureElement: !!unitOfMeasureElement,
+      unitPriceElement: !!unitPriceElement,
+      allFormElements: Object.keys(form).filter(k => k.includes('unit'))
+    })
     
     try {
       await sparePartService.create(data as any)
@@ -161,6 +182,7 @@ export default function Inventory() {
       await loadParts()
     } catch (err: any) {
       console.error('❌ Error al crear repuesto:', err)
+      console.error('❌ Error response:', err?.response?.data)
       const errorMessage = err?.response?.data?.error || err?.message || 'No se pudo crear el repuesto'
       alert(errorMessage)
     }
@@ -403,7 +425,7 @@ export default function Inventory() {
                   </div>
                   <div>
                     <label htmlFor="create-unitOfMeasure" className="block text-sm font-medium text-gray-700 mb-1">Unidad de Medida <span className="text-red-500">*</span></label>
-                    <select id="create-unitOfMeasure" name="unitOfMeasure" className="w-full px-3 py-2 border rounded" required>
+                    <select id="create-unitOfMeasure" name="unitOfMeasure" className="w-full px-3 py-2 border rounded" required defaultValue="unidad">
                       <option value="unidad">Unidad</option>
                       <option value="pieza">Pieza</option>
                       <option value="litro">Litro</option>
