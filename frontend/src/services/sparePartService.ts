@@ -25,7 +25,8 @@ export interface CreateSparePartData {
   currentStock: number
   minStock: number
   maxStock?: number
-  price?: number
+  unitOfMeasure: string
+  unitPrice: number
   supplier?: string
   location?: string
   workshopId: string
