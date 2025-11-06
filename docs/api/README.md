@@ -641,7 +641,7 @@ GET /vehicle-entries?status=ingresado&workshopId=uuid&page=1
   "data": [
     {
       "id": "uuid",
-      "entryCode": "ING-20250115-0001",
+      "entryCode": "ING-20241015-0001",
       "vehicle": {
         "licensePlate": "ABCD-12",
         "brand": "Mercedes-Benz",
@@ -653,7 +653,7 @@ GET /vehicle-entries?status=ingresado&workshopId=uuid&page=1
       "driverRut": "16.666.666-6",
       "driverName": "Roberto González",
       "driverPhone": "+56912345678",
-      "entryDate": "2025-01-15T08:30:00Z",
+      "entryDate": "2024-10-15T08:30:00Z",
       "exitDate": null,
       "entryKm": 125000,
       "exitKm": null,
@@ -809,7 +809,7 @@ GET /work-orders?status=en_progreso&priority=alta&assignedToId=uuid
         "lastName": "Silva"
       },
       "currentStatus": "en_progreso",
-      "startedAt": "2025-01-15T08:00:00Z",
+      "startedAt": "2024-10-15T08:00:00Z",
       "completedAt": null,
       "totalHours": null,
       "_count": {
@@ -817,7 +817,7 @@ GET /work-orders?status=en_progreso&priority=alta&assignedToId=uuid
         "photos": 2,
         "pauses": 1
       },
-      "createdAt": "2025-01-15T07:30:00Z"
+      "createdAt": "2024-10-15T07:30:00Z"
     }
   ],
   "pagination": { ... }
@@ -864,7 +864,7 @@ Obtener orden completa con detalles.
   "success": true,
   "data": {
     "id": "uuid",
-    "orderNumber": "OT-20250115-0001",
+    "orderNumber": "OT-20241015-0001",
     "vehicle": { ... },
     "entry": { ... },
     "workshop": { ... },
@@ -874,12 +874,12 @@ Obtener orden completa con detalles.
       {
         "status": "pendiente",
         "observations": "Orden creada",
-        "changedAt": "2025-01-15T07:30:00Z"
+        "changedAt": "2024-10-15T07:30:00Z"
       },
       {
         "status": "en_progreso",
         "observations": "Iniciando trabajos",
-        "changedAt": "2025-01-15T08:00:00Z"
+        "changedAt": "2024-10-15T08:00:00Z"
       }
     ],
     "photos": [
@@ -887,7 +887,7 @@ Obtener orden completa con detalles.
         "url": "https://...",
         "description": "Estado inicial",
         "photoType": "before",
-        "uploadedAt": "2025-01-15T08:05:00Z"
+        "uploadedAt": "2024-10-15T08:05:00Z"
       }
     ],
     "spareParts": [
@@ -904,8 +904,8 @@ Obtener orden completa con detalles.
     "pauses": [
       {
         "reason": "Esperando repuestos",
-        "pausedAt": "2025-01-15T10:00:00Z",
-        "resumedAt": "2025-01-15T10:30:00Z",
+        "pausedAt": "2024-10-15T10:00:00Z",
+        "resumedAt": "2024-10-15T10:30:00Z",
         "duration": 30
       }
     ]
@@ -1364,14 +1364,14 @@ Estadísticas generales del sistema.
     "lowStockItems": 8,
     "recentEntries": [
       {
-        "entryCode": "ING-20250115-0005",
+        "entryCode": "ING-20241015-0005",
         "vehicle": { "licensePlate": "WXYZ-99" },
-        "entryDate": "2025-01-15T12:30:00Z"
+        "entryDate": "2024-10-15T12:30:00Z"
       }
     ],
     "urgentWorkOrders": [
       {
-        "orderNumber": "OT-20250115-0008",
+        "orderNumber": "OT-20241015-0008",
         "priority": "critica",
         "vehicle": { "licensePlate": "ABCD-12" }
       }
@@ -1692,17 +1692,6 @@ Content-Type: application/json
 ### Colección de Insomnia
 
 Importa el archivo `insomnia_collection.json` para tener todas las requests pre-configuradas.
-
-### Credenciales de Prueba
-
-```
-Admin:          admin@pepsico.cl / admin123
-Guardia:        guardia@pepsico.cl / admin123
-Recepcionista:  recepcion@pepsico.cl / admin123
-Mecánico 1:     mecanico1@pepsico.cl / admin123
-Mecánico 2:     mecanico2@pepsico.cl / admin123
-Jefe Taller:    jefe@pepsico.cl / admin123
-```
 
 ---
 
