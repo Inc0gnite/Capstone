@@ -245,7 +245,7 @@ export default function Inventory() {
       minStock: Number(form.minStock.value || 0),
       maxStock: form.maxStock.value ? Number(form.maxStock.value) : undefined,
       unitOfMeasure: form.unitOfMeasure?.value?.trim() || (editingPart as any).unitOfMeasure || 'unidad',
-      unitPrice: form.unitPrice.value ? Number(form.unitPrice.value) : (editingPart as any).unitPrice || 0,
+      // unitPrice no se edita, se mantiene el valor original
       supplier: form.supplier.value.trim() || undefined,
       location: form.location.value.trim() || undefined,
     }
@@ -616,10 +616,6 @@ export default function Inventory() {
                       <option value="rollo">Rollo</option>
                       <option value="galón">Galón</option>
                     </select>
-                  </div>
-                  <div>
-                    <label htmlFor="edit-price" className="block text-sm font-medium text-gray-700 mb-1">Precio Unitario</label>
-                    <input id="edit-price" name="unitPrice" type="number" step="0.01" min="0" defaultValue={(editingPart as any).unitPrice ?? ''} placeholder="Precio" className="w-full px-3 py-2 border rounded" />
                   </div>
                   <div>
                     <label htmlFor="edit-currentStock" className="block text-sm font-medium text-gray-700 mb-1">Stock Actual</label>
