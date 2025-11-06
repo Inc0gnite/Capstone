@@ -51,6 +51,24 @@ export interface WorkOrder {
     description?: string
     createdAt: string
   }>
+  spareParts?: Array<{
+    id: string
+    workOrderId: string
+    sparePartId: string
+    quantityRequested: number
+    quantityDelivered?: number
+    status: string
+    requestedAt: string
+    deliveredAt?: string
+    observations?: string
+    sparePart: {
+      id: string
+      name: string
+      code: string
+      category: string
+      currentStock: number
+    }
+  }>
 }
 
 export interface CreateWorkOrderData {

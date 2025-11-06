@@ -521,6 +521,104 @@ export default function WorkOrderDetail() {
               </div>
             )}
 
+            {/* Repuestos Solicitados */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <span className="mr-2">📦</span>
+                Repuestos Solicitados
+                {workOrder.spareParts && workOrder.spareParts.length > 0 && (
+                  <span className="ml-2 text-sm font-normal text-gray-500">({workOrder.spareParts.length})</span>
+                )}
+              </h3>
+              
+              {workOrder.spareParts && workOrder.spareParts.length > 0 ? (
+                <div className="space-y-3">
+                  {workOrder.spareParts.map((sparePartRequest) => {
+                    const getStatusConfig = (status: string) => {
+                      const configs: Record<string, { label: string; color: string; bgColor: string; icon: string }> = {
+                        solicitado: { label: 'Solicitado', color: 'text-yellow-800', bgColor: 'bg-yellow-100', icon: '⏳' },
+                        entregado: { label: 'Entregado', color: 'text-green-800', bgColor: 'bg-green-100', icon: '✅' },
+                        cancelado: { label: 'Cancelado', color: 'text-red-800', bgColor: 'bg-red-100', icon: '❌' },
+                      }
+                      return configs[status] || { label: status, color: 'text-gray-800', bgColor: 'bg-gray-100', icon: '📋' }
+                    }
+                    
+                    const statusConfig = getStatusConfig(sparePartRequest.status)
+                    const isDelivered = sparePartRequest.status === 'entregado'
+                    
+                    return (
+                      <div
+                        key={sparePartRequest.id}
+                        className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                      >
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-2 mb-2">
+                              <h4 className="font-semibold text-gray-900">{sparePartRequest.sparePart.name}</h4>
+                              <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                                {sparePartRequest.sparePart.code}
+                              </span>
+                            </div>
+                            <div className="flex items-center space-x-4 text-sm text-gray-600">
+                              <span>Categoría: {sparePartRequest.sparePart.category}</span>
+                              <span>•</span>
+                              <span>Stock disponible: {sparePartRequest.sparePart.currentStock}</span>
+                            </div>
+                          </div>
+                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${statusConfig.bgColor} ${statusConfig.color}`}>
+                            <span className="mr-1">{statusConfig.icon}</span>
+                            {statusConfig.label}
+                          </span>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-3 border-t border-gray-200">
+                          <div>
+                            <label className="block text-xs font-medium text-gray-500 mb-1">Cantidad Solicitada</label>
+                            <p className="text-sm font-semibold text-gray-900">{sparePartRequest.quantityRequested}</p>
+                          </div>
+                          {isDelivered && sparePartRequest.quantityDelivered !== undefined && (
+                            <div>
+                              <label className="block text-xs font-medium text-gray-500 mb-1">Cantidad Entregada</label>
+                              <p className="text-sm font-semibold text-green-600">{sparePartRequest.quantityDelivered}</p>
+                            </div>
+                          )}
+                          <div>
+                            <label className="block text-xs font-medium text-gray-500 mb-1">Fecha de Solicitud</label>
+                            <p className="text-sm text-gray-900">{formatDate(sparePartRequest.requestedAt)}</p>
+                          </div>
+                          {isDelivered && sparePartRequest.deliveredAt && (
+                            <div>
+                              <label className="block text-xs font-medium text-gray-500 mb-1">Fecha de Entrega</label>
+                              <p className="text-sm text-gray-900">{formatDate(sparePartRequest.deliveredAt)}</p>
+                            </div>
+                          )}
+                        </div>
+                        
+                        {sparePartRequest.observations && (
+                          <div className="mt-3 pt-3 border-t border-gray-200">
+                            <label className="block text-xs font-medium text-gray-500 mb-1">Observaciones</label>
+                            <p className="text-sm text-gray-700">{sparePartRequest.observations}</p>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-8 bg-gray-50 rounded-lg">
+                  <p className="text-gray-600 mb-2">No hay repuestos solicitados para esta orden</p>
+                  {canRequestSpareParts() && canRequestSparePartsForOrder() && (
+                    <button
+                      onClick={() => setShowRequestSparePartsModal(true)}
+                      className="mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors text-sm"
+                    >
+                      📦 Solicitar Repuesto
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+
             {/* Fotos del Proceso */}
             {workOrder.photos && workOrder.photos.length > 0 && (
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
