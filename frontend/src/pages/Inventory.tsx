@@ -622,6 +622,20 @@ export default function Inventory() {
                     <input id="edit-price" name="unitPrice" type="number" step="0.01" min="0" defaultValue={(editingPart as any).unitPrice ?? ''} placeholder="Precio" className="w-full px-3 py-2 border rounded" />
                   </div>
                   <div>
+                    <label htmlFor="edit-currentStock" className="block text-sm font-medium text-gray-700 mb-1">Stock Actual</label>
+                    <input 
+                      id="edit-currentStock" 
+                      name="currentStock" 
+                      type="number" 
+                      defaultValue={editingPart.currentStock ?? 0} 
+                      placeholder="Stock actual" 
+                      className="w-full px-3 py-2 border rounded bg-gray-50" 
+                      readOnly
+                      title="El stock actual se modifica mediante ajustes de stock"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">ℹ️ Solo lectura - Usa "Ajustar Stock" para modificar</p>
+                  </div>
+                  <div>
                     <label htmlFor="edit-minStock" className="block text-sm font-medium text-gray-700 mb-1">Stock mínimo</label>
                     <input id="edit-minStock" name="minStock" type="number" defaultValue={editingPart.minStock} placeholder="Stock mínimo" className="w-full px-3 py-2 border rounded" required />
                   </div>
