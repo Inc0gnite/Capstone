@@ -92,3 +92,5 @@ Este archivo es **obligatorio** para cualquier SPA en Vercel. Siempre inclúyelo
 **Commit aplicado:** `58c15c2`  
 **Estado:** ✅ Solucionado
 
+
+

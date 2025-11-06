@@ -9,16 +9,18 @@ Error de conexión SMTP. Railway puede estar bloqueando conexiones SMTP.
 ## 🔍 Explicación del Problema
 
 **¿Qué significa este error?**
+
 - El sistema está intentando usar **SMTP** (Gmail, Outlook, etc.) para enviar correos
 - **Railway bloquea conexiones SMTP** (puertos 587 y 465) por políticas de seguridad
 - Por eso todas las conexiones SMTP fallan con timeout
 
 **¿Por qué está usando SMTP?**
+
 - El sistema intenta usar servicios en este orden:
+
   1. **SendGrid** (recomendado) - Si `SENDGRID_API_KEY` está configurada
   2. **Resend** - Si `RESEND_API_KEY` está configurada
   3. **SMTP** - Solo como último recurso (y falla en Railway)
-
 - Si ves este error, significa que **`SENDGRID_API_KEY` NO está configurada en Railway**
 
 ---
@@ -26,6 +28,7 @@ Error de conexión SMTP. Railway puede estar bloqueando conexiones SMTP.
 ## ✅ Solución: Configurar SendGrid
 
 SendGrid es perfecto porque:
+
 - ✅ **No usa SMTP** - Usa HTTP/HTTPS (funciona con Railway)
 - ✅ **Gratis hasta 100 emails/día** (suficiente para desarrollo)
 - ✅ **No requiere verificar dominio completo** - Solo el email remitente
@@ -55,22 +58,23 @@ SendGrid es perfecto porque:
 
 1. Ve a: **https://railway.app/**
 2. Tu proyecto → Servicio **backend** → **Variables**
-
 3. **Agrega estas 2 variables:**
 
    **Variable 1:**
+
    ```
    Name: SENDGRID_API_KEY
-   Value: SG.tu_api_key_aqui_de_sendgrid
+   Value:    Value: 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
    ```
+
    (Pega tu API Key completa desde SendGrid - debe empezar con `SG.`)
 
    **Variable 2:**
+
    ```
    Name: SENDGRID_FROM_EMAIL
    Value: pepsicomanager@gmail.com
    ```
-
 4. Railway guarda automáticamente
 
 ### PASO 3: Redeploy
@@ -82,21 +86,21 @@ SendGrid es perfecto porque:
 ### PASO 4: Verificar que Funciona
 
 1. **Revisa los logs** en Railway al iniciar:
+
    - Deberías ver: `✅ SendGrid configurado (recomendado - funciona sin dominio)`
    - **NO deberías ver**: `⚠️  Usando SMTP como fallback`
-
 2. **Prueba recuperar contraseña:**
+
    - Ve a tu frontend
    - "¿Olvidaste tu contraseña?"
    - Ingresa un email de usuario
    - Revisa los logs en Railway
-
 3. **Deberías ver:**
+
    ```
    ✅ Correo enviado exitosamente con SendGrid a: [email]
    📧 From: pepsicomanager@gmail.com
    ```
-
 4. **NO deberías ver más el error de SMTP**
 
 ---
@@ -151,4 +155,3 @@ Si ves esto, significa que SendGrid NO está configurado:
 ---
 
 **Después de estos pasos, el error de SMTP desaparecerá y el sistema usará SendGrid correctamente.** 🎉
-

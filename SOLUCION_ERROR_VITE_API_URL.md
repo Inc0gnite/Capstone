@@ -115,3 +115,5 @@ VITE_API_URL=https://backend-production-2561.up.railway.app/api
 
 **Después de corregir esta variable y hacer redeploy, debería funcionar perfectamente!** ✅
 
+
+
