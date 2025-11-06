@@ -10,6 +10,7 @@ import { WorkOrderChecklist } from '../components/WorkOrderChecklist'
 import { WordService } from '../services/wordService'
 import { sparePartService } from '../services/sparePartService'
 import { useAuthStore } from '../store/authStore'
+import { CameraCapture } from '../components/photo/CameraCapture'
 
 export default function WorkOrderDetail() {
   const { id } = useParams<{ id: string }>()
@@ -24,6 +25,8 @@ export default function WorkOrderDetail() {
   const [showExchangeMechanicModal, setShowExchangeMechanicModal] = useState(false)
   const [showRequestSparePartsModal, setShowRequestSparePartsModal] = useState(false)
   const [checklistCompleted, setChecklistCompleted] = useState(false)
+  const [showCamera, setShowCamera] = useState(false)
+  const [uploadingPhoto, setUploadingPhoto] = useState(false)
   const { user } = useAuthStore()
 
   useEffect(() => {
@@ -73,6 +76,26 @@ export default function WorkOrderDetail() {
   const handleChecklistChange = useCallback((_items: any[], allCompleted: boolean) => {
     setChecklistCompleted(allCompleted)
   }, [])
+
+  const handlePhotoTaken = async (photoDataUrl: string) => {
+    if (!workOrder) return
+
+    try {
+      setUploadingPhoto(true)
+      // Por ahora usamos la DataURL directamente
+      // En producción, aquí subirías la foto a Cloudinary u otro servicio
+      await workOrderService.addPhoto(workOrder.id, photoDataUrl, 'Foto del proceso', 'during')
+      
+      // Recargar la orden para mostrar la nueva foto
+      await loadWorkOrder()
+      setShowCamera(false)
+    } catch (err: any) {
+      console.error('Error guardando foto:', err)
+      alert('Error al guardar la foto: ' + (err.message || 'Error desconocido'))
+    } finally {
+      setUploadingPhoto(false)
+    }
+  }
 
   const handleExchangeMechanic = () => {
     setShowExchangeMechanicModal(true)
@@ -608,24 +631,46 @@ export default function WorkOrderDetail() {
             </div>
 
             {/* Fotos del Proceso */}
-            {workOrder.photos && workOrder.photos.length > 0 && (
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                  <span className="mr-2">📸</span>
-                  Fotos del Proceso ({workOrder.photos.length})
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-4 sm:mb-6 pb-3 sm:pb-4 border-b border-gray-200">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
+                  <span className="mr-2 text-lg sm:text-xl">📸</span>
+                  Fotos del Proceso
+                  {workOrder.photos && workOrder.photos.length > 0 && (
+                    <span className="ml-2 text-sm font-normal text-gray-500">({workOrder.photos.length})</span>
+                  )}
                 </h3>
-                
+                <button
+                  onClick={() => setShowCamera(true)}
+                  disabled={uploadingPhoto}
+                  className="px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                >
+                  {uploadingPhoto ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      <span>Subiendo...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>📷</span>
+                      <span>Tomar Foto</span>
+                    </>
+                  )}
+                </button>
+              </div>
+              
+              {workOrder.photos && workOrder.photos.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                   {workOrder.photos.map((photo, index) => (
-                    <div key={photo.id} className="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+                    <div key={photo.id} className="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow cursor-pointer" onClick={() => window.open(photo.url, '_blank')}>
                       <img
                         src={photo.url}
                         alt={`Foto ${index + 1}`}
-                        className="w-full h-40 object-cover"
+                        className="w-full h-32 sm:h-40 object-cover"
                       />
-                      <div className="p-3">
+                      <div className="p-2 sm:p-3">
                         {photo.description && (
-                          <p className="text-sm text-gray-700 mb-2">{photo.description}</p>
+                          <p className="text-xs sm:text-sm text-gray-700 mb-1 sm:mb-2 line-clamp-2">{photo.description}</p>
                         )}
                         <p className="text-xs text-gray-500">
                           {formatDate(photo.createdAt)}
@@ -634,8 +679,14 @@ export default function WorkOrderDetail() {
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
+              ) : (
+                <div className="text-center py-8 sm:py-12 bg-gray-50 rounded-lg">
+                  <div className="text-4xl sm:text-5xl mb-3 sm:mb-4">📷</div>
+                  <p className="text-sm sm:text-base text-gray-600 mb-2">No hay fotos registradas</p>
+                  <p className="text-xs sm:text-sm text-gray-500">Toma fotos del proceso de trabajo para documentar el avance</p>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Sidebar */}
@@ -930,6 +981,14 @@ export default function WorkOrderDetail() {
           }}
           workOrderId={workOrder.id}
           workOrderNumber={workOrder.orderNumber}
+        />
+      )}
+
+      {/* Modal de cámara para tomar fotos */}
+      {showCamera && (
+        <CameraCapture
+          onPhotoTaken={handlePhotoTaken}
+          onClose={() => setShowCamera(false)}
         />
       )}
     </MainLayout>
