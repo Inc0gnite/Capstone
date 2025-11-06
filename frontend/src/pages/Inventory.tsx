@@ -137,7 +137,8 @@ export default function Inventory() {
       currentStock: Number(form.currentStock.value || 0),
       minStock: Number(form.minStock.value || 0),
       maxStock: form.maxStock.value ? Number(form.maxStock.value) : undefined,
-      price: form.unitPrice.value ? Number(form.unitPrice.value) : undefined,
+      unitOfMeasure: form.unitOfMeasure.value.trim() || 'unidad',
+      unitPrice: Number(form.unitPrice.value || 0),
       supplier: form.supplier.value.trim() || undefined,
       location: form.location.value.trim() || undefined,
       workshopId: (user as any)?.workshopId || (user as any)?.workshop?.id
@@ -162,7 +163,8 @@ export default function Inventory() {
       description: form.description.value.trim() || undefined,
       minStock: Number(form.minStock.value || 0),
       maxStock: form.maxStock.value ? Number(form.maxStock.value) : undefined,
-      price: form.unitPrice.value ? Number(form.unitPrice.value) : undefined,
+      unitOfMeasure: form.unitOfMeasure?.value?.trim() || (editingPart as any).unitOfMeasure || 'unidad',
+      unitPrice: form.unitPrice.value ? Number(form.unitPrice.value) : (editingPart as any).unitPrice || 0,
       supplier: form.supplier.value.trim() || undefined,
       location: form.location.value.trim() || undefined,
     }
@@ -386,8 +388,20 @@ export default function Inventory() {
                     <input id="create-category" name="category" placeholder="Ej: Filtros de Aceite" className="w-full px-3 py-2 border rounded" required />
                   </div>
                   <div>
-                    <label htmlFor="create-price" className="block text-sm font-medium text-gray-700 mb-1">Precio (opcional)</label>
-                    <input id="create-price" name="unitPrice" type="number" step="0.01" placeholder="Ej: 15000" className="w-full px-3 py-2 border rounded" />
+                    <label htmlFor="create-unitOfMeasure" className="block text-sm font-medium text-gray-700 mb-1">Unidad de Medida <span className="text-red-500">*</span></label>
+                    <select id="create-unitOfMeasure" name="unitOfMeasure" className="w-full px-3 py-2 border rounded" required>
+                      <option value="unidad">Unidad</option>
+                      <option value="pieza">Pieza</option>
+                      <option value="litro">Litro</option>
+                      <option value="kilogramo">Kilogramo</option>
+                      <option value="metro">Metro</option>
+                      <option value="rollo">Rollo</option>
+                      <option value="galón">Galón</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label htmlFor="create-price" className="block text-sm font-medium text-gray-700 mb-1">Precio Unitario <span className="text-red-500">*</span></label>
+                    <input id="create-price" name="unitPrice" type="number" step="0.01" min="0" placeholder="Ej: 15000" className="w-full px-3 py-2 border rounded" required />
                   </div>
                   <div>
                     <label htmlFor="create-currentStock" className="block text-sm font-medium text-gray-700 mb-1">Stock actual</label>
@@ -446,8 +460,20 @@ export default function Inventory() {
                     <input id="edit-category" name="category" defaultValue={editingPart.category} placeholder="Categoría" className="w-full px-3 py-2 border rounded" required />
                   </div>
                   <div>
-                    <label htmlFor="edit-price" className="block text-sm font-medium text-gray-700 mb-1">Precio (opcional)</label>
-                    <input id="edit-price" name="unitPrice" type="number" step="0.01" defaultValue={(editingPart as any).unitPrice ?? ''} placeholder="Precio" className="w-full px-3 py-2 border rounded" />
+                    <label htmlFor="edit-unitOfMeasure" className="block text-sm font-medium text-gray-700 mb-1">Unidad de Medida</label>
+                    <select id="edit-unitOfMeasure" name="unitOfMeasure" className="w-full px-3 py-2 border rounded" defaultValue={(editingPart as any).unitOfMeasure || 'unidad'}>
+                      <option value="unidad">Unidad</option>
+                      <option value="pieza">Pieza</option>
+                      <option value="litro">Litro</option>
+                      <option value="kilogramo">Kilogramo</option>
+                      <option value="metro">Metro</option>
+                      <option value="rollo">Rollo</option>
+                      <option value="galón">Galón</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label htmlFor="edit-price" className="block text-sm font-medium text-gray-700 mb-1">Precio Unitario</label>
+                    <input id="edit-price" name="unitPrice" type="number" step="0.01" min="0" defaultValue={(editingPart as any).unitPrice ?? ''} placeholder="Precio" className="w-full px-3 py-2 border rounded" />
                   </div>
                   <div>
                     <label htmlFor="edit-minStock" className="block text-sm font-medium text-gray-700 mb-1">Stock mínimo</label>
