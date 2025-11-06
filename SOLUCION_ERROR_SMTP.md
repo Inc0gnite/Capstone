@@ -64,7 +64,7 @@ SendGrid es perfecto porque:
 
    ```
    Name: SENDGRID_API_KEY
-   Value:    Value: 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
+   Value: SG.tu_api_key_aqui_debes_pegarla_completa_desde_sendgrid
    ```
 
    (Pega tu API Key completa desde SendGrid - debe empezar con `SG.`)
