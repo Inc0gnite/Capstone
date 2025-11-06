@@ -1,0 +1,11 @@
+ID,Tarea,Actor/Participante,Tiempo Objetivo,Tiempo Real,Pasos Completados,Errores,Éxito (Sí/No),Satisfacción (1-5),Comentarios,Fecha
+UST-001,Registrar ingreso de vehículo completo,Guardia de Acceso,< 5 minutos,,,,,,,
+UST-002,Crear orden de trabajo,Recepcionista de Taller,< 3 minutos,,,,,,,
+UST-003,Asignar mecánico a OT,Jefe de Taller,< 1 minuto,,,,,,,
+UST-004,Actualizar estado de OT desde móvil,Mecánico,< 30 segundos,,,,,,,
+UST-005,Solicitar repuesto,Mecánico,< 1 minuto,,,,,,,
+UST-006,Buscar vehículo por patente,Usuario General,< 30 segundos,,,,,,,
+UST-007,Generar y exportar reporte,Supervisora de Flota,< 2 minutos,,,,,,,
+UST-008,Consultar dashboard en tablet,Jefe de Taller,Inmediato,,,,,,,
+UST-009,Navegar de dashboard a OT específica,Usuario General,< 1 minuto,,,,,,,
+UST-010,Entender y corregir error de validación,Usuario General,< 30 segundos,,,,,,,

@@ -1,0 +1,117 @@
+═══════════════════════════════════════════════════════════════
+  GUÍA RÁPIDA: Configurar SendGrid (No Requiere Dominio)
+═══════════════════════════════════════════════════════════════
+
+✅ VENTAJA: SendGrid NO requiere verificar dominio
+✅ Puedes enviar a CUALQUIER destinatario desde el inicio
+✅ Funciona perfectamente con Railway/Vercel
+
+═══════════════════════════════════════════════════════════════
+  PASO 1: Crear Cuenta en SendGrid
+═══════════════════════════════════════════════════════════════
+
+1. Ve a: https://sendgrid.com
+2. Haz clic en "Start for free" o "Sign Up"
+3. Completa el registro
+4. Verifica tu email
+
+═══════════════════════════════════════════════════════════════
+  PASO 2: Obtener API Key
+═══════════════════════════════════════════════════════════════
+
+1. Ve a: Settings → API Keys
+   (O directamente: https://app.sendgrid.com/settings/api_keys)
+
+2. Haz clic en "Create API Key"
+
+3. Configura:
+   ┌─────────────────────────────────────────┐
+   │ Name: PepsiCo Flota Railway            │
+   │ Permissions: Full Access              │
+   └─────────────────────────────────────────┘
+
+4. Haz clic en "Create & View"
+
+5. ⚠️ IMPORTANTE: Copia la API Key AHORA
+   Formato: SG.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx...
+   Se muestra SOLO UNA VEZ
+
+═══════════════════════════════════════════════════════════════
+  PASO 3: Verificar Email Remitente
+═══════════════════════════════════════════════════════════════
+
+1. En SendGrid, ve a: Settings → Sender Authentication
+2. Haz clic en "Verify a Single Sender"
+3. Completa:
+   ┌─────────────────────────────────────────┐
+   │ From Email: pepsicomanager@gmail.com    │
+   │ From Name: PepsiCo Flota                │
+   └─────────────────────────────────────────┘
+4. SendGrid enviará correo de verificación
+5. Abre pepsicomanager@gmail.com
+6. Haz clic en el enlace de verificación
+7. ✅ Email verificado
+
+═══════════════════════════════════════════════════════════════
+  PASO 4: Configurar Variables en Railway
+═══════════════════════════════════════════════════════════════
+
+1. Railway → Tu proyecto → Backend → Variables
+
+2. Agrega estas variables:
+
+   ┌───────────────────────────────────────────────────────┐
+   │ Variable 1:                                           │
+   │ Name: SENDGRID_API_KEY                                │
+   │ Value: SG.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx...        │
+   │                                                       │
+   │ Variable 2:                                           │
+   │ Name: SENDGRID_FROM_EMAIL                             │
+   │ Value: pepsicomanager@gmail.com                       │
+   └───────────────────────────────────────────────────────┘
+
+3. Guarda (Railway guarda automáticamente)
+
+═══════════════════════════════════════════════════════════════
+  PASO 5: Redeploy
+═══════════════════════════════════════════════════════════════
+
+Railway redeployeará automáticamente
+O haz clic en "Redeploy" manualmente
+
+═══════════════════════════════════════════════════════════════
+  PASO 6: Verificar
+═══════════════════════════════════════════════════════════════
+
+1. Railway → Logs → Deberías ver:
+   ✅ SendGrid configurado (recomendado - funciona sin dominio)
+      From Email: pepsicomanager@gmail.com
+
+2. Prueba recuperar contraseña
+
+3. Railway → Logs → Deberías ver:
+   ✅ Correo enviado exitosamente con SendGrid
+
+4. Revisa el correo del destinatario
+
+═══════════════════════════════════════════════════════════════
+  RESUMEN
+═══════════════════════════════════════════════════════════════
+
+✅ SendGrid instalado
+✅ Código actualizado para usar SendGrid primero
+✅ Fallback automático a Resend/SMTP si SendGrid falla
+✅ Guía completa: CONFIGURAR_SENDGRID_RAILWAY.md
+
+═══════════════════════════════════════════════════════════════
+  VENTAJAS
+═══════════════════════════════════════════════════════════════
+
+✅ No requiere dominio (solo verificar email)
+✅ Puedes enviar a CUALQUIERA desde el inicio
+✅ Funciona inmediatamente
+✅ Gratis 100 emails/día
+✅ Perfecto para Railway/Vercel
+
+═══════════════════════════════════════════════════════════════
+

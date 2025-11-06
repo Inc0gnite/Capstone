@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Login Guardia</title>
+</head>
+<body>
+    <h1>Test Login Guardia</h1>
+    <div id="status"></div>
+    <button onclick="testLogin()">Probar Login</button>
+    <button onclick="checkAuth()">Verificar Auth</button>
+    <button onclick="clearStorage()">Limpiar Storage</button>
+    
+    <script>
+        async function testLogin() {
+            const status = document.getElementById('status');
+            status.innerHTML = 'Probando login...';
+            
+            try {
+                const response = await fetch('http://localhost:3000/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: 'guardia@pepsico.cl',
+                        password: 'admin123'
+                    })
+                });
+                
+                const data = await response.json();
+                console.log('Respuesta del login:', data);
+                
+                if (data.success) {
+                    // Guardar tokens como lo hace el frontend
+                    sessionStorage.setItem('accessToken', data.data.accessToken);
+                    sessionStorage.setItem('refreshToken', data.data.refreshToken);
+                    
+                    status.innerHTML = `
+                        <div style="color: green;">
+                            ✅ Login exitoso<br>
+                            Usuario: ${data.data.user.firstName} ${data.data.user.lastName}<br>
+                            Rol: ${data.data.user.role.name}<br>
+                            Token guardado: ${data.data.accessToken ? 'Sí' : 'No'}
+                        </div>
+                    `;
+                } else {
+                    status.innerHTML = `<div style="color: red;">❌ Error: ${data.error}</div>`;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                status.innerHTML = `<div style="color: red;">❌ Error de conexión: ${error.message}</div>`;
+            }
+        }
+        
+        function checkAuth() {
+            const status = document.getElementById('status');
+            const token = sessionStorage.getItem('accessToken');
+            const refreshToken = sessionStorage.getItem('refreshToken');
+            
+            status.innerHTML = `
+                <div>
+                    <strong>Estado de autenticación:</strong><br>
+                    Access Token: ${token ? 'Presente (' + token.length + ' chars)' : 'Ausente'}<br>
+                    Refresh Token: ${refreshToken ? 'Presente (' + refreshToken.length + ' chars)' : 'Ausente'}<br>
+                    Keys en sessionStorage: ${Object.keys(sessionStorage).join(', ')}
+                </div>
+            `;
+        }
+        
+        function clearStorage() {
+            sessionStorage.clear();
+            document.getElementById('status').innerHTML = '<div style="color: orange;">🗑️ Storage limpiado</div>';
+        }
+        
+        // Verificar estado al cargar
+        window.onload = function() {
+            checkAuth();
+        };
+    </script>
+</body>
+</html>
+
+
