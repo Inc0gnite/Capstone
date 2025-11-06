@@ -84,6 +84,8 @@ export function useWorkOrders(workshopId?: string, assignedToId?: string) {
     } catch (err: any) {
       console.error('❌ Error cargando estadísticas desde BD:', err)
       console.error('❌ Error response:', err.response?.data)
+      // Re-lanzar el error para que el polling pueda manejarlo
+      throw err
     }
   }, [workshopId, assignedToId])
 
@@ -205,25 +207,49 @@ export function useWorkOrders(workshopId?: string, assignedToId?: string) {
     loadWorkOrders()
   }, [loadWorkOrders])
 
-  // Polling automático cada 15 segundos para estadísticas desde BD
+  // Polling automático con manejo de rate limiting
+  // Si hay error 429, aumentamos el intervalo exponencialmente
+  const [pollingInterval, setPollingInterval] = useState(60000) // Empezar con 60 segundos
+  const [statsPollingInterval, setStatsPollingInterval] = useState(120000) // Empezar con 2 minutos
+
   useEffect(() => {
-    const interval = setInterval(() => {
-      console.log('🔄 Actualización automática de estadísticas desde BD...')
-      loadStatsFromDB()
-    }, 15000) // 15 segundos para estadísticas más frecuentes
+    const interval = setInterval(async () => {
+      try {
+        console.log('🔄 Actualización automática de estadísticas desde BD...')
+        await loadStatsFromDB()
+        // Si funciona, resetear intervalo a valor normal
+        setStatsPollingInterval(120000) // 2 minutos
+      } catch (err: any) {
+        if (err.response?.status === 429) {
+          console.warn('⚠️ Rate limit alcanzado, aumentando intervalo de polling de estadísticas')
+          // Aumentar intervalo exponencialmente (máximo 5 minutos)
+          setStatsPollingInterval(prev => Math.min(prev * 2, 300000))
+        }
+      }
+    }, statsPollingInterval)
 
     return () => clearInterval(interval)
-  }, [loadStatsFromDB])
+  }, [loadStatsFromDB, statsPollingInterval])
 
-  // Polling menos frecuente para órdenes completas (cada 60 segundos)
+  // Polling menos frecuente para órdenes completas
   useEffect(() => {
-    const interval = setInterval(() => {
-      console.log('🔄 Actualización automática de lista de órdenes...')
-      loadWorkOrders()
-    }, 60000) // 60 segundos para la lista completa
+    const interval = setInterval(async () => {
+      try {
+        console.log('🔄 Actualización automática de lista de órdenes...')
+        await loadWorkOrders()
+        // Si funciona, resetear intervalo a valor normal
+        setPollingInterval(60000) // 1 minuto
+      } catch (err: any) {
+        if (err.response?.status === 429) {
+          console.warn('⚠️ Rate limit alcanzado, aumentando intervalo de polling de órdenes')
+          // Aumentar intervalo exponencialmente (máximo 5 minutos)
+          setPollingInterval(prev => Math.min(prev * 2, 300000))
+        }
+      }
+    }, pollingInterval)
 
     return () => clearInterval(interval)
-  }, [loadWorkOrders])
+  }, [loadWorkOrders, pollingInterval])
 
   // Escuchar eventos de actualización
   useEffect(() => {
