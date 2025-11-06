@@ -29,6 +29,7 @@ export default function Inventory() {
   const [showCreate, setShowCreate] = useState(false)
   const [showEdit, setShowEdit] = useState(false)
   const [editingPart, setEditingPart] = useState<SparePart | null>(null)
+  const [isCreating, setIsCreating] = useState(false)
 
   const totalPages = useMemo(() => Math.max(1, Math.ceil(total / limit)), [total, limit])
 
@@ -131,52 +132,54 @@ export default function Inventory() {
 
   const handleCreate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    
+    // Prevenir doble envío
+    if (isCreating) return
+    
+    setIsCreating(true)
     const form = e.currentTarget as any
     
-    // Validar y obtener unitOfMeasure - asegurar que siempre tenga un valor válido
-    const unitOfMeasureElement = form.unitOfMeasure || form['create-unitOfMeasure']
-    const unitOfMeasure = unitOfMeasureElement?.value?.trim() || 'unidad'
-    
-    // Validar y obtener unitPrice - asegurar que siempre sea un número válido
-    const unitPriceElement = form.unitPrice || form['create-price']
-    const unitPriceValue = unitPriceElement?.value
-    const unitPrice = unitPriceValue && unitPriceValue !== '' ? Number(unitPriceValue) : 0
-    
-    // Validar que los campos obligatorios estén presentes
-    if (!unitOfMeasure || unitOfMeasure === '') {
-      alert('Por favor selecciona una unidad de medida')
-      return
-    }
-    
-    if (unitPrice < 0 || isNaN(unitPrice)) {
-      alert('Por favor ingresa un precio válido (mayor o igual a 0)')
-      return
-    }
-    
-    const data = {
-      code: form.code.value.trim(),
-      name: form.name.value.trim(),
-      category: form.category.value.trim(),
-      description: form.description.value.trim() || undefined,
-      currentStock: Number(form.currentStock.value || 0),
-      minStock: Number(form.minStock.value || 0),
-      maxStock: form.maxStock.value ? Number(form.maxStock.value) : undefined,
-      unitOfMeasure: unitOfMeasure,
-      unitPrice: unitPrice,
-      supplier: form.supplier?.value?.trim() || undefined,
-      location: form.location?.value?.trim() || undefined,
-      workshopId: (user as any)?.workshopId || (user as any)?.workshop?.id
-    }
-    
-    console.log('📦 Datos a enviar al crear repuesto:', JSON.stringify(data, null, 2))
-    console.log('🔍 unitOfMeasure:', unitOfMeasure, 'unitPrice:', unitPrice)
-    console.log('🔍 Form elements:', {
-      unitOfMeasureElement: !!unitOfMeasureElement,
-      unitPriceElement: !!unitPriceElement,
-      allFormElements: Object.keys(form).filter(k => k.includes('unit'))
-    })
-    
     try {
+      // Validar y obtener unitOfMeasure - asegurar que siempre tenga un valor válido
+      const unitOfMeasureElement = form.unitOfMeasure || form['create-unitOfMeasure']
+      const unitOfMeasure = unitOfMeasureElement?.value?.trim() || 'unidad'
+      
+      // Validar y obtener unitPrice - asegurar que siempre sea un número válido
+      const unitPriceElement = form.unitPrice || form['create-price']
+      const unitPriceValue = unitPriceElement?.value
+      const unitPrice = unitPriceValue && unitPriceValue !== '' ? Number(unitPriceValue) : 0
+      
+      // Validar que los campos obligatorios estén presentes
+      if (!unitOfMeasure || unitOfMeasure === '') {
+        alert('Por favor selecciona una unidad de medida')
+        setIsCreating(false)
+        return
+      }
+      
+      if (unitPrice < 0 || isNaN(unitPrice)) {
+        alert('Por favor ingresa un precio válido (mayor o igual a 0)')
+        setIsCreating(false)
+        return
+      }
+      
+      const data = {
+        code: form.code.value.trim(),
+        name: form.name.value.trim(),
+        category: form.category.value.trim(),
+        description: form.description.value.trim() || undefined,
+        currentStock: Number(form.currentStock.value || 0),
+        minStock: Number(form.minStock.value || 0),
+        maxStock: form.maxStock.value ? Number(form.maxStock.value) : undefined,
+        unitOfMeasure: unitOfMeasure,
+        unitPrice: unitPrice,
+        supplier: form.supplier?.value?.trim() || undefined,
+        location: form.location?.value?.trim() || undefined,
+        workshopId: (user as any)?.workshopId || (user as any)?.workshop?.id
+      }
+      
+      console.log('📦 Datos a enviar al crear repuesto:', JSON.stringify(data, null, 2))
+      console.log('🔍 unitOfMeasure:', unitOfMeasure, 'unitPrice:', unitPrice)
+      
       await sparePartService.create(data as any)
       closeModals()
       await loadParts()
@@ -185,6 +188,8 @@ export default function Inventory() {
       console.error('❌ Error response:', err?.response?.data)
       const errorMessage = err?.response?.data?.error || err?.message || 'No se pudo crear el repuesto'
       alert(errorMessage)
+    } finally {
+      setIsCreating(false)
     }
   }
 
@@ -465,8 +470,21 @@ export default function Inventory() {
                   <textarea id="create-description" name="description" placeholder="Ej: Aceite sintético para motor diésel" className="w-full px-3 py-2 border rounded" />
                 </div>
                 <div className="flex justify-end gap-2">
-                  <button type="button" onClick={closeModals} className="px-4 py-2 rounded bg-gray-100 hover:bg-gray-200">Cancelar</button>
-                  <button type="submit" className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700">Crear</button>
+                  <button 
+                    type="button" 
+                    onClick={closeModals} 
+                    className="px-4 py-2 rounded bg-gray-100 hover:bg-gray-200"
+                    disabled={isCreating}
+                  >
+                    Cancelar
+                  </button>
+                  <button 
+                    type="submit" 
+                    className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={isCreating}
+                  >
+                    {isCreating ? 'Creando...' : 'Crear'}
+                  </button>
                 </div>
               </form>
             </div>
