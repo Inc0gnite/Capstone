@@ -244,7 +244,6 @@ export default function Inventory() {
       description: form.description.value.trim() || undefined,
       currentStock: Number(form.currentStock.value || 0),
       minStock: Number(form.minStock.value || 0),
-      maxStock: form.maxStock.value ? Number(form.maxStock.value) : undefined,
       unitOfMeasure: form.unitOfMeasure?.value?.trim() || (editingPart as any).unitOfMeasure || 'unidad',
       // unitPrice no se edita, se mantiene el valor original
       supplier: form.supplier.value.trim() || undefined,
@@ -634,10 +633,6 @@ export default function Inventory() {
                   <div>
                     <label htmlFor="edit-minStock" className="block text-sm font-medium text-gray-700 mb-1">Stock mínimo</label>
                     <input id="edit-minStock" name="minStock" type="number" defaultValue={editingPart.minStock} placeholder="Stock mínimo" className="w-full px-3 py-2 border rounded" required />
-                  </div>
-                  <div>
-                    <label htmlFor="edit-maxStock" className="block text-sm font-medium text-gray-700 mb-1">Stock máximo (opcional)</label>
-                    <input id="edit-maxStock" name="maxStock" type="number" defaultValue={(editingPart as any).maxStock ?? ''} placeholder="Stock máximo" className="w-full px-3 py-2 border rounded" />
                   </div>
                   <div>
                     <label htmlFor="edit-supplier" className="block text-sm font-medium text-gray-700 mb-1">Proveedor (opcional)</label>
