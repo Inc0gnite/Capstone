@@ -414,75 +414,76 @@ export function CreateEntryModalAdvanced({ isOpen, onClose, onSuccess }: CreateE
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 p-4">
-      <div className="relative top-4 sm:top-10 mx-auto p-4 sm:p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white max-h-[90vh] overflow-y-auto">
-        <div className="mt-3">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-lg font-medium text-gray-900">
+    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 p-2 sm:p-4">
+      <div className="relative top-2 sm:top-4 md:top-10 mx-auto p-3 sm:p-4 md:p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
+        <div className="mt-1 sm:mt-3">
+          <div className="flex justify-between items-center mb-4 sm:mb-6">
+            <h3 className="text-base sm:text-lg font-medium text-gray-900">
               Registrar Nuevo Ingreso Completo
             </h3>
             <button
               onClick={handleClose}
-              className="text-gray-400 hover:text-gray-600"
+              className="text-gray-400 hover:text-gray-600 p-1"
+              aria-label="Cerrar"
             >
               <span className="sr-only">Cerrar</span>
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
 
           {/* Indicador de pasos */}
-          <div className="flex items-center justify-center mb-8">
-            <div className="flex items-center space-x-4">
-              <div className={`flex items-center space-x-2 ${step === 'vehicle' ? 'text-blue-600' : step === 'driver' || step === 'entry' ? 'text-green-600' : 'text-gray-400'}`}>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step === 'vehicle' ? 'bg-blue-600 text-white' : step === 'driver' || step === 'entry' ? 'bg-green-600 text-white' : 'bg-gray-300 text-gray-600'}`}>
-                  <span className="text-sm font-bold">1</span>
+          <div className="flex items-center justify-center mb-4 sm:mb-6 md:mb-8 overflow-x-auto pb-2">
+            <div className="flex items-center space-x-2 sm:space-x-4 min-w-max">
+              <div className={`flex items-center space-x-1 sm:space-x-2 ${step === 'vehicle' ? 'text-blue-600' : step === 'driver' || step === 'entry' ? 'text-green-600' : 'text-gray-400'}`}>
+                <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center flex-shrink-0 ${step === 'vehicle' ? 'bg-blue-600 text-white' : step === 'driver' || step === 'entry' ? 'bg-green-600 text-white' : 'bg-gray-300 text-gray-600'}`}>
+                  <span className="text-xs sm:text-sm font-bold">1</span>
                 </div>
-                <span className="text-sm font-medium">Vehículo</span>
+                <span className="text-xs sm:text-sm font-medium hidden xs:inline">Vehículo</span>
               </div>
-              <div className={`w-8 h-0.5 ${step === 'driver' || step === 'entry' ? 'bg-green-600' : 'bg-gray-300'}`}></div>
-              <div className={`flex items-center space-x-2 ${step === 'driver' ? 'text-blue-600' : step === 'entry' ? 'text-green-600' : 'text-gray-400'}`}>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step === 'driver' ? 'bg-blue-600 text-white' : step === 'entry' ? 'bg-green-600 text-white' : 'bg-gray-300 text-gray-600'}`}>
-                  <span className="text-sm font-bold">2</span>
+              <div className={`w-4 sm:w-8 h-0.5 ${step === 'driver' || step === 'entry' ? 'bg-green-600' : 'bg-gray-300'}`}></div>
+              <div className={`flex items-center space-x-1 sm:space-x-2 ${step === 'driver' ? 'text-blue-600' : step === 'entry' ? 'text-green-600' : 'text-gray-400'}`}>
+                <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center flex-shrink-0 ${step === 'driver' ? 'bg-blue-600 text-white' : step === 'entry' ? 'bg-green-600 text-white' : 'bg-gray-300 text-gray-600'}`}>
+                  <span className="text-xs sm:text-sm font-bold">2</span>
                 </div>
-                <span className="text-sm font-medium">Conductor</span>
+                <span className="text-xs sm:text-sm font-medium hidden xs:inline">Conductor</span>
               </div>
-              <div className={`w-8 h-0.5 ${step === 'entry' ? 'bg-green-600' : 'bg-gray-300'}`}></div>
-              <div className={`flex items-center space-x-2 ${step === 'entry' ? 'text-blue-600' : 'text-gray-400'}`}>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step === 'entry' ? 'bg-blue-600 text-white' : 'bg-gray-300 text-gray-600'}`}>
-                  <span className="text-sm font-bold">3</span>
+              <div className={`w-4 sm:w-8 h-0.5 ${step === 'entry' ? 'bg-green-600' : 'bg-gray-300'}`}></div>
+              <div className={`flex items-center space-x-1 sm:space-x-2 ${step === 'entry' ? 'text-blue-600' : 'text-gray-400'}`}>
+                <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center flex-shrink-0 ${step === 'entry' ? 'bg-blue-600 text-white' : 'bg-gray-300 text-gray-600'}`}>
+                  <span className="text-xs sm:text-sm font-bold">3</span>
                 </div>
-                <span className="text-sm font-medium">Ingreso</span>
+                <span className="text-xs sm:text-sm font-medium hidden xs:inline">Ingreso</span>
               </div>
             </div>
           </div>
 
           {/* Paso 1: Datos del Vehículo */}
           {step === 'vehicle' && (
-            <form onSubmit={handleVehicleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <form onSubmit={handleVehicleSubmit} className="space-y-3 sm:space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                     Patente *
                   </label>
                   <input
                     type="text"
                     value={vehicleData.licensePlate}
                     onChange={(e) => setVehicleData({ ...vehicleData, licensePlate: e.target.value.toUpperCase() })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-2.5 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="ABCD12"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                     Tipo de Vehículo *
                   </label>
                   <select
                     value={vehicleData.vehicleType}
                     onChange={(e) => setVehicleData({ ...vehicleData, vehicleType: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-2.5 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
                   >
                     <option value="camion">Camión</option>
@@ -492,45 +493,45 @@ export function CreateEntryModalAdvanced({ isOpen, onClose, onSuccess }: CreateE
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                     Marca *
                   </label>
                   <input
                     type="text"
                     value={vehicleData.brand}
                     onChange={(e) => setVehicleData({ ...vehicleData, brand: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-2.5 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Toyota"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                     Modelo
                   </label>
                   <input
                     type="text"
                     value={vehicleData.model}
                     onChange={(e) => setVehicleData({ ...vehicleData, model: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-2.5 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Hilux (opcional)"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                     Año
                   </label>
                   <input
                     type="number"
                     value={vehicleData.year}
                     onChange={(e) => setVehicleData({ ...vehicleData, year: parseInt(e.target.value) })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-2.5 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     min="1990"
                     max={new Date().getFullYear() + 1}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                     Región *
                   </label>
                   <RegionSelector
@@ -559,7 +560,7 @@ export function CreateEntryModalAdvanced({ isOpen, onClose, onSuccess }: CreateE
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                     VIN
                   </label>
                   <VINField
@@ -572,36 +573,36 @@ export function CreateEntryModalAdvanced({ isOpen, onClose, onSuccess }: CreateE
                   </p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                     Número de Flota
                   </label>
                   <input
                     type="text"
                     value={vehicleData.fleetNumber}
                     onChange={(e) => setVehicleData({ ...vehicleData, fleetNumber: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-2.5 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="FL001"
                   />
                 </div>
               </div>
 
-              <div className="flex justify-end space-x-3 pt-4">
+              <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 sm:space-x-3 pt-3 sm:pt-4">
                 <button
                   type="button"
                   onClick={handleClose}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                  className="w-full sm:w-auto px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center space-x-2"
+                  className="w-full sm:w-auto px-3 sm:px-4 py-2 text-sm sm:text-base bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
                 >
                   {loading && (
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                   )}
-                  <span>{loading ? 'Creando vehículo...' : 'Siguiente: Conductor'}</span>
+                  <span>{loading ? 'Creando vehículo...' : <><span className="hidden sm:inline">Siguiente: </span>Conductor</>}</span>
                 </button>
               </div>
             </form>
@@ -609,61 +610,61 @@ export function CreateEntryModalAdvanced({ isOpen, onClose, onSuccess }: CreateE
 
           {/* Paso 2: Datos del Conductor */}
           {step === 'driver' && (
-            <form onSubmit={handleDriverSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <form onSubmit={handleDriverSubmit} className="space-y-3 sm:space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                     Nombre del Conductor *
                   </label>
                   <input
                     type="text"
                     value={driverData.name}
                     onChange={(e) => setDriverData({ ...driverData, name: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-2.5 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Juan Pérez"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                     RUT *
                   </label>
                   <input
                     type="text"
                     value={driverData.rut}
                     onChange={(e) => setDriverData({ ...driverData, rut: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-2.5 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="12.345.678-9"
                     required
                   />
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                     Teléfono
                   </label>
                   <input
                     type="tel"
                     value={driverData.phone}
                     onChange={(e) => setDriverData({ ...driverData, phone: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-2.5 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="+56912345678"
                   />
                 </div>
               </div>
 
-              <div className="flex justify-between pt-4">
+              <div className="flex flex-col sm:flex-row justify-between gap-2 sm:gap-3 pt-3 sm:pt-4">
                 <button
                   type="button"
                   onClick={() => setStep('vehicle')}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                  className="w-full sm:w-auto px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
                 >
-                  ← Anterior: Vehículo
+                  <span className="hidden sm:inline">← Anterior: </span>Vehículo
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                  className="w-full sm:w-auto px-3 sm:px-4 py-2 text-sm sm:text-base bg-blue-600 text-white rounded-md hover:bg-blue-700"
                 >
-                  Siguiente: Ingreso →
+                  <span className="hidden sm:inline">Siguiente: </span>Ingreso<span className="hidden sm:inline"> →</span>
                 </button>
               </div>
             </form>
@@ -671,29 +672,29 @@ export function CreateEntryModalAdvanced({ isOpen, onClose, onSuccess }: CreateE
 
           {/* Paso 3: Datos del Ingreso */}
           {step === 'entry' && (
-            <form onSubmit={handleEntrySubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <form onSubmit={handleEntrySubmit} className="space-y-3 sm:space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                     Kilometraje de Ingreso *
                   </label>
                   <input
                     type="number"
                     value={entryData.entryKm}
                     onChange={(e) => setEntryData({ ...entryData, entryKm: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-2.5 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="50000"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                     Nivel de Combustible
                   </label>
                   <select
                     value={entryData.fuelLevel}
                     onChange={(e) => setEntryData({ ...entryData, fuelLevel: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-2.5 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="empty">Vacío</option>
                     <option value="quarter">1/4</option>
@@ -705,31 +706,31 @@ export function CreateEntryModalAdvanced({ isOpen, onClose, onSuccess }: CreateE
               </div>
 
               {/* Control de Llaves */}
-              <div className="space-y-3">
-                <label className="block text-sm font-medium text-gray-700">
+              <div className="space-y-2 sm:space-y-3">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700">
                   Control de Llaves
                 </label>
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-2 sm:space-x-3">
                   <label className="flex items-center">
                     <input
                       type="checkbox"
                       checked={entryData.hasKeys}
                       onChange={(e) => setEntryData({ ...entryData, hasKeys: e.target.checked })}
-                      className="mr-2"
+                      className="mr-2 w-4 h-4 sm:w-5 sm:h-5"
                     />
-                    <span className="text-sm text-gray-700">¿Tiene llaves?</span>
+                    <span className="text-xs sm:text-sm text-gray-700">¿Tiene llaves?</span>
                   </label>
                 </div>
                 {entryData.hasKeys && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                       Ubicación de las Llaves
                     </label>
                     <input
                       type="text"
                       value={entryData.keyLocation}
                       onChange={(e) => setEntryData({ ...entryData, keyLocation: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-2.5 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="Oficina principal"
                     />
                   </div>
@@ -737,26 +738,26 @@ export function CreateEntryModalAdvanced({ isOpen, onClose, onSuccess }: CreateE
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                   Observaciones
                 </label>
                 <textarea
                   value={entryData.observations}
                   onChange={(e) => setEntryData({ ...entryData, observations: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-2.5 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                   rows={3}
                   placeholder="Observaciones adicionales..."
                 />
               </div>
 
               {/* Sección de Fotografías */}
-              <div className="border-t pt-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-medium text-gray-900">📸 Fotografías del Vehículo</h3>
+              <div className="border-t pt-4 sm:pt-6">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 mb-3 sm:mb-4">
+                  <h3 className="text-base sm:text-lg font-medium text-gray-900">📸 Fotografías del Vehículo</h3>
                   <button
                     type="button"
                     onClick={() => setShowPhotoSection(!showPhotoSection)}
-                    className="flex items-center gap-2 text-blue-600 hover:text-blue-700 text-sm font-medium"
+                    className="flex items-center gap-1 sm:gap-2 text-blue-600 hover:text-blue-700 text-xs sm:text-sm font-medium"
                   >
                     {showPhotoSection ? 'Ocultar' : 'Mostrar'} Fotos
                     <span className="text-xs">
@@ -776,18 +777,18 @@ export function CreateEntryModalAdvanced({ isOpen, onClose, onSuccess }: CreateE
                 )}
               </div>
 
-              <div className="flex justify-between pt-4">
+              <div className="flex flex-col sm:flex-row justify-between gap-2 sm:gap-3 pt-3 sm:pt-4">
                 <button
                   type="button"
                   onClick={() => setStep('driver')}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                  className="w-full sm:w-auto px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
                 >
-                  ← Anterior: Conductor
+                  <span className="hidden sm:inline">← Anterior: </span>Conductor
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center space-x-2"
+                  className="w-full sm:w-auto px-3 sm:px-4 py-2 text-sm sm:text-base bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
                 >
                   {loading && (
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>

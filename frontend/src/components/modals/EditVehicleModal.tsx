@@ -79,86 +79,86 @@ export function EditVehicleModal({ isOpen, onClose, onSuccess, vehicle }: EditVe
   if (!isOpen || !vehicle) return null
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl">
-        <div className="p-4 border-b flex items-center justify-between">
-          <h2 className="text-lg font-semibold">✏️ Editar Vehículo - {vehicle.licensePlate}</h2>
-          <button onClick={handleClose} className="text-gray-500 hover:text-gray-700">✕</button>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
+        <div className="p-3 sm:p-4 border-b flex items-center justify-between sticky top-0 bg-white">
+          <h2 className="text-base sm:text-lg font-semibold">✏️ Editar Vehículo - {vehicle.licensePlate}</h2>
+          <button onClick={handleClose} className="text-gray-500 hover:text-gray-700 text-xl sm:text-2xl p-1" aria-label="Cerrar">✕</button>
         </div>
 
-        <div className="p-6 space-y-4">
+        <div className="p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4">
           {error && (
-            <div className="p-3 bg-red-100 text-red-800 border border-red-300 rounded">{error}</div>
+            <div className="p-2 sm:p-3 bg-red-100 text-red-800 border border-red-300 rounded text-xs sm:text-sm">{error}</div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Marca</label>
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">Marca</label>
               <input
                 value={brand}
                 onChange={(e) => setBrand(e.target.value)}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-2.5 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border rounded-lg focus:ring-2 focus:ring-blue-500"
                 placeholder="Toyota"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Modelo</label>
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">Modelo</label>
               <input
                 value={model}
                 onChange={(e) => setModel(e.target.value)}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-2.5 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border rounded-lg focus:ring-2 focus:ring-blue-500"
                 placeholder="Corolla"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Año</label>
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">Año</label>
               <input
                 type="number"
                 value={year}
                 onChange={(e) => setYear(e.target.value === '' ? '' : Number(e.target.value))}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-2.5 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border rounded-lg focus:ring-2 focus:ring-blue-500"
                 placeholder="2020"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">VIN</label>
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">VIN</label>
               <input
                 value={vin}
                 onChange={(e) => setVin(e.target.value)}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-2.5 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border rounded-lg focus:ring-2 focus:ring-blue-500"
                 placeholder="1HGCM82633A004352"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Número de Flota</label>
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">Número de Flota</label>
               <input
                 value={fleetNumber}
                 onChange={(e) => setFleetNumber(e.target.value)}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-2.5 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border rounded-lg focus:ring-2 focus:ring-blue-500"
                 placeholder="F-123"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">Tipo</label>
               <input
                 value={vehicleType}
                 onChange={(e) => setVehicleType(e.target.value)}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-2.5 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border rounded-lg focus:ring-2 focus:ring-blue-500"
                 placeholder="Sedán"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Estado</label>
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">Estado</label>
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-2.5 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border rounded-lg focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Sin cambio</option>
                 <option value="active">Activo</option>
@@ -169,12 +169,12 @@ export function EditVehicleModal({ isOpen, onClose, onSuccess, vehicle }: EditVe
           </div>
         </div>
 
-        <div className="p-4 border-t flex justify-end space-x-3">
-          <button onClick={handleClose} className="px-4 py-2 text-gray-600 hover:text-gray-800" disabled={loading}>Cancelar</button>
+        <div className="p-3 sm:p-4 border-t flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 sm:space-x-3">
+          <button onClick={handleClose} className="w-full sm:w-auto px-3 sm:px-4 py-2 text-sm sm:text-base text-gray-600 hover:text-gray-800" disabled={loading}>Cancelar</button>
           <button
             onClick={handleSave}
             disabled={loading}
-            className={`px-4 py-2 rounded-lg text-white ${loading ? 'bg-blue-300' : 'bg-blue-600 hover:bg-blue-700'}`}
+            className={`w-full sm:w-auto px-3 sm:px-4 py-2 text-sm sm:text-base rounded-lg text-white ${loading ? 'bg-blue-300' : 'bg-blue-600 hover:bg-blue-700'}`}
           >
             {loading ? 'Guardando...' : 'Guardar cambios'}
           </button>

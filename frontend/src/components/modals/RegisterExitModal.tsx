@@ -114,28 +114,29 @@ export function RegisterExitModal({ isOpen, onClose, onSuccess, entry }: Registe
   if (!isOpen || !entry) return null
 
   return (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-      <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-2/3 lg:w-1/2 shadow-lg rounded-md bg-white">
-        <div className="mt-3">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-medium text-gray-900">
+    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 p-2 sm:p-4">
+      <div className="relative top-2 sm:top-4 md:top-20 mx-auto p-3 sm:p-4 md:p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
+        <div className="mt-1 sm:mt-3">
+          <div className="flex justify-between items-center mb-3 sm:mb-4">
+            <h3 className="text-base sm:text-lg font-medium text-gray-900">
               Registrar Salida de Vehículo
             </h3>
             <button
               onClick={handleClose}
-              className="text-gray-400 hover:text-gray-600"
+              className="text-gray-400 hover:text-gray-600 p-1"
+              aria-label="Cerrar"
             >
               <span className="sr-only">Cerrar</span>
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
           
           {/* Información del Ingreso */}
-          <div className="bg-gray-50 rounded-lg p-4 mb-6">
-            <h4 className="font-medium text-gray-900 mb-3">📋 Información del Ingreso</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+          <div className="bg-gray-50 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
+            <h4 className="text-sm sm:text-base font-medium text-gray-900 mb-2 sm:mb-3">📋 Información del Ingreso</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 md:gap-4 text-xs sm:text-sm">
               <div>
                 <span className="text-gray-600">🚗 Vehículo:</span>
                 <span className="ml-2 font-medium">{entry.entryCode}</span>
@@ -168,10 +169,10 @@ export function RegisterExitModal({ isOpen, onClose, onSuccess, entry }: Registe
             </div>
           </div>
           
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
             {/* Kilometraje de Salida */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                 🚗 Kilometraje de Salida *
               </label>
               <input
@@ -182,11 +183,11 @@ export function RegisterExitModal({ isOpen, onClose, onSuccess, entry }: Registe
                 onChange={(e) => setFormData({ ...formData, exitKm: e.target.value })}
                 placeholder={`${entry.entryKm + 100}`}
                 min={entry.entryKm + 1}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-2.5 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               />
-              <div className="mt-2 p-3 bg-blue-50 rounded-md">
-                <p className="text-sm text-blue-800">
+              <div className="mt-2 p-2 sm:p-3 bg-blue-50 rounded-md">
+                <p className="text-xs sm:text-sm text-blue-800">
                   <strong>KM de entrada:</strong> {entry.entryKm.toLocaleString()} km
                 </p>
                 <p className="text-xs text-blue-600 mt-1">
@@ -196,15 +197,15 @@ export function RegisterExitModal({ isOpen, onClose, onSuccess, entry }: Registe
             </div>
 
             {/* Información sobre hora automática */}
-            <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
-              <p className="text-sm text-blue-800">
+            <div className="p-2 sm:p-3 bg-blue-50 border border-blue-200 rounded-md">
+              <p className="text-xs sm:text-sm text-blue-800">
                 <strong>🕐 Hora de salida:</strong> Se registrará automáticamente la hora actual del sistema
               </p>
             </div>
 
             {/* Observaciones */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                 📝 Observaciones (Opcional)
               </label>
               <textarea
@@ -212,23 +213,23 @@ export function RegisterExitModal({ isOpen, onClose, onSuccess, entry }: Registe
                 onChange={(e) => setFormData({ ...formData, observations: e.target.value })}
                 placeholder="Observaciones sobre la salida del vehículo (estado, entregas, etc.)..."
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-2.5 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
               />
             </div>
 
             {/* Botones */}
-            <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+            <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 sm:space-x-3 pt-3 sm:pt-4 border-t border-gray-200">
               <button
                 type="button"
                 onClick={handleClose}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors"
+                className="w-full sm:w-auto px-3 sm:px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors"
               >
                 ❌ Cancelar
               </button>
               <button
                 type="submit"
                 disabled={loading || !formData.exitKm}
-                className="px-6 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
+                className="w-full sm:w-auto px-4 sm:px-6 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center space-x-2"
               >
                 {loading ? (
                   <>

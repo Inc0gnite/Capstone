@@ -155,34 +155,35 @@ export function CreateEntryModal({ isOpen, onClose, onSuccess }: CreateEntryModa
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-      <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-2/3 lg:w-1/2 shadow-lg rounded-md bg-white">
-        <div className="mt-3">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-medium text-gray-900">
+    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 p-2 sm:p-4">
+      <div className="relative top-2 sm:top-4 md:top-20 mx-auto p-3 sm:p-4 md:p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
+        <div className="mt-1 sm:mt-3">
+          <div className="flex justify-between items-center mb-3 sm:mb-4">
+            <h3 className="text-base sm:text-lg font-medium text-gray-900">
               Registrar Nuevo Ingreso
             </h3>
             <button
               onClick={handleClose}
-              className="text-gray-400 hover:text-gray-600"
+              className="text-gray-400 hover:text-gray-600 p-1"
+              aria-label="Cerrar"
             >
               <span className="sr-only">Cerrar</span>
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
           
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
             {/* Vehículo */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                 Vehículo *
               </label>
               <select
                 value={formData.vehicleId}
                 onChange={(e) => setFormData({ ...formData, vehicleId: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-2.5 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
                 disabled={loadingVehicles}
               >
@@ -203,9 +204,9 @@ export function CreateEntryModal({ isOpen, onClose, onSuccess }: CreateEntryModa
             </div>
 
             {/* Información del Conductor */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                   RUT Conductor *
                 </label>
                 <input
@@ -213,12 +214,12 @@ export function CreateEntryModal({ isOpen, onClose, onSuccess }: CreateEntryModa
                   value={formData.driverRut}
                   onChange={(e) => setFormData({ ...formData, driverRut: e.target.value })}
                   placeholder="12345678-9"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-2.5 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                   Nombre Conductor *
                 </label>
                 <input
@@ -226,14 +227,14 @@ export function CreateEntryModal({ isOpen, onClose, onSuccess }: CreateEntryModa
                   value={formData.driverName}
                   onChange={(e) => setFormData({ ...formData, driverName: e.target.value })}
                   placeholder="Nombre completo"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-2.5 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                 Teléfono Conductor
               </label>
               <input
@@ -241,14 +242,14 @@ export function CreateEntryModal({ isOpen, onClose, onSuccess }: CreateEntryModa
                 value={formData.driverPhone}
                 onChange={(e) => setFormData({ ...formData, driverPhone: e.target.value })}
                 placeholder="+56912345678"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-2.5 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
             {/* Información del Vehículo */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                   Kilometraje Ingreso *
                 </label>
                 <input
@@ -256,18 +257,18 @@ export function CreateEntryModal({ isOpen, onClose, onSuccess }: CreateEntryModa
                   value={formData.entryKm}
                   onChange={(e) => setFormData({ ...formData, entryKm: e.target.value })}
                   placeholder="50000"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-2.5 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                   Nivel de Combustible
                 </label>
                 <select
                   value={formData.fuelLevel}
                   onChange={(e) => setFormData({ ...formData, fuelLevel: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-2.5 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="full">Lleno</option>
                   <option value="half">Medio</option>
@@ -279,13 +280,13 @@ export function CreateEntryModal({ isOpen, onClose, onSuccess }: CreateEntryModa
             {/* Control de Llaves */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                   ¿El vehículo tiene llaves?
                 </label>
                 <select
                   value={formData.hasKeys ? 'true' : 'false'}
                   onChange={(e) => setFormData({ ...formData, hasKeys: e.target.value === 'true' })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-2.5 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="true">Sí</option>
                   <option value="false">No</option>
@@ -293,7 +294,7 @@ export function CreateEntryModal({ isOpen, onClose, onSuccess }: CreateEntryModa
               </div>
               {formData.hasKeys && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                     Ubicación de las llaves
                   </label>
                   <input
@@ -301,7 +302,7 @@ export function CreateEntryModal({ isOpen, onClose, onSuccess }: CreateEntryModa
                     value={formData.keyLocation}
                     onChange={(e) => setFormData({ ...formData, keyLocation: e.target.value })}
                     placeholder="Ej: Oficina principal, Cajón 1"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-2.5 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
               )}
@@ -317,18 +318,18 @@ export function CreateEntryModal({ isOpen, onClose, onSuccess }: CreateEntryModa
                 onChange={(e) => setFormData({ ...formData, observations: e.target.value })}
                 placeholder="Observaciones adicionales..."
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-2.5 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
               />
             </div>
 
             {/* Sección de Fotografías */}
-            <div className="border-t pt-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium text-gray-900">📸 Fotografías del Vehículo</h3>
+            <div className="border-t pt-4 sm:pt-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 mb-3 sm:mb-4">
+                <h3 className="text-base sm:text-lg font-medium text-gray-900">📸 Fotografías del Vehículo</h3>
                 <button
                   type="button"
                   onClick={() => setShowPhotoSection(!showPhotoSection)}
-                  className="flex items-center gap-2 text-blue-600 hover:text-blue-700 text-sm font-medium"
+                  className="flex items-center gap-1 sm:gap-2 text-blue-600 hover:text-blue-700 text-xs sm:text-sm font-medium"
                 >
                   {showPhotoSection ? 'Ocultar' : 'Mostrar'} Fotos
                   <span className="text-xs">
@@ -349,18 +350,18 @@ export function CreateEntryModal({ isOpen, onClose, onSuccess }: CreateEntryModa
             </div>
 
             {/* Botones */}
-            <div className="flex justify-end space-x-3 pt-4">
+            <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 sm:space-x-3 pt-3 sm:pt-4">
               <button
                 type="button"
                 onClick={handleClose}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors"
+                className="w-full sm:w-auto px-3 sm:px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="w-full sm:w-auto px-3 sm:px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {loading ? 'Registrando...' : 'Registrar Ingreso'}
               </button>
