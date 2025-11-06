@@ -339,30 +339,6 @@ export default function MechanicOrders() {
                         {hasOrderInProgress ? '⚠️ No disponible' : 'Iniciar Trabajo'}
                       </button>
                     )}
-                    {order.currentStatus === 'en_progreso' && (
-                      <button 
-                        onClick={() => handleStatusChange(order.id, 'pausado')}
-                        className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-medium text-sm"
-                      >
-                        Pausar
-                      </button>
-                    )}
-                    {order.currentStatus === 'pausado' && (
-                      <button 
-                        onClick={() => handleStatusChange(order.id, 'en_progreso')}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm"
-                      >
-                        ▶️ Reanudar
-                      </button>
-                    )}
-                    {(order.currentStatus === 'en_progreso' || order.currentStatus === 'pausado') && (
-                      <button 
-                        onClick={() => handleStatusChange(order.id, 'completado')}
-                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium text-sm"
-                      >
-                        ✅ Completar
-                      </button>
-                    )}
                   </div>
                 </div>
               </div>

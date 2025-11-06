@@ -79,37 +79,6 @@ export default function WorkOrderDetail() {
     }
   }
 
-  // Función para calcular el progreso basado en el estado de la orden
-  const getProgressFromStatus = (status: string): number => {
-    switch (status) {
-      case 'pendiente':
-        return 0
-      case 'en_progreso':
-        return 50
-      case 'pausado':
-        return 25
-      case 'completado':
-        return 100
-      default:
-        return 0
-    }
-  }
-
-  // Función para obtener el color de la barra de progreso según el estado
-  const getProgressColor = (status: string): string => {
-    switch (status) {
-      case 'pendiente':
-        return 'bg-gray-400'
-      case 'en_progreso':
-        return 'bg-gradient-to-r from-blue-500 to-blue-600'
-      case 'pausado':
-        return 'bg-gradient-to-r from-yellow-500 to-orange-500'
-      case 'completado':
-        return 'bg-gradient-to-r from-green-500 to-green-600'
-      default:
-        return 'bg-gray-400'
-    }
-  }
 
   // Función para verificar si el usuario puede realizar acciones de gestión
   const canManageOrders = () => {
@@ -371,19 +340,6 @@ export default function WorkOrderDetail() {
                       </span>
                     </div>
                   </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Progreso</label>
-                    <div className="flex items-center space-x-3">
-                      <div className="flex-1 bg-gray-200 rounded-full h-3">
-                        <div
-                          className={`h-3 rounded-full transition-all duration-500 ${getProgressColor(workOrder.currentStatus)}`}
-                          style={{ width: `${getProgressFromStatus(workOrder.currentStatus)}%` }}
-                        />
-                      </div>
-                      <span className="text-sm font-medium text-gray-700 min-w-[3rem]">{getProgressFromStatus(workOrder.currentStatus)}%</span>
-                    </div>
-                  </div>
                 </div>
                 
                 <div className="space-y-4">
@@ -609,40 +565,6 @@ export default function WorkOrderDetail() {
                             <p className="text-sm text-purple-700 font-medium">
                               🔄 Este repuesto puede ser devuelto al inventario
                             </p>
-                          </div>
-                        )}
-                        
-                        {/* Botones de acción para repuestos solicitados */}
-                        {sparePartRequest.status === 'solicitado' && canRequestSpareParts() && (
-                          <div className="mt-3 pt-3 border-t border-gray-200 flex items-center space-x-2">
-                            <button
-                              onClick={async () => {
-                                try {
-                                  await sparePartService.markAsUsed(sparePartRequest.id)
-                                  await loadWorkOrder()
-                                } catch (err: any) {
-                                  alert(err.response?.data?.error || err.message || 'Error al marcar como usado')
-                                }
-                              }}
-                              className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
-                            >
-                              ✅ Marcar como Usado
-                            </button>
-                            <button
-                              onClick={async () => {
-                                if (confirm(`¿Deseas marcar este repuesto como sobrante y devolverlo al inventario?`)) {
-                                  try {
-                                    await sparePartService.markAsSurplus(sparePartRequest.id)
-                                    await loadWorkOrder()
-                                  } catch (err: any) {
-                                    alert(err.response?.data?.error || err.message || 'Error al marcar como sobrante')
-                                  }
-                                }
-                              }}
-                              className="px-3 py-1 bg-purple-600 text-white text-sm rounded hover:bg-purple-700 transition-colors"
-                            >
-                              🔄 Marcar como Sobrante
-                            </button>
                           </div>
                         )}
                         
