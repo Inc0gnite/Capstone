@@ -164,17 +164,55 @@ export default function Inventory() {
         return
       }
       
+      // Validar campos obligatorios según backend
+      const code = form.code.value.trim()
+      const name = form.name.value.trim()
+      const category = form.category.value.trim()
+      const currentStock = Number(form.currentStock.value || 0)
+      const minStock = Number(form.minStock.value || 0)
+      const maxStock = Number(form.maxStock.value || minStock) // maxStock es obligatorio, usar minStock como default
+      
+      // Validaciones adicionales
+      if (!code) {
+        alert('El código es obligatorio')
+        setIsCreating(false)
+        return
+      }
+      
+      if (!name) {
+        alert('El nombre es obligatorio')
+        setIsCreating(false)
+        return
+      }
+      
+      if (!category) {
+        alert('La categoría es obligatoria')
+        setIsCreating(false)
+        return
+      }
+      
+      if (minStock < 0) {
+        alert('El stock mínimo debe ser mayor o igual a 0')
+        setIsCreating(false)
+        return
+      }
+      
+      if (maxStock < minStock) {
+        alert('El stock máximo debe ser mayor o igual al stock mínimo')
+        setIsCreating(false)
+        return
+      }
+      
       const data = {
-        code: form.code.value.trim(),
-        name: form.name.value.trim(),
-        category: form.category.value.trim(),
+        code: code.toUpperCase(), // Convertir a mayúsculas como el backend espera
+        name: name,
+        category: category,
         description: form.description.value.trim() || undefined,
-        currentStock: Number(form.currentStock.value || 0),
-        minStock: Number(form.minStock.value || 0),
-        maxStock: form.maxStock.value ? Number(form.maxStock.value) : undefined,
+        currentStock: currentStock,
+        minStock: minStock,
+        maxStock: maxStock, // Obligatorio según backend
         unitOfMeasure: unitOfMeasure,
         unitPrice: unitPrice,
-        supplier: form.supplier?.value?.trim() || undefined,
         location: form.location?.value?.trim() || undefined,
         workshopId: (user as any)?.workshopId || (user as any)?.workshop?.id
       }
@@ -419,11 +457,11 @@ export default function Inventory() {
               <form onSubmit={handleCreate} className="p-6 space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="create-code" className="block text-sm font-medium text-gray-700 mb-1">Código</label>
+                    <label htmlFor="create-code" className="block text-sm font-medium text-gray-700 mb-1">Código <span className="text-red-500">*</span></label>
                     <input id="create-code" name="code" placeholder="Ej: REP-001" className="w-full px-3 py-2 border rounded" required />
                   </div>
                   <div>
-                    <label htmlFor="create-name" className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+                    <label htmlFor="create-name" className="block text-sm font-medium text-gray-700 mb-1">Nombre <span className="text-red-500">*</span></label>
                     <input id="create-name" name="name" placeholder="Ej: Filtro de Aceite" className="w-full px-3 py-2 border rounded" required />
                   </div>
                   <div>
@@ -475,20 +513,16 @@ export default function Inventory() {
                     <input id="create-price" name="unitPrice" type="number" step="0.01" min="0" placeholder="Ej: 15000" className="w-full px-3 py-2 border rounded" required />
                   </div>
                   <div>
-                    <label htmlFor="create-currentStock" className="block text-sm font-medium text-gray-700 mb-1">Stock actual</label>
-                    <input id="create-currentStock" name="currentStock" type="number" placeholder="Ej: 50" className="w-full px-3 py-2 border rounded" required />
+                    <label htmlFor="create-currentStock" className="block text-sm font-medium text-gray-700 mb-1">Stock actual <span className="text-red-500">*</span></label>
+                    <input id="create-currentStock" name="currentStock" type="number" min="0" placeholder="Ej: 50" className="w-full px-3 py-2 border rounded" required />
                   </div>
                   <div>
-                    <label htmlFor="create-minStock" className="block text-sm font-medium text-gray-700 mb-1">Stock mínimo</label>
-                    <input id="create-minStock" name="minStock" type="number" placeholder="Ej: 10" className="w-full px-3 py-2 border rounded" required />
+                    <label htmlFor="create-minStock" className="block text-sm font-medium text-gray-700 mb-1">Stock mínimo <span className="text-red-500">*</span></label>
+                    <input id="create-minStock" name="minStock" type="number" min="0" placeholder="Ej: 10" className="w-full px-3 py-2 border rounded" required />
                   </div>
                   <div>
-                    <label htmlFor="create-maxStock" className="block text-sm font-medium text-gray-700 mb-1">Stock máximo (opcional)</label>
-                    <input id="create-maxStock" name="maxStock" type="number" placeholder="Ej: 100" className="w-full px-3 py-2 border rounded" />
-                  </div>
-                  <div>
-                    <label htmlFor="create-supplier" className="block text-sm font-medium text-gray-700 mb-1">Proveedor (opcional)</label>
-                    <input id="create-supplier" name="supplier" placeholder="Ej: Proveedor de Repuestos" className="w-full px-3 py-2 border rounded" />
+                    <label htmlFor="create-maxStock" className="block text-sm font-medium text-gray-700 mb-1">Stock máximo <span className="text-red-500">*</span></label>
+                    <input id="create-maxStock" name="maxStock" type="number" min="0" placeholder="Ej: 100" className="w-full px-3 py-2 border rounded" required />
                   </div>
                   <div>
                     <label htmlFor="create-location" className="block text-sm font-medium text-gray-700 mb-1">Ubicación (opcional)</label>
