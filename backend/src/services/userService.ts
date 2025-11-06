@@ -156,8 +156,8 @@ export class UserService {
   /**
    * Actualizar usuario
    */
-  async update(id: string, data: Partial<RegisterRequest>) {
-    const { rut, firstName, lastName, email, password, phone, roleId, workshopId } =
+  async update(id: string, data: Partial<RegisterRequest & { isActive?: boolean }>) {
+    const { rut, firstName, lastName, email, password, phone, roleId, workshopId, isActive } =
       data
 
     // Verificar que el usuario existe
@@ -182,6 +182,7 @@ export class UserService {
     if (password) {
       updateData.password = await hashPassword(password)
     }
+    if (isActive !== undefined) updateData.isActive = isActive
 
     // Actualizar usuario
     const user = await prisma.user.update({
