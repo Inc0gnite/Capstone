@@ -197,6 +197,7 @@ export class SparePartService {
     category: string
     unitOfMeasure: string
     unitPrice: number
+    currentStock: number
     minStock: number
     maxStock: number
     location: string

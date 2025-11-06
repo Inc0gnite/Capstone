@@ -242,6 +242,7 @@ export default function Inventory() {
       name: form.name.value.trim(),
       category: form.category.value.trim(),
       description: form.description.value.trim() || undefined,
+      currentStock: Number(form.currentStock.value || 0),
       minStock: Number(form.minStock.value || 0),
       maxStock: form.maxStock.value ? Number(form.maxStock.value) : undefined,
       unitOfMeasure: form.unitOfMeasure?.value?.trim() || (editingPart as any).unitOfMeasure || 'unidad',
@@ -623,13 +624,12 @@ export default function Inventory() {
                       id="edit-currentStock" 
                       name="currentStock" 
                       type="number" 
+                      min="0"
                       defaultValue={editingPart.currentStock ?? 0} 
                       placeholder="Stock actual" 
-                      className="w-full px-3 py-2 border rounded bg-gray-50" 
-                      readOnly
-                      title="El stock actual se modifica mediante ajustes de stock"
+                      className="w-full px-3 py-2 border rounded" 
+                      required
                     />
-                    <p className="text-xs text-gray-500 mt-1">ℹ️ Solo lectura - Usa "Ajustar Stock" para modificar</p>
                   </div>
                   <div>
                     <label htmlFor="edit-minStock" className="block text-sm font-medium text-gray-700 mb-1">Stock mínimo</label>
