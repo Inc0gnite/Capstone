@@ -97,19 +97,19 @@ export const sparePartService = {
 
   // Obtener repuestos con stock bajo
   async getLowStock() {
-    const response = await api.get('/spare-parts?lowStock=true')
+    const response = await api.get('/spare-parts?page=1&limit=100&lowStock=true')
     return response.data
   },
 
   // Obtener repuestos sin stock
   async getOutOfStock() {
-    const response = await api.get('/spare-parts?outOfStock=true')
+    const response = await api.get('/spare-parts?page=1&limit=100&outOfStock=true')
     return response.data
   },
 
   // Buscar repuestos
   async search(query: string) {
-    const response = await api.get(`/spare-parts?search=${encodeURIComponent(query)}`)
+    const response = await api.get(`/spare-parts?page=1&limit=100&search=${encodeURIComponent(query)}`)
     return response.data
   },
 
