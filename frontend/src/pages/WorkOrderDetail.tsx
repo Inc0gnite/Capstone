@@ -4,6 +4,7 @@ import { MainLayout } from '../components/Layout/MainLayout'
 import { workOrderService, WorkOrder } from '../services/workOrderService'
 import { AssignMechanicModal } from '../components/modals/AssignMechanicModal'
 import { ExchangeMechanicModal } from '../components/modals/ExchangeMechanicModal'
+import { RequestSparePartsModal } from '../components/modals/RequestSparePartsModal'
 import { MechanicInfoDropdown } from '../components/mechanic/MechanicInfoDropdown'
 import { WorkOrderChecklist } from '../components/WorkOrderChecklist'
 import { WordService } from '../services/wordService'
@@ -20,6 +21,7 @@ export default function WorkOrderDetail() {
   const [statusReason, setStatusReason] = useState('')
   const [showAssignMechanicModal, setShowAssignMechanicModal] = useState(false)
   const [showExchangeMechanicModal, setShowExchangeMechanicModal] = useState(false)
+  const [showRequestSparePartsModal, setShowRequestSparePartsModal] = useState(false)
   const [checklistCompleted, setChecklistCompleted] = useState(false)
   const { user } = useAuthStore()
 
@@ -112,6 +114,20 @@ export default function WorkOrderDetail() {
   const canManageOrders = () => {
     const roleName = (user as any)?.role?.name
     return roleName === 'Administrador' || roleName === 'Recepcionista' || roleName === 'Jefe de Taller'
+  }
+
+  // Función para verificar si el usuario puede solicitar repuestos
+  const canRequestSpareParts = () => {
+    const roleName = (user as any)?.role?.name
+    // Mecánicos y roles de gestión pueden solicitar repuestos
+    return roleName === 'Mecánico' || canManageOrders()
+  }
+
+  // Función para verificar si la orden permite solicitar repuestos
+  const canRequestSparePartsForOrder = () => {
+    if (!workOrder) return false
+    // Solo se pueden solicitar repuestos para órdenes en progreso o pendientes
+    return workOrder.currentStatus === 'en_progreso' || workOrder.currentStatus === 'pendiente'
   }
 
   // Función para obtener el workshopId para asignación de mecánico
@@ -581,6 +597,17 @@ export default function WorkOrderDetail() {
                   </>
                 )}
                 
+                {/* Botón de Solicitar Repuestos */}
+                {canRequestSpareParts() && canRequestSparePartsForOrder() && (
+                  <button
+                    onClick={() => setShowRequestSparePartsModal(true)}
+                    className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium transition-colors flex items-center justify-center space-x-2"
+                  >
+                    <span>📦</span>
+                    <span>Solicitar Repuestos</span>
+                  </button>
+                )}
+                
                 {workOrder.currentStatus === 'pausado' && (
                   <button
                     onClick={() => handleStatusChange('en_progreso')}
@@ -797,6 +824,19 @@ export default function WorkOrderDetail() {
           workOrderId={workOrder.id}
           currentMechanicId={workOrder.assignedTo.id}
           workshopId={getWorkshopIdForAssignment() || ''}
+        />
+      )}
+
+      {/* Modal de solicitar repuestos */}
+      {workOrder && canRequestSpareParts() && canRequestSparePartsForOrder() && (
+        <RequestSparePartsModal
+          isOpen={showRequestSparePartsModal}
+          onClose={() => setShowRequestSparePartsModal(false)}
+          onSuccess={() => {
+            loadWorkOrder() // Recargar la orden para mostrar los repuestos solicitados
+          }}
+          workOrderId={workOrder.id}
+          workOrderNumber={workOrder.orderNumber}
         />
       )}
     </MainLayout>
