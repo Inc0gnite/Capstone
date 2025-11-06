@@ -232,6 +232,43 @@ export default function EntryDetail() {
                 )}
               </div>
             </div>
+
+            {/* Fotos del Vehículo */}
+            {entry.photos && entry.photos.length > 0 && (
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                  <span className="mr-2 text-xl sm:text-2xl">📸</span>
+                  Fotografías del Vehículo ({entry.photos.length})
+                </h3>
+                
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+                  {entry.photos.map((photoUrl, index) => (
+                    <div 
+                      key={index} 
+                      className="relative group border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+                      onClick={() => {
+                        // Abrir imagen en modal o nueva ventana
+                        window.open(photoUrl, '_blank')
+                      }}
+                    >
+                      <img
+                        src={photoUrl}
+                        alt={`Foto del vehículo ${index + 1}`}
+                        className="w-full h-32 sm:h-40 md:h-48 object-cover"
+                      />
+                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 flex items-center justify-center">
+                        <span className="opacity-0 group-hover:opacity-100 text-white text-sm font-medium">
+                          👁️ Ver
+                        </span>
+                      </div>
+                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent p-2">
+                        <p className="text-white text-xs">Foto {index + 1}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Información del Vehículo */}
