@@ -72,6 +72,28 @@ router.post(
 )
 
 /**
+ * POST /api/spare-parts/:id/mark-as-used
+ * Marcar repuesto como usado
+ */
+router.post(
+  '/:id/mark-as-used',
+  authorize('spare-parts', 'update'),
+  auditLog('mark-as-used', 'spare-parts'),
+  sparePartController.markAsUsed
+)
+
+/**
+ * POST /api/spare-parts/:id/mark-as-surplus
+ * Marcar repuesto como sobrante y devolver al inventario
+ */
+router.post(
+  '/:id/mark-as-surplus',
+  authorize('spare-parts', 'update'),
+  auditLog('mark-as-surplus', 'spare-parts'),
+  sparePartController.markAsSurplus
+)
+
+/**
  * GET /api/spare-parts
  */
 router.get(

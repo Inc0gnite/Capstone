@@ -175,5 +175,19 @@ export const sparePartService = {
       observations
     })
     return response.data
+  },
+
+  // Marcar repuesto como usado
+  async markAsUsed(requestId: string) {
+    const response = await api.post(`/spare-parts/${requestId}/mark-as-used`)
+    return response.data
+  },
+
+  // Marcar repuesto como sobrante y devolver al inventario
+  async markAsSurplus(requestId: string, quantityToReturn?: number) {
+    const response = await api.post(`/spare-parts/${requestId}/mark-as-surplus`, {
+      quantityToReturn
+    })
+    return response.data
   }
 }

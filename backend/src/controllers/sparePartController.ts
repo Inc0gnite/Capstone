@@ -194,6 +194,35 @@ export class SparePartController {
       return sendError(res, error.message, 400)
     }
   }
+
+  /**
+   * POST /api/spare-parts/:id/mark-as-used
+   * Marcar repuesto como usado
+   */
+  async markAsUsed(req: Request, res: Response) {
+    try {
+      const { id } = req.params
+      const request = await sparePartService.markAsUsed(id)
+      return sendSuccess(res, request, 'Repuesto marcado como usado exitosamente')
+    } catch (error: any) {
+      return sendError(res, error.message, 400)
+    }
+  }
+
+  /**
+   * POST /api/spare-parts/:id/mark-as-surplus
+   * Marcar repuesto como sobrante y devolver al inventario
+   */
+  async markAsSurplus(req: Request, res: Response) {
+    try {
+      const { id } = req.params
+      const { quantityToReturn } = req.body
+      const request = await sparePartService.markAsSurplus(id, quantityToReturn)
+      return sendSuccess(res, request, 'Repuesto marcado como sobrante y devuelto al inventario')
+    } catch (error: any) {
+      return sendError(res, error.message, 400)
+    }
+  }
 }
 
 export default new SparePartController()

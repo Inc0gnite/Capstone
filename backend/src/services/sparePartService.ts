@@ -583,8 +583,8 @@ export class SparePartService {
       throw new Error('Solicitud no encontrada')
     }
 
-    if (request.status === 'entregado') {
-      throw new Error('La solicitud ya fue entregada')
+    if (request.status === 'entregado' || request.status === 'usado' || request.status === 'sobrante') {
+      throw new Error('La solicitud ya fue procesada')
     }
 
     // Verificar stock
@@ -598,7 +598,7 @@ export class SparePartService {
         where: { id },
         data: {
           quantityDelivered,
-          status: 'entregado',
+          status: 'solicitado', // Mantener como solicitado hasta que se marque como usado o sobrante
           deliveredAt: new Date(),
         },
       }),
@@ -624,6 +624,108 @@ export class SparePartService {
     ])
 
     return this.getById(request.sparePartId)
+  }
+
+  /**
+   * Marcar repuesto como usado
+   */
+  async markAsUsed(id: string) {
+    const request = await prisma.workOrderSparePart.findUnique({
+      where: { id },
+      include: {
+        sparePart: true,
+        workOrder: true,
+      },
+    })
+
+    if (!request) {
+      throw new Error('Solicitud no encontrada')
+    }
+
+    if (request.status === 'usado') {
+      throw new Error('El repuesto ya fue marcado como usado')
+    }
+
+    if (request.status === 'sobrante') {
+      throw new Error('No se puede marcar como usado un repuesto que ya fue marcado como sobrante')
+    }
+
+    // Solo actualizar el estado, el stock ya fue descontado en la entrega
+    await prisma.workOrderSparePart.update({
+      where: { id },
+      data: {
+        status: 'usado',
+      },
+    })
+
+    return request
+  }
+
+  /**
+   * Marcar repuesto como sobrante y devolver stock al inventario
+   */
+  async markAsSurplus(id: string, quantityToReturn?: number) {
+    const request = await prisma.workOrderSparePart.findUnique({
+      where: { id },
+      include: {
+        sparePart: true,
+        workOrder: true,
+      },
+    })
+
+    if (!request) {
+      throw new Error('Solicitud no encontrada')
+    }
+
+    if (request.status === 'usado') {
+      throw new Error('No se puede marcar como sobrante un repuesto que ya fue usado')
+    }
+
+    if (request.status === 'sobrante') {
+      throw new Error('El repuesto ya fue marcado como sobrante')
+    }
+
+    // Determinar cantidad a devolver
+    const quantityReturned = quantityToReturn || (request.quantityDelivered || request.quantityRequested)
+
+    if (quantityReturned <= 0) {
+      throw new Error('La cantidad a devolver debe ser mayor a 0')
+    }
+
+    if (quantityReturned > (request.quantityDelivered || request.quantityRequested)) {
+      throw new Error('La cantidad a devolver no puede ser mayor a la cantidad entregada')
+    }
+
+    // Actualizar estado y devolver stock al inventario en transacción
+    await prisma.$transaction([
+      prisma.workOrderSparePart.update({
+        where: { id },
+        data: {
+          status: 'sobrante',
+        },
+      }),
+      prisma.sparePart.update({
+        where: { id: request.sparePartId },
+        data: {
+          currentStock: {
+            increment: quantityReturned,
+          },
+        },
+      }),
+      prisma.sparePartMovement.create({
+        data: {
+          sparePartId: request.sparePartId,
+          movementType: 'entrada',
+          quantity: quantityReturned,
+          previousStock: request.sparePart.currentStock,
+          newStock: request.sparePart.currentStock + quantityReturned,
+          reason: 'Devolución de repuesto sobrante',
+          reference: request.workOrder.orderNumber,
+        },
+      }),
+    ])
+
+    return request
   }
 }
 

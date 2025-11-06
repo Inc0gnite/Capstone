@@ -8,6 +8,7 @@ import { RequestSparePartsModal } from '../components/modals/RequestSparePartsMo
 import { MechanicInfoDropdown } from '../components/mechanic/MechanicInfoDropdown'
 import { WorkOrderChecklist } from '../components/WorkOrderChecklist'
 import { WordService } from '../services/wordService'
+import { sparePartService } from '../services/sparePartService'
 import { useAuthStore } from '../store/authStore'
 
 export default function WorkOrderDetail() {
@@ -537,6 +538,9 @@ export default function WorkOrderDetail() {
                     const getStatusConfig = (status: string) => {
                       const configs: Record<string, { label: string; color: string; bgColor: string; icon: string }> = {
                         solicitado: { label: 'Solicitado', color: 'text-yellow-800', bgColor: 'bg-yellow-100', icon: '⏳' },
+                        usado: { label: 'Usado', color: 'text-blue-800', bgColor: 'bg-blue-100', icon: '✅' },
+                        sobrante: { label: 'Sobrante', color: 'text-purple-800', bgColor: 'bg-purple-100', icon: '🔄' },
+                        // Mantener compatibilidad con estados antiguos
                         entregado: { label: 'Entregado', color: 'text-green-800', bgColor: 'bg-green-100', icon: '✅' },
                         cancelado: { label: 'Cancelado', color: 'text-red-800', bgColor: 'bg-red-100', icon: '❌' },
                       }
@@ -544,7 +548,9 @@ export default function WorkOrderDetail() {
                     }
                     
                     const statusConfig = getStatusConfig(sparePartRequest.status)
-                    const isDelivered = sparePartRequest.status === 'entregado'
+                    const isUsed = sparePartRequest.status === 'usado'
+                    const isSurplus = sparePartRequest.status === 'sobrante'
+                    const isDelivered = sparePartRequest.status === 'entregado' // Compatibilidad con estado antiguo
                     
                     return (
                       <div
@@ -576,23 +582,69 @@ export default function WorkOrderDetail() {
                             <label className="block text-xs font-medium text-gray-500 mb-1">Cantidad Solicitada</label>
                             <p className="text-sm font-semibold text-gray-900">{sparePartRequest.quantityRequested}</p>
                           </div>
-                          {isDelivered && sparePartRequest.quantityDelivered !== undefined && (
+                          {(isDelivered || isUsed || isSurplus) && sparePartRequest.quantityDelivered !== undefined && (
                             <div>
                               <label className="block text-xs font-medium text-gray-500 mb-1">Cantidad Entregada</label>
-                              <p className="text-sm font-semibold text-green-600">{sparePartRequest.quantityDelivered}</p>
+                              <p className={`text-sm font-semibold ${isUsed ? 'text-blue-600' : isSurplus ? 'text-purple-600' : 'text-green-600'}`}>
+                                {sparePartRequest.quantityDelivered}
+                              </p>
                             </div>
                           )}
                           <div>
                             <label className="block text-xs font-medium text-gray-500 mb-1">Fecha de Solicitud</label>
                             <p className="text-sm text-gray-900">{formatDate(sparePartRequest.requestedAt)}</p>
                           </div>
-                          {isDelivered && sparePartRequest.deliveredAt && (
+                          {(isDelivered || isUsed || isSurplus) && sparePartRequest.deliveredAt && (
                             <div>
-                              <label className="block text-xs font-medium text-gray-500 mb-1">Fecha de Entrega</label>
+                              <label className="block text-xs font-medium text-gray-500 mb-1">
+                                {isUsed ? 'Fecha de Uso' : isSurplus ? 'Fecha de Entrega' : 'Fecha de Entrega'}
+                              </label>
                               <p className="text-sm text-gray-900">{formatDate(sparePartRequest.deliveredAt)}</p>
                             </div>
                           )}
                         </div>
+                        
+                        {isSurplus && (
+                          <div className="mt-3 pt-3 border-t border-purple-200 bg-purple-50 rounded-lg p-3">
+                            <p className="text-sm text-purple-700 font-medium">
+                              🔄 Este repuesto puede ser devuelto al inventario
+                            </p>
+                          </div>
+                        )}
+                        
+                        {/* Botones de acción para repuestos solicitados */}
+                        {sparePartRequest.status === 'solicitado' && canRequestSpareParts() && (
+                          <div className="mt-3 pt-3 border-t border-gray-200 flex items-center space-x-2">
+                            <button
+                              onClick={async () => {
+                                try {
+                                  await sparePartService.markAsUsed(sparePartRequest.id)
+                                  await loadWorkOrder()
+                                } catch (err: any) {
+                                  alert(err.response?.data?.error || err.message || 'Error al marcar como usado')
+                                }
+                              }}
+                              className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
+                            >
+                              ✅ Marcar como Usado
+                            </button>
+                            <button
+                              onClick={async () => {
+                                if (confirm(`¿Deseas marcar este repuesto como sobrante y devolverlo al inventario?`)) {
+                                  try {
+                                    await sparePartService.markAsSurplus(sparePartRequest.id)
+                                    await loadWorkOrder()
+                                  } catch (err: any) {
+                                    alert(err.response?.data?.error || err.message || 'Error al marcar como sobrante')
+                                  }
+                                }
+                              }}
+                              className="px-3 py-1 bg-purple-600 text-white text-sm rounded hover:bg-purple-700 transition-colors"
+                            >
+                              🔄 Marcar como Sobrante
+                            </button>
+                          </div>
+                        )}
                         
                         {sparePartRequest.observations && (
                           <div className="mt-3 pt-3 border-t border-gray-200">
