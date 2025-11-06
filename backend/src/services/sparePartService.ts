@@ -587,41 +587,21 @@ export class SparePartService {
       throw new Error('La solicitud ya fue procesada')
     }
 
-    // Verificar stock
-    if (request.sparePart.currentStock < quantityDelivered) {
-      throw new Error('Stock insuficiente')
+    // Verificar que la cantidad entregada no exceda la solicitada
+    if (quantityDelivered > request.quantityRequested) {
+      throw new Error(`La cantidad entregada (${quantityDelivered}) no puede ser mayor a la solicitada (${request.quantityRequested})`)
     }
 
-    // Actualizar solicitud y stock en transacción
-    await prisma.$transaction([
-      prisma.workOrderSparePart.update({
-        where: { id },
-        data: {
-          quantityDelivered,
-          status: 'solicitado', // Mantener como solicitado hasta que se marque como usado o sobrante
-          deliveredAt: new Date(),
-        },
-      }),
-      prisma.sparePart.update({
-        where: { id: request.sparePartId },
-        data: {
-          currentStock: {
-            decrement: quantityDelivered,
-          },
-        },
-      }),
-      prisma.sparePartMovement.create({
-        data: {
-          sparePartId: request.sparePartId,
-          movementType: 'salida',
-          quantity: quantityDelivered,
-          previousStock: request.sparePart.currentStock,
-          newStock: request.sparePart.currentStock - quantityDelivered,
-          reason: 'Entrega para orden de trabajo',
-          reference: request.workOrder.orderNumber,
-        },
-      }),
-    ])
+    // NO descontar stock aquí porque ya se descontó al solicitar
+    // Solo actualizar el estado de la solicitud
+    await prisma.workOrderSparePart.update({
+      where: { id },
+      data: {
+        quantityDelivered,
+        status: 'solicitado', // Mantener como solicitado hasta que se marque como usado o sobrante
+        deliveredAt: new Date(),
+      },
+    })
 
     return this.getById(request.sparePartId)
   }
