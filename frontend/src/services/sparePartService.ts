@@ -50,13 +50,39 @@ export const sparePartService = {
     workshopId?: string
   }) {
     const searchParams = new URLSearchParams()
-    // Siempre incluir page y limit (valores por defecto si no se proporcionan)
-    searchParams.append('page', (params?.page || 1).toString())
-    searchParams.append('limit', (params?.limit || 10).toString())
-    if (params?.category) searchParams.append('category', params.category)
-    if (params?.lowStock) searchParams.append('lowStock', params.lowStock.toString())
-    if (params?.search) searchParams.append('search', params.search)
-    if (params?.workshopId) searchParams.append('workshopId', params.workshopId)
+    
+    // Validar y normalizar page y limit
+    let page = params?.page
+    let limit = params?.limit
+    
+    // Validar que page sea un número válido >= 1
+    if (page === undefined || page === null || typeof page !== 'number' || isNaN(page) || page < 1) {
+      page = 1
+    }
+    
+    // Validar que limit sea un número válido entre 1 y 100
+    if (limit === undefined || limit === null || typeof limit !== 'number' || isNaN(limit) || limit < 1) {
+      limit = 10
+    } else if (limit > 100) {
+      limit = 100
+    }
+    
+    // Siempre incluir page y limit con valores validados
+    searchParams.append('page', page.toString())
+    searchParams.append('limit', limit.toString())
+    
+    if (params?.category && params.category.trim()) {
+      searchParams.append('category', params.category.trim())
+    }
+    if (params?.lowStock === true) {
+      searchParams.append('lowStock', 'true')
+    }
+    if (params?.search && params.search.trim()) {
+      searchParams.append('search', params.search.trim())
+    }
+    if (params?.workshopId && params.workshopId.trim()) {
+      searchParams.append('workshopId', params.workshopId.trim())
+    }
 
     const response = await api.get(`/spare-parts?${searchParams.toString()}`)
     return response.data

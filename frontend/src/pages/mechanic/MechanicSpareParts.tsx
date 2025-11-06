@@ -133,9 +133,19 @@ export default function MechanicSpareParts() {
       setTotal(totalCount)
     } catch (err: any) {
       console.error('Error cargando inventario:', err)
+      console.error('Error completo:', {
+        status: err?.response?.status,
+        data: err?.response?.data,
+        message: err?.message,
+        config: err?.config
+      })
+      
       let errorMessage = 'No se pudo cargar el inventario'
       
-      if (err?.response?.status === 401) {
+      if (err?.response?.status === 400) {
+        const backendError = err?.response?.data?.error || err?.response?.data?.message
+        errorMessage = backendError || 'Error en los parámetros de la petición. Por favor, intenta nuevamente.'
+      } else if (err?.response?.status === 401) {
         errorMessage = 'No estás autenticado. Por favor, inicia sesión nuevamente.'
       } else if (err?.response?.status === 403) {
         errorMessage = 'No tienes permisos para ver el inventario. Contacta al administrador.'
