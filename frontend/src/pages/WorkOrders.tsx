@@ -119,6 +119,9 @@ export default function WorkOrders() {
 
   const filterStats = getFilterStats()
 
+  // Ordenar órdenes usando useMemo (debe estar en el nivel superior del componente)
+  const sortedWorkOrders = useMemo(() => sortWorkOrders(workOrders), [workOrders])
+
   if (loading && workOrders.length === 0) {
     return (
       <MainLayout>
@@ -307,9 +310,9 @@ export default function WorkOrders() {
           </div>
 
           {/* Lista de órdenes */}
-          {workOrders.length > 0 ? (
+          {sortedWorkOrders.length > 0 ? (
             <div className="space-y-3">
-              {useMemo(() => sortWorkOrders(workOrders), [workOrders]).map((order) => (
+              {sortedWorkOrders.map((order) => (
                 <ActiveOrderCard
                   key={order.id}
                   order={order}
