@@ -135,36 +135,37 @@ export default function WorkOrders() {
     <MainLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="flex items-center space-x-3">
-              <h2 className="text-2xl font-bold text-gray-900">Órdenes de Trabajo</h2>
-              <div className="flex items-center space-x-2 text-sm text-gray-500">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
+          <div className="flex-1">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Órdenes de Trabajo</h2>
+              <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-500">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                 <span>Actualización en tiempo real</span>
               </div>
             </div>
-            <p className="text-gray-600">Gestión y seguimiento de órdenes</p>
+            <p className="text-sm sm:text-base text-gray-600">Gestión y seguimiento de órdenes</p>
           </div>
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2 sm:space-x-3">
             <button
               onClick={() => {
                 loadStatsFromDB()
                 handleFilterChange(filter)
               }}
-              className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium transition-colors flex items-center space-x-2"
+              className="px-2 sm:px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium transition-colors flex items-center space-x-1 sm:space-x-2 text-sm"
               title="Actualizar estadísticas desde BD"
             >
               <span className={`${loading ? 'animate-spin' : ''}`}>🔄</span>
-              <span>Actualizar </span>
+              <span className="hidden sm:inline">Actualizar</span>
             </button>
             {/* Solo mostrar botón de crear para roles que no sean Jefe de Taller */}
             {userRole !== 'Jefe de Taller' && (
               <button
                 onClick={handleCreateOrder}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors"
+                className="px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors text-sm sm:text-base"
               >
-                📝 Nueva Orden
+                <span className="sm:hidden">📝</span>
+                <span className="hidden sm:inline">📝 Nueva Orden</span>
               </button>
             )}
           </div>
@@ -178,7 +179,7 @@ export default function WorkOrders() {
         )}
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
           <StatCard
             title="Total"
             value={(stats.total || 0).toString()}
@@ -214,22 +215,22 @@ export default function WorkOrders() {
         </div>
 
         {/* Filtros */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">
+        <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-4">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900">
               {filterStats.label} ({filterStats.count})
             </h3>
-            <div className="flex items-center space-x-4">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:space-x-4">
               {/* Selector de Mecánico */}
-              <div className="flex items-center space-x-2">
-                <label htmlFor="mechanic-filter" className="text-sm font-medium text-gray-700">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                <label htmlFor="mechanic-filter" className="text-xs sm:text-sm font-medium text-gray-700 whitespace-nowrap">
                   Mecánico:
                 </label>
                 <select
                   id="mechanic-filter"
                   value={selectedMechanic}
                   onChange={(e) => handleMechanicChange(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="flex-1 sm:flex-none px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="">Todos los mecánicos</option>
                   {mechanics.map((mechanic) => (
@@ -239,10 +240,10 @@ export default function WorkOrders() {
                   ))}
                 </select>
               </div>
-              <div className="flex space-x-2">
+              <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => handleFilterChange('all')}
-                className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                className={`px-2 sm:px-3 py-1 rounded text-xs sm:text-sm font-medium transition-colors ${
                   filter === 'all'
                     ? 'bg-blue-100 text-blue-800'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -252,7 +253,7 @@ export default function WorkOrders() {
               </button>
               <button
                 onClick={() => handleFilterChange('pendiente')}
-                className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                className={`px-2 sm:px-3 py-1 rounded text-xs sm:text-sm font-medium transition-colors ${
                   filter === 'pendiente'
                     ? 'bg-yellow-100 text-yellow-800'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -262,7 +263,7 @@ export default function WorkOrders() {
               </button>
               <button
                 onClick={() => handleFilterChange('en_progreso')}
-                className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                className={`px-2 sm:px-3 py-1 rounded text-xs sm:text-sm font-medium transition-colors ${
                   filter === 'en_progreso'
                     ? 'bg-blue-100 text-blue-800'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -272,7 +273,7 @@ export default function WorkOrders() {
               </button>
               <button
                 onClick={() => handleFilterChange('pausado')}
-                className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                className={`px-2 sm:px-3 py-1 rounded text-xs sm:text-sm font-medium transition-colors ${
                   filter === 'pausado'
                     ? 'bg-orange-100 text-orange-800'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -282,7 +283,7 @@ export default function WorkOrders() {
               </button>
               <button
                 onClick={() => handleFilterChange('completado')}
-                className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                className={`px-2 sm:px-3 py-1 rounded text-xs sm:text-sm font-medium transition-colors ${
                   filter === 'completado'
                     ? 'bg-green-100 text-green-800'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -292,7 +293,7 @@ export default function WorkOrders() {
               </button>
               <button
                 onClick={() => handleFilterChange('cancelado')}
-                className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                className={`px-2 sm:px-3 py-1 rounded text-xs sm:text-sm font-medium transition-colors ${
                   filter === 'cancelado'
                     ? 'bg-red-100 text-red-800'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -353,16 +354,16 @@ function StatCard({ title, value, icon, color, onClick, active }: any) {
   return (
     <div 
       onClick={onClick}
-      className={`bg-white rounded-lg shadow p-6 cursor-pointer transition-all hover:shadow-lg ${
+      className={`bg-white rounded-lg shadow p-4 sm:p-6 cursor-pointer transition-all hover:shadow-lg ${
         active ? 'ring-2 ring-blue-500' : ''
       }`}
     >
       <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm font-medium text-gray-600">{title}</p>
-          <p className="text-3xl font-bold text-gray-900 mt-2">{value}</p>
+        <div className="flex-1 min-w-0">
+          <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">{title}</p>
+          <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mt-1 sm:mt-2">{value}</p>
         </div>
-        <div className={`text-5xl ${colors[color]} p-4 rounded-lg`}>{icon}</div>
+        <div className={`text-3xl sm:text-4xl lg:text-5xl ${colors[color]} p-2 sm:p-3 lg:p-4 rounded-lg flex-shrink-0 ml-2`}>{icon}</div>
       </div>
     </div>
   )

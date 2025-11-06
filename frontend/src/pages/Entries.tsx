@@ -183,70 +183,71 @@ export default function Entries() {
     <MainLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex justify-between items-center">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">Gestión de Ingresos</h2>
-            <p className="text-gray-600">Control de entradas y salidas de vehículos</p>
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0">
+          <div className="flex-1">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Gestión de Ingresos</h2>
+            <p className="text-sm sm:text-base text-gray-600">Control de entradas y salidas de vehículos</p>
             {selectedVehicle && (
-              <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-sm text-blue-800">
+              <div className="mt-2 p-2 sm:p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-xs sm:text-sm text-blue-800">
                   <span className="font-medium">Filtrando por vehículo:</span> {selectedVehicle.licensePlate} - {selectedVehicle.brand} {selectedVehicle.model}
                 </p>
               </div>
             )}
           </div>
-          <div className="flex space-x-3">
+          <div className="flex space-x-2 sm:space-x-3">
             <button
               onClick={() => setShowCreateFormAdvanced(true)}
-              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+              className="bg-green-600 hover:bg-green-700 text-white px-3 sm:px-4 py-2 rounded-lg font-medium transition-colors text-sm sm:text-base"
             >
-              📝 Ingresar Vehiculo
+              <span className="sm:hidden">📝</span>
+              <span className="hidden sm:inline">📝 Ingresar Vehiculo</span>
             </button>
           </div>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white rounded-lg shadow p-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
+          <div className="bg-white rounded-lg shadow p-4 sm:p-6">
             <div className="flex items-center">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <span className="text-2xl">🏭</span>
+              <div className="p-2 bg-blue-100 rounded-lg flex-shrink-0">
+                <span className="text-xl sm:text-2xl">🏭</span>
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Ingresos</p>
-                <p className="text-2xl font-bold text-gray-900">{entries.length}</p>
+              <div className="ml-3 sm:ml-4 min-w-0 flex-1">
+                <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Total Ingresos</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{entries.length}</p>
               </div>
             </div>
           </div>
           
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-lg shadow p-4 sm:p-6">
             <div className="flex items-center">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <span className="text-2xl">✅</span>
+              <div className="p-2 bg-green-100 rounded-lg flex-shrink-0">
+                <span className="text-xl sm:text-2xl">✅</span>
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Activos</p>
-                <p className="text-2xl font-bold text-gray-900">{activeEntries.length}</p>
+              <div className="ml-3 sm:ml-4 min-w-0 flex-1">
+                <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Activos</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{activeEntries.length}</p>
               </div>
             </div>
           </div>
           
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-lg shadow p-4 sm:p-6">
             <div className="flex items-center">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <span className="text-2xl">📋</span>
+              <div className="p-2 bg-purple-100 rounded-lg flex-shrink-0">
+                <span className="text-xl sm:text-2xl">📋</span>
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Completados</p>
-                <p className="text-2xl font-bold text-gray-900">{completedEntries.length}</p>
+              <div className="ml-3 sm:ml-4 min-w-0 flex-1">
+                <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Completados</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{completedEntries.length}</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Search */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex space-x-3">
+        <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row gap-3">
             <input
               id="searchEntries"
               name="searchEntries"
@@ -254,18 +255,19 @@ export default function Entries() {
               placeholder="Buscar por código, conductor o RUT..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="flex-1 px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
             />
           </div>
         </div>
 
         {/* Active Entries */}
         <div className="bg-white rounded-lg shadow">
-          <div className="p-6 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900">Ingresos Activos</h3>
-            <p className="text-gray-600">Vehículos actualmente en taller</p>
+          <div className="p-4 sm:p-6 border-b border-gray-200">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900">Ingresos Activos</h3>
+            <p className="text-sm sm:text-base text-gray-600">Vehículos actualmente en taller</p>
           </div>
-          <div className="overflow-x-auto">
+          {/* Vista de tabla para desktop */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
@@ -361,29 +363,103 @@ export default function Entries() {
               </div>
             )}
           </div>
+          
+          {/* Vista de cards para móvil - Ingresos Activos */}
+          <div className="md:hidden p-4 space-y-4">
+            {activeEntries.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                No hay ingresos activos
+              </div>
+            ) : (
+              activeEntries.map((entry) => (
+                <div key={entry.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-bold text-base text-gray-900">{entry.entryCode}</h4>
+                      <p className="text-sm text-gray-600 truncate">{entry.driverName}</p>
+                      <p className="text-xs text-gray-500">{entry.driverRut}</p>
+                    </div>
+                    {readyForExit.has(entry.id) ? (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 flex-shrink-0 ml-2">
+                        ✅ Listo
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 flex-shrink-0 ml-2">
+                        ⏳ En proceso
+                      </span>
+                    )}
+                  </div>
+                  
+                  <div className="space-y-2 text-sm text-gray-700 mb-3">
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Fecha:</span>
+                      <span className="font-medium">{new Date(entry.entryDate).toLocaleDateString('es-CL')}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">KM:</span>
+                      <span className="font-medium">{entry.entryKm.toLocaleString()} km</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Combustible:</span>
+                      <span className={`px-2 py-1 text-xs rounded-full ${
+                        entry.fuelLevel === 'full' ? 'bg-green-100 text-green-800' :
+                        entry.fuelLevel === 'half' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-red-100 text-red-800'
+                      }`}>
+                        {entry.fuelLevel === 'full' ? 'Lleno' :
+                         entry.fuelLevel === 'half' ? 'Medio' : 'Bajo'}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-wrap gap-2 pt-3 border-t border-gray-200">
+                    {readyForExit.has(entry.id) ? (
+                      <button
+                        onClick={() => handleRegisterExit(entry)}
+                        className="flex-1 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium"
+                      >
+                        Registrar Salida
+                      </button>
+                    ) : (
+                      <span className="flex-1 px-3 py-2 bg-gray-200 text-gray-500 rounded-lg text-sm text-center">
+                        ⏳ Esperando orden lista
+                      </span>
+                    )}
+                    <button 
+                      onClick={() => handleViewDetails(entry)}
+                      className="flex-1 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
+                    >
+                      Ver Detalles
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         </div>
 
         {/* Completed Entries */}
         <div className="bg-white rounded-lg shadow">
-          <div className="p-6 border-b border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900">Historial de Salidas Registradas</h3>
-                <p className="text-gray-600">
+          <div className="p-4 sm:p-6 border-b border-gray-200">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="flex-1">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900">Historial de Salidas Registradas</h3>
+                <p className="text-sm sm:text-base text-gray-600">
                   {showAllCompleted ? 'Todos los vehículos que han registrado salida' : 'Últimos 10 vehículos con salida registrada'}
                 </p>
               </div>
               {completedEntries.length > 10 && (
                 <button
                   onClick={() => setShowAllCompleted(!showAllCompleted)}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors"
+                  className="px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors text-sm sm:text-base whitespace-nowrap"
                 >
                   {showAllCompleted ? 'Ver Solo Últimos 10' : `Ver Todos (${completedEntries.length})`}
                 </button>
               )}
             </div>
           </div>
-          <div className="overflow-x-auto">
+          {/* Vista de tabla para desktop */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
@@ -449,6 +525,43 @@ export default function Entries() {
               </div>
             )}
           </div>
+          
+          {/* Vista de cards para móvil - Completados */}
+          <div className="md:hidden p-4 space-y-4">
+            {displayedCompletedEntries.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                No hay ingresos completados
+              </div>
+            ) : (
+              displayedCompletedEntries.map((entry) => (
+                <div key={entry.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-bold text-base text-gray-900">{entry.entryCode}</h4>
+                      <p className="text-sm text-gray-600 truncate">{entry.driverName}</p>
+                      <p className="text-xs text-gray-500">{entry.driverRut}</p>
+                    </div>
+                    <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800 flex-shrink-0 ml-2">
+                      Completado
+                    </span>
+                  </div>
+                  
+                  <div className="space-y-2 text-sm text-gray-700">
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Ingreso:</span>
+                      <span className="font-medium">{new Date(entry.entryDate).toLocaleDateString('es-CL')} {entry.entryTime || new Date(entry.entryDate).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Salida:</span>
+                      <span className="font-medium">
+                        {entry.exitDate ? `${new Date(entry.exitDate).toLocaleDateString('es-CL')} ${entry.exitTime || new Date(entry.exitDate).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}` : '-'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         </div>
       </div>
 
@@ -473,9 +586,9 @@ export default function Entries() {
 
       {/* Modal de Detalles del Vehículo */}
       {showDetailsModal && selectedVehicleDetails && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-4 sm:p-6">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold text-gray-900">
                   Detalles del Vehículo
@@ -491,7 +604,7 @@ export default function Entries() {
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Información General</h3>
                   <div className="space-y-3">

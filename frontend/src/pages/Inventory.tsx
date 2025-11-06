@@ -288,28 +288,29 @@ export default function Inventory() {
     <MainLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">Inventario</h2>
-            <p className="text-gray-600">Listado y búsqueda de repuestos</p>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
+          <div className="flex-1">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Inventario</h2>
+            <p className="text-sm sm:text-base text-gray-600">Listado y búsqueda de repuestos</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             {/* Solo mostrar botón de crear si no es mecánico */}
             {((user as any)?.role?.name || '') !== 'Mecánico' && (
               <button
                 onClick={openCreate}
-                className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                className="px-3 sm:px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors text-sm sm:text-base"
               >
-                + Agregar repuesto
+                <span className="sm:hidden">+</span>
+                <span className="hidden sm:inline">+ Agregar repuesto</span>
               </button>
             )}
-            <div className="text-sm text-gray-500">{total} repuestos</div>
+            <div className="text-xs sm:text-sm text-gray-500">{total} repuestos</div>
           </div>
         </div>
 
         {/* Filtros */}
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+        <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
             <div className="md:col-span-2">
               <input
                 type="text"
@@ -448,14 +449,14 @@ export default function Inventory() {
 
         {/* Modal Crear */}
         {showCreate && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-            <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl">
-              <div className="px-6 py-4 border-b flex items-center justify-between">
-                <h3 className="text-lg font-semibold">Agregar repuesto</h3>
-                <button onClick={closeModals} className="text-gray-500 hover:text-gray-700">✕</button>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+            <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+              <div className="px-4 sm:px-6 py-4 border-b flex items-center justify-between sticky top-0 bg-white">
+                <h3 className="text-base sm:text-lg font-semibold">Agregar repuesto</h3>
+                <button onClick={closeModals} className="text-gray-500 hover:text-gray-700 text-xl">✕</button>
               </div>
-              <form onSubmit={handleCreate} className="p-6 space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <form onSubmit={handleCreate} className="p-4 sm:p-6 space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div>
                     <label htmlFor="create-code" className="block text-sm font-medium text-gray-700 mb-1">Código <span className="text-red-500">*</span></label>
                     <input id="create-code" name="code" placeholder="Ej: REP-001" className="w-full px-3 py-2 border rounded" required />
@@ -557,14 +558,14 @@ export default function Inventory() {
 
         {/* Modal Editar */}
         {showEdit && editingPart && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-            <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl">
-              <div className="px-6 py-4 border-b flex items-center justify-between">
-                <h3 className="text-lg font-semibold">Editar repuesto</h3>
-                <button onClick={closeModals} className="text-gray-500 hover:text-gray-700">✕</button>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+            <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+              <div className="px-4 sm:px-6 py-4 border-b flex items-center justify-between sticky top-0 bg-white">
+                <h3 className="text-base sm:text-lg font-semibold">Editar repuesto</h3>
+                <button onClick={closeModals} className="text-gray-500 hover:text-gray-700 text-xl">✕</button>
               </div>
-              <form onSubmit={handleEdit} className="p-6 space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <form onSubmit={handleEdit} className="p-4 sm:p-6 space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div>
                     <label htmlFor="edit-code" className="block text-sm font-medium text-gray-700 mb-1">Código</label>
                     <input id="edit-code" name="code" defaultValue={editingPart.code} placeholder="Código" className="w-full px-3 py-2 border rounded" required />

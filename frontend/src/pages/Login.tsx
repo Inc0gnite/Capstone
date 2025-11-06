@@ -81,9 +81,9 @@ function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100">
-      <div className="max-w-md w-full mx-4">
-        <div className="bg-white rounded-2xl shadow-xl p-8 space-y-6">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 p-4">
+      <div className="max-w-md w-full">
+        <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8 space-y-4 sm:space-y-6">
           {/* Logo y título */}
           <div className="text-center space-y-2">
             <div className="mx-auto w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center">
@@ -205,7 +205,7 @@ function Login() {
       {/* Modal Recuperar Contraseña */}
       {isForgotOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="bg-white w-full max-w-md rounded-xl shadow-xl p-6">
+          <div className="bg-white w-full max-w-md rounded-xl shadow-xl p-4 sm:p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-900">Recuperar contraseña</h3>
               <button

@@ -139,12 +139,12 @@ function Dashboard() {
         {canCreateVehicle && (
           <button
             onClick={() => setShowCreateVehicle(true)}
-            className="fixed bottom-24 right-6 bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-full shadow-lg transition-all duration-300 hover:scale-110 z-50"
+            className="fixed bottom-20 sm:bottom-24 right-4 sm:right-6 bg-blue-600 hover:bg-blue-700 text-white p-3 sm:p-4 rounded-full shadow-lg transition-all duration-300 hover:scale-110 z-50"
             title="Registrar Nuevo Vehículo"
           >
-            <div className="flex items-center space-x-2">
-              <span className="text-2xl">🚗</span>
-              <span className="font-medium">Nuevo Vehículo</span>
+            <div className="flex items-center space-x-1 sm:space-x-2">
+              <span className="text-xl sm:text-2xl">🚗</span>
+              <span className="hidden sm:inline font-medium text-sm sm:text-base">Nuevo Vehículo</span>
             </div>
           </button>
         )}

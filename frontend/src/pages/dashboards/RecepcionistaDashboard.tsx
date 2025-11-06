@@ -96,24 +96,26 @@ export default function RecepcionistaDashboard() {
     <MainLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">Gestión de Ingresos y Órdenes</h2>
-            <p className="text-gray-600">Recepción y coordinación de trabajos</p>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
+          <div className="flex-1">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Gestión de Ingresos y Órdenes</h2>
+            <p className="text-sm sm:text-base text-gray-600">Recepción y coordinación de trabajos</p>
           </div>
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2 sm:space-x-3">
             <NotificationDropdown />
             <button
               onClick={handleCreateOrder}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors"
+              className="px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors text-sm sm:text-base"
             >
-              📝 Nueva Orden
+              <span className="sm:hidden">📝</span>
+              <span className="hidden sm:inline">📝 Nueva Orden</span>
             </button>
             <button
               onClick={handleDataUpdate}
-              className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 font-medium transition-colors"
+              className="px-3 sm:px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 font-medium transition-colors text-sm sm:text-base"
             >
-              🔄 Actualizar
+              <span className="sm:hidden">🔄</span>
+              <span className="hidden sm:inline">🔄 Actualizar</span>
             </button>
           </div>
         </div>

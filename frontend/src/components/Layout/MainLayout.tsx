@@ -109,7 +109,7 @@ export function MainLayout({ children }: MainLayoutProps) {
               {/* Usuario - Responsive */}
               <div className="flex items-center space-x-2 sm:space-x-3">
                 {/* Información del usuario - oculta en móvil muy pequeño */}
-                <div className="hidden sm:block text-right">
+                <div className="hidden md:block text-right">
                   <p className="text-sm font-medium text-gray-700 truncate max-w-32">
                     {user?.firstName} {user?.lastName}
                   </p>
@@ -117,8 +117,8 @@ export function MainLayout({ children }: MainLayoutProps) {
                 </div>
                 
                 {/* Versión compacta para móvil */}
-                <div className="sm:hidden">
-                  <p className="text-sm font-medium text-gray-700 truncate max-w-20">
+                <div className="md:hidden">
+                  <p className="text-sm font-medium text-gray-700 truncate max-w-24">
                     {user?.firstName}
                   </p>
                 </div>
@@ -126,6 +126,7 @@ export function MainLayout({ children }: MainLayoutProps) {
                 <button
                   onClick={handleLogout}
                   className="px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition"
+                  aria-label="Cerrar sesión"
                 >
                   <span className="hidden sm:inline">Salir</span>
                   <span className="sm:hidden">🚪</span>
@@ -151,15 +152,15 @@ export function MainLayout({ children }: MainLayoutProps) {
           transform transition-transform duration-300 ease-in-out
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}>
-          <nav className="p-4 space-y-1">
+          <nav className="p-3 sm:p-4 space-y-1">
             {navItems.map((item) => (
               <a
                 key={item.name}
                 href={item.href}
-                className="flex items-center space-x-3 px-3 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition"
+                className="flex items-center space-x-3 px-3 py-2.5 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition text-sm sm:text-base"
                 onClick={() => setSidebarOpen(false)} // Cerrar sidebar al hacer clic en móvil
               >
-                <span className="text-xl">{item.icon}</span>
+                <span className="text-lg sm:text-xl">{item.icon}</span>
                 <span className="font-medium">{item.name}</span>
               </a>
             ))}
@@ -167,7 +168,7 @@ export function MainLayout({ children }: MainLayoutProps) {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 min-h-[calc(100vh-4rem)]">
+        <main className="flex-1 p-3 sm:p-4 md:p-6 lg:p-8 min-h-[calc(100vh-4rem)] w-full overflow-x-hidden">
           {children}
         </main>
       </div>

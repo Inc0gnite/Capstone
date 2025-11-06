@@ -65,16 +65,16 @@ export default function AdminDashboard() {
         </div>
         {/* Stats Cards */}
         {loadingStats ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
             {[1,2,3,4].map(i => (
-              <div key={i} className="bg-white rounded-lg shadow p-6 animate-pulse">
-                <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
-                <div className="h-8 bg-gray-200 rounded w-1/2"></div>
+              <div key={i} className="bg-white rounded-lg shadow p-4 sm:p-6 animate-pulse">
+                <div className="h-3 sm:h-4 bg-gray-200 rounded w-3/4 mb-3 sm:mb-4"></div>
+                <div className="h-6 sm:h-8 bg-gray-200 rounded w-1/2"></div>
               </div>
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
             <StatCard
               title="Total Vehículos"
               value={(totalVehicles || 0).toString()}
@@ -107,7 +107,7 @@ export default function AdminDashboard() {
         )}
 
         {/* Main Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           {/* Órdenes Urgentes */}
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between mb-4">
@@ -190,9 +190,9 @@ export default function AdminDashboard() {
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Acciones Rápidas</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Acciones Rápidas</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
             <QuickAction icon="➕" label="Nuevo Usuario" onClick={() => navigate('/users')} />
             <QuickAction icon="🚗" label="Registrar Vehículo" onClick={() => navigate('/vehicles')} />
             <QuickAction icon="📝" label="Nuevo Ingreso" onClick={() => navigate('/entries')} />
@@ -214,14 +214,14 @@ function StatCard({ title, value, change, icon, color }: any) {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
+    <div className="bg-white rounded-lg shadow p-4 sm:p-6">
       <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm font-medium text-gray-600">{title}</p>
-          <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
-          <p className="text-sm text-gray-500 mt-1">{change} vs mes anterior</p>
+        <div className="flex-1 min-w-0">
+          <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">{title}</p>
+          <p className="text-xl sm:text-2xl font-bold text-gray-900 mt-1">{value}</p>
+          <p className="text-xs sm:text-sm text-gray-500 mt-1 truncate">{change} vs mes anterior</p>
         </div>
-        <div className={`text-4xl ${colors[color]} p-3 rounded-lg`}>{icon}</div>
+        <div className={`text-3xl sm:text-4xl ${colors[color]} p-2 sm:p-3 rounded-lg flex-shrink-0 ml-2`}>{icon}</div>
       </div>
     </div>
   )
@@ -308,9 +308,9 @@ function StockAlert({ item, current, min }: any) {
 
 function QuickAction({ icon, label, onClick }: any) {
   return (
-    <button onClick={onClick} className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition">
-      <span className="text-3xl mb-2">{icon}</span>
-      <span className="text-sm font-medium text-gray-700">{label}</span>
+    <button onClick={onClick} className="flex flex-col items-center justify-center p-3 sm:p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition">
+      <span className="text-2xl sm:text-3xl mb-1 sm:mb-2">{icon}</span>
+      <span className="text-xs sm:text-sm font-medium text-gray-700 text-center">{label}</span>
     </button>
   )
 }
