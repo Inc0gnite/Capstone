@@ -11,25 +11,85 @@ interface WorkOrderChecklistProps {
   onChecklistChange: (items: ChecklistItem[], allCompleted: boolean) => void
   initialItems?: ChecklistItem[]
   disabled?: boolean
+  workOrderId?: string // ID de la orden para persistir el estado
 }
 
 export function WorkOrderChecklist({ 
   description, 
   onChecklistChange, 
   initialItems = [],
-  disabled = false 
+  disabled = false,
+  workOrderId 
 }: WorkOrderChecklistProps) {
   const [items, setItems] = useState<ChecklistItem[]>(initialItems)
   const [hasInitialized, setHasInitialized] = useState(false)
 
-  // Parsear la descripción en tareas individuales solo una vez
+  // Función para obtener la clave de localStorage
+  const getStorageKey = () => workOrderId ? `checklist-${workOrderId}` : null
+
+  // Cargar estado guardado desde localStorage y reconciliar con nueva descripción
   useEffect(() => {
-    if (!hasInitialized && initialItems.length === 0 && description) {
-      const parsedItems = parseDescriptionToTasks(description)
-      setItems(parsedItems)
-      setHasInitialized(true)
+    if (hasInitialized) return // Ya se inicializó, no volver a hacerlo
+    
+    const storageKey = getStorageKey()
+    let parsedItems: ChecklistItem[] = []
+    
+    // Parsear la descripción
+    if (description && initialItems.length === 0) {
+      parsedItems = parseDescriptionToTasks(description)
+    } else if (initialItems.length > 0) {
+      parsedItems = initialItems
     }
-  }, [description, initialItems.length, hasInitialized])
+    
+    if (parsedItems.length === 0) {
+      setHasInitialized(true)
+      return
+    }
+
+    // Intentar cargar estado guardado
+    if (storageKey) {
+      try {
+        const saved = localStorage.getItem(storageKey)
+        if (saved) {
+          const savedItems: ChecklistItem[] = JSON.parse(saved)
+          // Reconciliar: mantener el estado de completado si el texto coincide
+          const reconciledItems = parsedItems.map((newItem, index) => {
+            // Buscar item guardado por índice o texto similar
+            const savedItem = savedItems.find(
+              (saved) => saved.id === newItem.id || saved.text === newItem.text
+            ) || savedItems[index]
+            
+            return {
+              ...newItem,
+              completed: savedItem?.completed || false
+            }
+          })
+          
+          setItems(reconciledItems)
+          setHasInitialized(true)
+          return
+        }
+      } catch (error) {
+        console.warn('Error cargando checklist desde localStorage:', error)
+      }
+    }
+
+    // Si no hay estado guardado, usar items parseados
+    setItems(parsedItems)
+    setHasInitialized(true)
+  }, [description, initialItems.length, hasInitialized, workOrderId])
+
+  // Guardar estado en localStorage cuando cambie
+  useEffect(() => {
+    const storageKey = getStorageKey()
+    if (storageKey && items.length > 0 && hasInitialized) {
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(items))
+      } catch (error) {
+        console.warn('Error guardando checklist en localStorage:', error)
+      }
+    }
+  }, [items, hasInitialized, workOrderId])
 
   // Notificar cambios al componente padre
   useEffect(() => {

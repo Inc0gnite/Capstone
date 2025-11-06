@@ -379,6 +379,7 @@ export default function WorkOrderDetail() {
                   description={workOrder.description}
                   onChecklistChange={handleChecklistChange}
                   disabled={workOrder.currentStatus === 'pendiente' || workOrder.currentStatus === 'completado' || workOrder.currentStatus === 'cancelado'}
+                  workOrderId={workOrder.id}
                 />
               </div>
             </div>
