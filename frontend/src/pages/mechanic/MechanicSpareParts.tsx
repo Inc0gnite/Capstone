@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { MainLayout } from '../../components/Layout/MainLayout'
 import { sparePartService, SparePart } from '../../services/sparePartService'
+import { useAuthStore } from '../../store/authStore'
 
 // Tipos locales
 interface SparePartFilters {
@@ -20,6 +21,7 @@ interface PaginatedResponse<T> {
 }
 
 export default function MechanicSpareParts() {
+  const { user } = useAuthStore()
   const [parts, setParts] = useState<SparePart[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -39,9 +41,11 @@ export default function MechanicSpareParts() {
   const totalPages = useMemo(() => Math.max(1, Math.ceil(total / limit)), [total, limit])
 
   useEffect(() => {
-    loadParts()
+    if (user) {
+      loadParts()
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, limit])
+  }, [page, limit, user])
 
   useEffect(() => {
     const loadCategories = async () => {
@@ -101,10 +105,29 @@ export default function MechanicSpareParts() {
       if (lowStockOnly) params.lowStock = true
 
       const response: PaginatedResponse<SparePart> | any = await sparePartService.getAll(params as any)
+      
+      console.log('[MechanicSpareParts] 🔍 Params enviados:', params)
+      console.log('[MechanicSpareParts] 📦 Respuesta recibida:', response)
+      console.log('[MechanicSpareParts] 📦 Tipo respuesta:', typeof response)
+      console.log('[MechanicSpareParts] 📦 Es array?', Array.isArray(response))
+      if (response && typeof response === 'object') {
+        console.log('[MechanicSpareParts] 📦 Keys:', Object.keys(response))
+        console.log('[MechanicSpareParts] 📦 response.data existe?', 'data' in response)
+        console.log('[MechanicSpareParts] 📦 response.data es array?', Array.isArray(response.data))
+        console.log('[MechanicSpareParts] 📦 response.data length:', response.data?.length)
+        console.log('[MechanicSpareParts] 📦 response.total:', response.total)
+      }
+      
       // sendPaginated devuelve { data: [...], page, limit, total, totalPages }
       // sparePartService.getAll() devuelve res.data del axios, que es el objeto paginado
-      const items: SparePart[] = response?.data ?? response?.items ?? (Array.isArray(response) ? response : [])
+      const items: SparePart[] = response?.data ?? response?.items ?? response?.spareParts ?? (Array.isArray(response) ? response : [])
       const totalCount = response?.total ?? items.length
+
+      console.log('[MechanicSpareParts] ✅ Items extraídos:', items.length)
+      console.log('[MechanicSpareParts] ✅ Total count:', totalCount)
+      if (items.length > 0) {
+        console.log('[MechanicSpareParts] ✅ Primer item:', items[0])
+      }
 
       setParts(items)
       setTotal(totalCount)
