@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { MainLayout } from '../../components/Layout/MainLayout'
 import { useRecepcionista } from '../../hooks/useRecepcionista'
 import { PendingVehicleCard } from '../../components/recepcionista/PendingVehicleCard'
@@ -14,6 +15,7 @@ import { useAuthStore } from '../../store/authStore'
 
 export default function RecepcionistaDashboard() {
   console.log('🏠 RecepcionistaDashboard cargado correctamente')
+  const navigate = useNavigate()
   const [showCreateModal, setShowCreateModal] = useState(false)
   const { user } = useAuthStore()
   
@@ -166,7 +168,7 @@ export default function RecepcionistaDashboard() {
         {/* Acciones Principales */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
           <button 
-            onClick={() => window.location.href = '/vehicles'}
+            onClick={() => navigate('/vehicles')}
             className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg shadow-lg p-4 sm:p-6 lg:p-8 text-center transition transform hover:scale-105"
           >
             <div className="text-4xl sm:text-6xl mb-2 sm:mb-4">🔍</div>
@@ -175,7 +177,7 @@ export default function RecepcionistaDashboard() {
           </button>
 
           <button 
-            onClick={() => window.location.href = '/work-orders'}
+            onClick={() => navigate('/work-orders')}
             className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white rounded-lg shadow-lg p-4 sm:p-6 lg:p-8 text-center transition transform hover:scale-105"
           >
             <div className="text-4xl sm:text-6xl mb-2 sm:mb-4">🔨</div>
