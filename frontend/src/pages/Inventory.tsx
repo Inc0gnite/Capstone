@@ -289,7 +289,10 @@ export default function Inventory() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categoría</th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Mínimo</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Precio</th>
+                  {/* Ocultar precio para mecánicos */}
+                  {((user as any)?.role?.name || '') !== 'Mecánico' && (
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Precio</th>
+                  )}
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ubicación</th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
                 </tr>
@@ -297,7 +300,7 @@ export default function Inventory() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {parts.length === 0 && (
                   <tr>
-                    <td colSpan={8} className="px-6 py-8 text-center text-gray-500">Sin resultados</td>
+                    <td colSpan={((user as any)?.role?.name || '') === 'Mecánico' ? 7 : 8} className="px-6 py-8 text-center text-gray-500">Sin resultados</td>
                   </tr>
                 )}
                 {parts.map((p) => {
@@ -310,7 +313,10 @@ export default function Inventory() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{p.category}</td>
                       <td className={`px-6 py-4 whitespace-nowrap text-sm text-right font-medium ${out ? 'text-red-600' : isLow ? 'text-yellow-600' : 'text-green-600'}`}>{p.currentStock}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-700">{p.minStock}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900">{typeof (p as any).unitPrice === 'number' ? `$${(p as any).unitPrice.toLocaleString('es-CL')}` : '—'}</td>
+                      {/* Ocultar precio para mecánicos */}
+                      {((user as any)?.role?.name || '') !== 'Mecánico' && (
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900">{typeof (p as any).unitPrice === 'number' ? `$${(p as any).unitPrice.toLocaleString('es-CL')}` : '—'}</td>
+                      )}
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{p.location || '—'}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-right">
                         {/* Solo mostrar botón de editar si no es mecánico */}
