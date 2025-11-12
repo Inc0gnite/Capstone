@@ -11,6 +11,26 @@ import { WordService } from '../services/wordService'
 import { sparePartService } from '../services/sparePartService'
 import { useAuthStore } from '../store/authStore'
 import { CameraCapture } from '../components/photo/CameraCapture'
+import photoService, { VehicleEntryPhoto } from '../services/photoService'
+
+type DisplayPhoto = {
+  id: string
+  url: string
+  description?: string
+  uploadedAt?: string
+  source: 'entry' | 'process'
+  photoType?: string
+}
+
+const PHOTO_TYPE_LABELS: Record<string, string> = {
+  before: 'Antes',
+  damage: 'Daños',
+  interior: 'Interior',
+  exterior: 'Exterior',
+  during: 'Proceso',
+  after: 'Después',
+  general: 'General',
+}
 
 export default function WorkOrderDetail() {
   const { id } = useParams<{ id: string }>()
@@ -27,6 +47,7 @@ export default function WorkOrderDetail() {
   const [checklistCompleted, setChecklistCompleted] = useState(false)
   const [showCamera, setShowCamera] = useState(false)
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
+  const [entryPhotos, setEntryPhotos] = useState<VehicleEntryPhoto[]>([])
   const { user } = useAuthStore()
 
   useEffect(() => {
@@ -51,6 +72,18 @@ export default function WorkOrderDetail() {
         completedAt: order.completedAt
       })
       setWorkOrder(order)
+
+      if (order.entryId) {
+        try {
+          const photos = await photoService.getEntryPhotos(order.entryId)
+          setEntryPhotos(photos)
+        } catch (photoError) {
+          console.error('❌ Error cargando fotos de ingreso:', photoError)
+          setEntryPhotos([])
+        }
+      } else {
+        setEntryPhotos([])
+      }
     } catch (err: any) {
       console.error('❌ Error cargando orden de trabajo:', err)
       console.error('❌ Error response:', err.response)
@@ -300,6 +333,38 @@ export default function WorkOrderDetail() {
   const statusConfig = getStatusConfig(workOrder.currentStatus)
   const priorityConfig = getPriorityConfig(workOrder.priority)
   const workTypeConfig = getWorkTypeConfig(workOrder.workType)
+
+  const guardPhotos: DisplayPhoto[] = entryPhotos.map((photo) => ({
+    id: photo.id,
+    url: photo.url,
+    description:
+      photo.description ||
+      `Foto de ingreso (${PHOTO_TYPE_LABELS[photo.photoType] || photo.photoType})`,
+    uploadedAt: photo.uploadedAt,
+    source: 'entry',
+    photoType: photo.photoType,
+  }))
+
+  const processPhotos: DisplayPhoto[] = (workOrder.photos || []).map((photo) => ({
+    id: photo.id,
+    url: photo.url,
+    description:
+      photo.description ||
+      (photo.photoType
+        ? `Foto del proceso (${PHOTO_TYPE_LABELS[photo.photoType] || photo.photoType})`
+        : 'Foto del proceso'),
+    uploadedAt: photo.uploadedAt,
+    source: 'process',
+    photoType: photo.photoType,
+  }))
+
+  const allPhotos: DisplayPhoto[] = [...guardPhotos, ...processPhotos].sort((a, b) => {
+    const dateA = a.uploadedAt ? new Date(a.uploadedAt).getTime() : 0
+    const dateB = b.uploadedAt ? new Date(b.uploadedAt).getTime() : 0
+    return dateB - dateA
+  })
+
+  const hasPhotos = allPhotos.length > 0
 
   return (
     <MainLayout>
@@ -636,8 +701,8 @@ export default function WorkOrderDetail() {
                 <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
                   <span className="mr-2 text-lg sm:text-xl">📸</span>
                   Fotos del Proceso
-                  {workOrder.photos && workOrder.photos.length > 0 && (
-                    <span className="ml-2 text-sm font-normal text-gray-500">({workOrder.photos.length})</span>
+                  {hasPhotos && (
+                    <span className="ml-2 text-sm font-normal text-gray-500">({allPhotos.length})</span>
                   )}
                 </h3>
                 <button
@@ -659,10 +724,23 @@ export default function WorkOrderDetail() {
                 </button>
               </div>
               
-              {workOrder.photos && workOrder.photos.length > 0 ? (
+              {hasPhotos ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                  {workOrder.photos.map((photo, index) => (
-                    <div key={photo.id} className="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow cursor-pointer" onClick={() => window.open(photo.url, '_blank')}>
+                  {allPhotos.map((photo, index) => (
+                    <div
+                      key={photo.id}
+                      className="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow cursor-pointer relative"
+                      onClick={() => window.open(photo.url, '_blank')}
+                    >
+                      <span
+                        className={`absolute top-2 left-2 px-2 py-0.5 rounded-full text-xs font-semibold ${
+                          photo.source === 'entry'
+                            ? 'bg-green-600 text-white'
+                            : 'bg-blue-600 text-white'
+                        }`}
+                      >
+                        {photo.source === 'entry' ? 'Ingreso' : 'Proceso'}
+                      </span>
                       <img
                         src={photo.url}
                         alt={`Foto ${index + 1}`}
@@ -673,7 +751,7 @@ export default function WorkOrderDetail() {
                           <p className="text-xs sm:text-sm text-gray-700 mb-1 sm:mb-2 line-clamp-2">{photo.description}</p>
                         )}
                         <p className="text-xs text-gray-500">
-                          {formatDate(photo.createdAt)}
+                          {formatDate(photo.uploadedAt)}
                         </p>
                       </div>
                     </div>

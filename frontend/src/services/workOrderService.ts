@@ -1,4 +1,5 @@
 import api from './api'
+import type { VehicleEntryPhoto } from './photoService'
 
 export interface WorkOrder {
   id: string
@@ -32,6 +33,7 @@ export interface WorkOrder {
     driverName: string
     driverRut: string
     entryDate: string
+    photos?: VehicleEntryPhoto[]
   }
   assignedTo?: {
     id: string
@@ -49,7 +51,8 @@ export interface WorkOrder {
     id: string
     url: string
     description?: string
-    createdAt: string
+    photoType?: string
+    uploadedAt: string
   }>
   spareParts?: Array<{
     id: string
