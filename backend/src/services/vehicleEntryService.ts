@@ -1,5 +1,6 @@
 import prisma from '../config/database'
 import { generateEntryCode } from '../utils/generators'
+import notificationService from './notificationService'
 
 /**
  * Servicio de ingresos de vehículos
@@ -248,6 +249,12 @@ export class VehicleEntryService {
     })
 
     console.log('✅ Ingreso creado exitosamente:', entry.id)
+
+    // Notificar a roles relevantes (recepcionista / jefe de taller)
+    notificationService
+      .notifyVehicleEntry(entry.id)
+      .catch((error) => console.error('❌ Error notificando ingreso de vehículo:', error))
+
     return this.getById(entry.id)
   }
 

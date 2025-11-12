@@ -1,6 +1,7 @@
 import prisma from '../config/database'
 import { generateWorkOrderNumber } from '../utils/generators'
 import type { WorkOrderFilters } from '../types'
+import notificationService from './notificationService'
 
 /**
  * Servicio de órdenes de trabajo
@@ -237,6 +238,11 @@ export class WorkOrderService {
 
       return newOrder
     })
+
+    // Notificar a los usuarios relevantes (mecánico asignado, jefe/recepcionista)
+    notificationService
+      .notifyWorkOrderCreated(workOrder.id)
+      .catch((error) => console.error('❌ Error notificando creación de OT:', error))
 
     return this.getById(workOrder.id)
   }
@@ -516,6 +522,19 @@ export class WorkOrderService {
     })
 
     console.log('✅ Mecánico asignado exitosamente:', updatedOrder.assignedTo)
+
+    // Notificar al mecánico asignado
+    notificationService
+      .create({
+        userId: mechanicId,
+        title: 'Nueva orden asignada',
+        message: `Se te ha asignado la orden ${workOrder.orderNumber}.`,
+        type: 'work_order_assigned',
+        relatedTo: 'work-orders',
+        relatedId: workOrderId,
+      })
+      .catch((error) => console.error('❌ Error notificando asignación de OT:', error))
+
     return updatedOrder
   }
 

@@ -10,7 +10,8 @@ export function NotificationDropdown() {
     loading,
     markAsRead,
     markAllAsRead,
-    deleteNotification
+    deleteNotification,
+    refresh
   } = useNotifications()
 
   // Cerrar dropdown al hacer clic fuera
@@ -64,7 +65,13 @@ export function NotificationDropdown() {
     <div className="relative" ref={dropdownRef}>
       {/* Botón de notificaciones */}
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => {
+          const nextOpen = !isOpen
+          setIsOpen(nextOpen)
+          if (!isOpen) {
+            void refresh(true)
+          }
+        }}
         className="relative p-2 text-gray-400 hover:text-gray-500 transition-colors"
       >
         <span className="sr-only">Notificaciones</span>
@@ -84,7 +91,7 @@ export function NotificationDropdown() {
             <h3 className="text-lg font-semibold text-gray-900">Notificaciones</h3>
             {unreadCount > 0 && (
               <button
-                onClick={markAllAsRead}
+                onClick={() => void markAllAsRead()}
                 className="text-sm text-blue-600 hover:text-blue-800 font-medium"
               >
                 Marcar todas como leídas
@@ -151,7 +158,7 @@ export function NotificationDropdown() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation()
-                        deleteNotification(notification.id)
+                        void deleteNotification(notification.id)
                       }}
                       className="text-gray-400 hover:text-red-500 transition-colors"
                     >

@@ -1,178 +1,130 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import type { Notification as BackendNotification } from '../../../shared/types'
+import { notificationService } from '../services/notificationService'
 
-export interface Notification {
-  id: string
-  title: string
-  message: string
-  type: 'success' | 'warning' | 'error' | 'info'
-  isRead: boolean
-  createdAt: string
-  data?: {
-    vehicle?: {
-      licensePlate: string
-      driverName: string
-      driverRut: string
-    }
-    entryId?: string
-  }
-}
+type AppNotification = BackendNotification & { data?: Record<string, any> }
+
+const POLLING_INTERVAL_MS = 15000
 
 export function useNotifications() {
-  const [notifications, setNotifications] = useState<Notification[]>([])
-  const [loading, setLoading] = useState(false)
+  const [notifications, setNotifications] = useState<AppNotification[]>([])
+  const [loading, setLoading] = useState(true)
+  const [unreadCount, setUnreadCount] = useState(0)
+  const pollingRef = useRef<number | null>(null)
 
-  const unreadCount = notifications.filter(n => !n.isRead).length
+  const fetchNotifications = useCallback(async (showSpinner = false) => {
+    if (showSpinner) {
+      setLoading(true)
+    }
 
-  // Cargar notificaciones desde localStorage
-  const loadNotifications = useCallback(() => {
     try {
-      const stored = localStorage.getItem('notifications')
-      if (stored) {
-        const parsed = JSON.parse(stored)
-        setNotifications(parsed)
-      }
+      const response = await notificationService.getMyNotifications(1, 50)
+      const list = Array.isArray(response.data) ? response.data : []
+      setNotifications(list)
+      const unread = typeof response.unreadCount === 'number'
+        ? response.unreadCount
+        : list.filter(n => !n.isRead).length
+      setUnreadCount(unread)
     } catch (error) {
-      console.error('Error cargando notificaciones:', error)
+      console.error('Error obteniendo notificaciones:', error)
+    } finally {
+      setLoading(false)
     }
   }, [])
 
-  // Guardar notificaciones en localStorage
-  const saveNotifications = useCallback((newNotifications: Notification[]) => {
+  const markAsRead = useCallback(async (id: string) => {
     try {
-      localStorage.setItem('notifications', JSON.stringify(newNotifications))
-      setNotifications(newNotifications)
+      await notificationService.markAsRead(id)
+      setNotifications(prev =>
+        prev.map((n) =>
+          n.id === id ? { ...n, isRead: true, readAt: new Date().toISOString() } : n
+        )
+      )
+      setUnreadCount(prev => (prev > 0 ? prev - 1 : 0))
     } catch (error) {
-      console.error('Error guardando notificaciones:', error)
+      console.error('Error marcando notificación como leída:', error)
     }
   }, [])
 
-  // Agregar nueva notificación
-  const addNotification = useCallback((notification: Omit<Notification, 'id' | 'createdAt' | 'isRead'>) => {
-    const newNotification: Notification = {
-      ...notification,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString(),
-      isRead: false
+  const markAllAsRead = useCallback(async () => {
+    try {
+      await notificationService.markAllAsRead()
+      setNotifications(prev => prev.map((n) => ({ ...n, isRead: true, readAt: new Date().toISOString() })))
+      setUnreadCount(0)
+    } catch (error) {
+      console.error('Error marcando todas las notificaciones como leídas:', error)
     }
+  }, [])
 
-    const updatedNotifications = [newNotification, ...notifications]
-    saveNotifications(updatedNotifications)
-
-    // Mostrar notificación del sistema si está disponible
-    if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification(notification.title, {
-        body: notification.message,
-        icon: '/favicon.ico'
+  const deleteNotification = useCallback(async (id: string) => {
+    try {
+      await notificationService.delete(id)
+      setNotifications(prev => {
+        const target = prev.find(n => n.id === id)
+        if (target && !target.isRead) {
+          setUnreadCount(prevUnread => (prevUnread > 0 ? prevUnread - 1 : 0))
+        }
+        return prev.filter(n => n.id !== id)
       })
+    } catch (error) {
+      console.error('Error eliminando notificación:', error)
+    }
+  }, [])
+
+  const clearReadNotifications = useCallback(async () => {
+    try {
+      await notificationService.deleteAllRead()
+      setNotifications(prev => prev.filter(n => !n.isRead))
+    } catch (error) {
+      console.error('Error eliminando notificaciones leídas:', error)
+    }
+  }, [])
+
+  const setupPolling = useCallback(() => {
+    if (pollingRef.current) {
+      window.clearInterval(pollingRef.current)
     }
 
-    return newNotification
-  }, [notifications, saveNotifications])
+    pollingRef.current = window.setInterval(() => {
+      fetchNotifications()
+    }, POLLING_INTERVAL_MS)
+  }, [fetchNotifications])
 
-  // Marcar como leída
-  const markAsRead = useCallback((id: string) => {
-    const updatedNotifications = notifications.map(n => 
-      n.id === id ? { ...n, isRead: true } : n
-    )
-    saveNotifications(updatedNotifications)
-  }, [notifications, saveNotifications])
-
-  // Marcar todas como leídas
-  const markAllAsRead = useCallback(() => {
-    const updatedNotifications = notifications.map(n => ({ ...n, isRead: true }))
-    saveNotifications(updatedNotifications)
-  }, [notifications, saveNotifications])
-
-  // Eliminar notificación
-  const deleteNotification = useCallback((id: string) => {
-    const updatedNotifications = notifications.filter(n => n.id !== id)
-    saveNotifications(updatedNotifications)
-  }, [notifications, saveNotifications])
-
-  // Limpiar notificaciones leídas
-  const clearReadNotifications = useCallback(() => {
-    const updatedNotifications = notifications.filter(n => !n.isRead)
-    saveNotifications(updatedNotifications)
-  }, [notifications, saveNotifications])
-
-  // Escuchar eventos de ingreso de vehículos
   useEffect(() => {
-    const handleVehicleEntry = (event: any) => {
-      console.log('🚗 Evento de ingreso de vehículo recibido:', event.detail)
-      
-      const { vehicle, entry, guardName } = event.detail
-      const currentTime = new Date().toLocaleTimeString('es-CL', { 
-        hour: '2-digit', 
-        minute: '2-digit',
-        second: '2-digit'
-      })
-      
-      addNotification({
-        title: 'Nuevo Ingreso de Vehículo',
-        message: `El Guardia "${guardName || 'Sistema'}" realizó el ingreso de un vehículo a las ${currentTime}`,
-        type: 'success',
-        data: {
-          vehicle: {
-            licensePlate: vehicle.licensePlate,
-            driverName: entry.driverName,
-            driverRut: entry.driverRut
-          },
-          entryId: entry.id
-        }
-      })
-    }
+    fetchNotifications(true)
+    setupPolling()
 
-    const handleVehicleExit = (event: any) => {
-      console.log('🚪 Evento de salida de vehículo recibido:', event.detail)
-      
-      const { vehicle, guardName } = event.detail
-      const currentTime = new Date().toLocaleTimeString('es-CL', { 
-        hour: '2-digit', 
-        minute: '2-digit',
-        second: '2-digit'
-      })
-      
-      addNotification({
-        title: 'Salida de Vehículo Registrada',
-        message: `El Guardia "${guardName || 'Sistema'}" realizó la salida de un vehículo a las ${currentTime}`,
-        type: 'info',
-        data: {
-          vehicle: {
-            licensePlate: vehicle.licensePlate,
-            driverName: vehicle.driverName || 'N/A',
-            driverRut: vehicle.driverRut || 'N/A'
-          }
-        }
-      })
-    }
+    const handleRefresh = () => fetchNotifications()
+    const handleVehicleEvent = () => fetchNotifications()
 
-    // Solicitar permisos para notificaciones del sistema
+    window.addEventListener('notifications:refresh', handleRefresh)
+    window.addEventListener('vehicle-entry-created', handleVehicleEvent)
+    window.addEventListener('vehicle-exit-registered', handleVehicleEvent)
+
     if ('Notification' in window && Notification.permission === 'default') {
-      Notification.requestPermission()
+      Notification.requestPermission().catch(() => {
+        /* noop */
+      })
     }
-
-    // Escuchar eventos
-    window.addEventListener('vehicle-entry-created', handleVehicleEntry)
-    window.addEventListener('vehicle-exit-registered', handleVehicleExit)
-
-    // Cargar notificaciones existentes
-    loadNotifications()
 
     return () => {
-      window.removeEventListener('vehicle-entry-created', handleVehicleEntry)
-      window.removeEventListener('vehicle-exit-registered', handleVehicleExit)
+      if (pollingRef.current) {
+        window.clearInterval(pollingRef.current)
+      }
+      window.removeEventListener('notifications:refresh', handleRefresh)
+      window.removeEventListener('vehicle-entry-created', handleVehicleEvent)
+      window.removeEventListener('vehicle-exit-registered', handleVehicleEvent)
     }
-  }, [addNotification, loadNotifications])
+  }, [fetchNotifications, setupPolling])
 
   return {
     notifications,
     unreadCount,
     loading,
-    addNotification,
     markAsRead,
     markAllAsRead,
     deleteNotification,
     clearReadNotifications,
-    loadNotifications
+    refresh: fetchNotifications,
   }
 }

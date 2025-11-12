@@ -67,12 +67,16 @@ export class NotificationService {
       relatedId?: string
     }
   ) {
-    const notifications = await prisma.notification.createMany({
-      data: userIds.map((userId) => ({
-        userId,
-        ...data,
-      })),
-    })
+    const notifications = await Promise.all(
+      userIds.map((userId) =>
+        prisma.notification.create({
+          data: {
+            userId,
+            ...data,
+          },
+        })
+      )
+    )
 
     return notifications
   }
