@@ -333,13 +333,8 @@ function StatCard({ title, value, icon, color }: any) {
 
   return (
     <div className="bg-white rounded-lg shadow p-4 sm:p-6">
-      <div className="flex items-center justify-between">
-        <div className="flex-1 min-w-0">
-          <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">{title}</p>
-          <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mt-1 sm:mt-2">{value}</p>
-        </div>
-        <div className={`text-3xl sm:text-4xl lg:text-5xl ${colors[color]} p-2 sm:p-3 lg:p-4 rounded-lg flex-shrink-0 ml-2`}>{icon}</div>
-      </div>
+        <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">{title}</p>
+        <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mt-2">{value}</p>
     </div>
   )
 }
