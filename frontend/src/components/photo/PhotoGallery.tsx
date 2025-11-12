@@ -37,6 +37,10 @@ export function PhotoGallery({
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   const convertFileToDataUrl = (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      throw new Error('Solo se permiten archivos de imagen (JPG, PNG, GIF, WEBP)')
+    }
+
     return new Promise<string>((resolve, reject) => {
       const reader = new FileReader()
       reader.onload = () => resolve(reader.result as string)
@@ -63,7 +67,8 @@ export function PhotoGallery({
         onAddPhoto(newPhoto)
       } catch (error) {
         console.error('Error cargando la foto:', error)
-        alert('Hubo un problema al cargar la foto. Intenta nuevamente.')
+        const message = error instanceof Error ? error.message : 'Hubo un problema al cargar la foto. Intenta nuevamente.'
+        alert(message)
       }
     }
   }
