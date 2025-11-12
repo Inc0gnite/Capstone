@@ -151,11 +151,6 @@ export class VehicleEntryService {
       entryTime,
     } = data
 
-    // Generar código único secuencial
-    console.log('🔑 Generando código de ingreso...')
-    const entryCode = await generateEntryCode()
-    console.log('✅ Código de ingreso generado:', entryCode)
-
     // Verificar que el vehículo existe
     console.log('🔍 Verificando vehículo:', vehicleId)
     const vehicle = await prisma.vehicle.findUnique({ where: { id: vehicleId } })
@@ -164,6 +159,32 @@ export class VehicleEntryService {
       throw new Error('Vehículo no encontrado')
     }
     console.log('✅ Vehículo encontrado:', vehicle.licensePlate)
+
+    // Validar que no exista un ingreso activo para este vehículo
+    console.log('🔍 Buscando ingresos activos del vehículo...')
+    const activeEntry = await prisma.vehicleEntry.findFirst({
+      where: {
+        vehicleId,
+        exitDate: null,
+      },
+      orderBy: { createdAt: 'desc' },
+    })
+
+    if (activeEntry) {
+      console.log('⚠️ Vehículo con ingreso activo:', {
+        entryId: activeEntry.id,
+        entryCode: activeEntry.entryCode,
+        createdAt: activeEntry.createdAt,
+      })
+      throw new Error(
+        'El vehículo ya cuenta con un ingreso activo. Debes registrar la salida antes de crear un nuevo ingreso.'
+      )
+    }
+
+    // Generar código único secuencial
+    console.log('🔑 Generando código de ingreso...')
+    const entryCode = await generateEntryCode()
+    console.log('✅ Código de ingreso generado:', entryCode)
 
     // Verificar que el taller existe
     console.log('🔍 Verificando taller:', workshopId)
