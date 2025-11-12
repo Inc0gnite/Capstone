@@ -177,8 +177,8 @@ export const workOrderService = {
   },
 
   // Agregar foto a la orden
-  async addPhoto(id: string, url: string, description?: string) {
-    const response = await api.post(`/work-orders/${id}/photos`, { url, description })
+  async addPhoto(id: string, url: string, description?: string, photoType?: string) {
+    const response = await api.post(`/work-orders/${id}/photos`, { url, description, photoType })
     return response.data
   },
 

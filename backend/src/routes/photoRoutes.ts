@@ -28,7 +28,7 @@ router.post(
  */
 router.get(
   '/entries/:entryId',
-  authorize('entries', 'read'),
+  authorize('vehicle-entries', 'read'),
   photoController.getEntryPhotos
 )
 
