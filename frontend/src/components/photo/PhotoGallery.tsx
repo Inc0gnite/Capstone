@@ -1,5 +1,4 @@
-import { useState } from 'react'
-import { CameraCapture } from './CameraCapture'
+import { useRef, useState } from 'react'
 
 export interface Photo {
   id: string
@@ -25,32 +24,52 @@ const PHOTO_TYPES = [
   { value: 'exterior', label: 'Exterior', icon: '🚙', color: 'bg-purple-500' }
 ]
 
-export function PhotoGallery({ 
-  entryId, 
-  photos, 
-  onAddPhoto, 
-  onDeletePhoto, 
-  onUpdatePhoto 
+export function PhotoGallery({
+  entryId,
+  photos,
+  onAddPhoto,
+  onDeletePhoto,
+  onUpdatePhoto
 }: PhotoGalleryProps) {
-  const [showCamera, setShowCamera] = useState(false)
   const [selectedPhotoType, setSelectedPhotoType] = useState('before')
   const [editingPhoto, setEditingPhoto] = useState<string | null>(null)
   const [editDescription, setEditDescription] = useState('')
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
 
-  const handlePhotoTaken = async (photoDataUrl: string) => {
-    // Por ahora usamos la DataURL directamente
-    // En producción, aquí subirías la foto a un servidor
-    const newPhoto: Photo = {
-      id: `temp-${Date.now()}`,
-      entryId,
-      url: photoDataUrl,
-      description: `Foto ${PHOTO_TYPES.find(t => t.value === selectedPhotoType)?.label}`,
-      photoType: selectedPhotoType,
-      uploadedAt: new Date().toISOString()
+  const convertFileToDataUrl = (file: File) => {
+    return new Promise<string>((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(reader.result as string)
+      reader.onerror = () => reject(new Error('No se pudo leer el archivo'))
+      reader.readAsDataURL(file)
+    })
+  }
+
+  const handleFilesSelected = async (files: FileList | null) => {
+    if (!files || files.length === 0) return
+
+    for (const file of Array.from(files)) {
+      try {
+        const dataUrl = await convertFileToDataUrl(file)
+        const newPhoto: Photo = {
+          id: `temp-${Date.now()}-${file.name}`,
+          entryId,
+          url: dataUrl,
+          description: file.name,
+          photoType: selectedPhotoType,
+          uploadedAt: new Date().toISOString()
+        }
+
+        onAddPhoto(newPhoto)
+      } catch (error) {
+        console.error('Error cargando la foto:', error)
+        alert('Hubo un problema al cargar la foto. Intenta nuevamente.')
+      }
     }
-    
-    onAddPhoto(newPhoto)
-    setShowCamera(false)
+  }
+
+  const handleUploadButtonClick = () => {
+    fileInputRef.current?.click()
   }
 
   const handleEditPhoto = (photo: Photo) => {
@@ -88,8 +107,8 @@ export function PhotoGallery({
             key={type.value}
             onClick={() => setSelectedPhotoType(type.value)}
             className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${
-              selectedPhotoType === type.value 
-                ? `${type.color} text-white shadow-lg` 
+              selectedPhotoType === type.value
+                ? `${type.color} text-white shadow-lg`
                 : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
             }`}
           >
@@ -102,15 +121,28 @@ export function PhotoGallery({
         ))}
       </div>
 
-      {/* Botón para tomar foto */}
+      {/* Botón para subir foto */}
       <button
-        onClick={() => setShowCamera(true)}
+        onClick={handleUploadButtonClick}
         className="w-full bg-blue-500 hover:bg-blue-600 text-white p-2.5 sm:p-3 rounded-lg flex items-center justify-center gap-2 font-medium transition-colors text-sm sm:text-base"
       >
         <span className="text-lg sm:text-xl">📸</span>
-        <span className="hidden sm:inline">Tomar Foto - </span>
+        <span className="hidden sm:inline">Subir Foto - </span>
         <span>{getPhotoTypeInfo(selectedPhotoType).label}</span>
       </button>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        multiple
+        className="hidden"
+        onChange={(event) => {
+          void handleFilesSelected(event.target.files)
+          if (event.target) {
+            event.target.value = ''
+          }
+        }}
+      />
 
       {/* Galería de fotos por tipo */}
       {PHOTO_TYPES.map(type => {
@@ -123,16 +155,16 @@ export function PhotoGallery({
               <span>{type.icon}</span>
               {type.label} ({typePhotos.length})
             </h4>
-            
+
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3">
               {typePhotos.map(photo => (
                 <div key={photo.id} className="relative group">
-                  <img 
-                    src={photo.url} 
-                    alt={photo.description} 
+                  <img
+                    src={photo.url}
+                    alt={photo.description}
                     className="w-full h-24 sm:h-32 md:h-40 object-cover rounded-lg border-2 border-gray-200"
                   />
-                  
+
                   {/* Overlay con controles */}
                   <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 rounded-lg flex items-center justify-center">
                     <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex gap-1">
@@ -193,16 +225,7 @@ export function PhotoGallery({
           </div>
         </div>
       )}
-
-      {/* Cámara */}
-      {showCamera && (
-        <CameraCapture
-          onPhotoTaken={handlePhotoTaken}
-          onClose={() => setShowCamera(false)}
-        />
-      )}
     </div>
   )
 }
-
 
