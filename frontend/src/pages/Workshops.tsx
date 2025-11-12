@@ -212,8 +212,8 @@ export default function Workshops() {
           </div>
         ) : (
           <>
-            <div className="bg-white rounded-lg shadow overflow-x-auto">
-              <table className="min-w-full text-sm">
+            <div className="bg-white rounded-lg shadow">
+              <table className="min-w-full table-fixed text-sm">
                 <thead>
                   <tr className="text-left text-gray-600">
                     <th className="px-4 py-2">Código</th>
@@ -231,15 +231,15 @@ export default function Workshops() {
                 <tbody>
                   {filtered.length > 0 ? (
                     filtered.map((w) => (
-                      <tr key={w.id} className="border-t">
-                        <td className="px-4 py-2 whitespace-nowrap font-mono text-xs">
+                      <tr key={w.id} className="border-t align-top">
+                        <td className="px-4 py-2 font-mono text-xs break-words">
                           {w.code}
                         </td>
-                        <td className="px-4 py-2 font-medium">{w.name}</td>
-                        <td className="px-4 py-2">{w.region?.name || '—'}</td>
-                        <td className="px-4 py-2">{w.city}</td>
-                        <td className="px-4 py-2">{w.address}</td>
-                        <td className="px-4 py-2">{w.phone || '—'}</td>
+                        <td className="px-4 py-2 font-medium break-words">{w.name}</td>
+                        <td className="px-4 py-2 break-words">{w.region?.name || '—'}</td>
+                        <td className="px-4 py-2 break-words">{w.city}</td>
+                        <td className="px-4 py-2 break-words">{w.address}</td>
+                        <td className="px-4 py-2 break-words">{w.phone || '—'}</td>
                         <td className="px-4 py-2">{w.capacity || '—'}</td>
                         <td className="px-4 py-2">
                           {w._count?.users || 0}

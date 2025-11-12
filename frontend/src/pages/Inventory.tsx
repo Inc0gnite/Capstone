@@ -364,8 +364,8 @@ export default function Inventory() {
 
         {/* Tabla */}
         <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
+          <div className="md:overflow-visible overflow-x-auto">
+            <table className="min-w-full table-fixed divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Código</th>
@@ -392,17 +392,17 @@ export default function Inventory() {
                   const out = p.currentStock === 0
                   return (
                     <tr key={p.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{p.code}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{p.name}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{p.category}</td>
-                      <td className={`px-6 py-4 whitespace-nowrap text-sm text-right font-medium ${out ? 'text-red-600' : isLow ? 'text-yellow-600' : 'text-green-600'}`}>{p.currentStock}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-700">{p.minStock}</td>
+                      <td className="px-4 py-3 text-sm text-gray-900 break-words">{p.code}</td>
+                      <td className="px-4 py-3 text-sm text-gray-900 break-words">{p.name}</td>
+                      <td className="px-4 py-3 text-sm text-gray-700 break-words">{p.category}</td>
+                      <td className={`px-4 py-3 text-sm text-right font-medium ${out ? 'text-red-600' : isLow ? 'text-yellow-600' : 'text-green-600'}`}>{p.currentStock}</td>
+                      <td className="px-4 py-3 text-sm text-right text-gray-700">{p.minStock}</td>
                       {/* Ocultar precio para mecánicos */}
                       {((user as any)?.role?.name || '') !== 'Mecánico' && (
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900">{typeof (p as any).unitPrice === 'number' ? `$${(p as any).unitPrice.toLocaleString('es-CL')}` : '—'}</td>
+                        <td className="px-4 py-3 text-sm text-right text-gray-900">{typeof (p as any).unitPrice === 'number' ? `$${(p as any).unitPrice.toLocaleString('es-CL')}` : '—'}</td>
                       )}
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{p.location || '—'}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-right">
+                      <td className="px-4 py-3 text-sm text-gray-700 break-words">{p.location || '—'}</td>
+                      <td className="px-4 py-3 text-sm text-right">
                         {/* Solo mostrar botón de editar si no es mecánico */}
                         {((user as any)?.role?.name || '') !== 'Mecánico' && (
                           <button

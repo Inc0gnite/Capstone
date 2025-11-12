@@ -222,8 +222,8 @@ export default function Users() {
           </div>
         ) : (
           <>
-          <div className="bg-white rounded-lg shadow overflow-x-auto">
-            <table className="min-w-full text-sm">
+          <div className="bg-white rounded-lg shadow">
+            <table className="min-w-full table-fixed text-sm">
               <thead>
                 <tr className="text-left text-gray-600">
                   <th className="px-4 py-2">Nombre</th>
@@ -238,11 +238,11 @@ export default function Users() {
               <tbody>
                 {filtered.length > 0 ? (
                   filtered.map(u => (
-                    <tr key={u.id} className="border-t">
-                      <td className="px-4 py-2 whitespace-nowrap">{u.firstName} {u.lastName}</td>
-                      <td className="px-4 py-2">{u.email}</td>
-                      <td className="px-4 py-2">{u.role?.name || '—'}</td>
-                      <td className="px-4 py-2">{u.workshop?.name || '—'}</td>
+                    <tr key={u.id} className="border-t align-top">
+                      <td className="px-4 py-2 break-words">{u.firstName} {u.lastName}</td>
+                      <td className="px-4 py-2 break-words">{u.email}</td>
+                      <td className="px-4 py-2 break-words">{u.role?.name || '—'}</td>
+                      <td className="px-4 py-2 break-words">{u.workshop?.name || '—'}</td>
                       <td className="px-4 py-2">
                         {(() => {
                           const isMechanic = (u.role?.name || '').toLowerCase() === 'mecánico'

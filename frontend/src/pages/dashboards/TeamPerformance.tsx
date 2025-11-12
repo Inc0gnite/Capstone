@@ -65,8 +65,8 @@ export default function TeamPerformance() {
             <div className="bg-white rounded-lg shadow p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Rendimiento</h3>
               {mechanicsPerformance.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <table className="min-w-full text-left text-sm">
+                <div className="md:overflow-visible overflow-x-auto">
+                  <table className="min-w-full table-fixed text-left text-sm">
                     <thead>
                       <tr className="text-gray-600">
                         <th className="py-2 pr-4">Mecánico</th>
@@ -80,7 +80,7 @@ export default function TeamPerformance() {
                     <tbody>
                       {mechanicsPerformance.map((m: any) => (
                         <tr key={m.id} className="border-t">
-                          <td className="py-2 pr-4">{m.name}</td>
+                          <td className="py-2 pr-4 break-words">{m.name}</td>
                           <td className="py-2 pr-4">{m.totalOrders}</td>
                           <td className="py-2 pr-4">{m.inProgressOrders}</td>
                           <td className="py-2 pr-4">{m.completedOrders}</td>

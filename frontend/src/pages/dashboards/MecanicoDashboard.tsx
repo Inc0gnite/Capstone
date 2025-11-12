@@ -298,68 +298,50 @@ export default function MecanicoDashboard() {
           </div>
           
           {pendingOrders.length > 0 ? (
-            <div className="relative">
-              {/* Contenedor deslizable */}
-              <div className="overflow-x-auto scrollbar-hide">
-                <div className="flex space-x-4 pb-4" style={{ width: 'max-content' }}>
-                  {pendingOrders.map((order) => (
-                    <div key={order.id} className="flex-shrink-0 w-80 bg-gray-50 rounded-lg p-4 border border-gray-200 hover:shadow-md transition-shadow">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center space-x-2">
-                          <h4 className="font-semibold text-gray-900 text-sm">
-                            {order.orderNumber}
-                          </h4>
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(order.priority)}`}>
-                            {getPriorityText(order.priority)}
-                          </span>
-                        </div>
-                        <span className="text-xs text-gray-500">⏳</span>
-                      </div>
-                      
-                      <div className="space-y-2 mb-3">
-                        <div className="text-sm">
-                          <p className="text-gray-600">
-                            <span className="font-medium">Vehículo:</span> {order.vehicle?.licensePlate || 'N/A'}
-                          </p>
-                          <p className="text-gray-600">
-                            <span className="font-medium">Tipo:</span> {order.workType}
-                          </p>
-                        </div>
-                      </div>
-                      
-                      {order.description && (
-                        <div className="mb-3">
-                          <p className="text-xs font-medium text-gray-700 mb-1">Descripción del trabajo:</p>
-                          <p className="text-sm text-gray-600 line-clamp-3 bg-white p-2 rounded border">
-                            {order.description}
-                          </p>
-                        </div>
-                      )}
-                      
-                      <div className="flex items-center justify-between text-xs text-gray-500">
-                        <span>Asignada: {formatDate(order.createdAt)}</span>
-                        <Link
-                          to={`/work-orders/${order.id}`}
-                          className="text-blue-600 hover:text-blue-800 font-medium"
-                        >
-                          Ver detalles →
-                        </Link>
-                      </div>
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {pendingOrders.map((order) => (
+                <div key={order.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200 hover:shadow-md transition-shadow">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center space-x-2">
+                      <h4 className="font-semibold text-gray-900 text-sm">
+                        {order.orderNumber}
+                      </h4>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(order.priority)}`}>
+                        {getPriorityText(order.priority)}
+                      </span>
                     </div>
-                  ))}
-                </div>
-              </div>
-              
-              {/* Indicador de scroll si hay más elementos */}
-              {pendingOrders.length > 1 && (
-                <div className="flex justify-center mt-2">
-                  <div className="flex space-x-1">
-                    {Array.from({ length: Math.min(pendingOrders.length, 5) }).map((_, index) => (
-                      <div key={index} className="w-2 h-2 bg-gray-300 rounded-full"></div>
-                    ))}
+                    <span className="text-xs text-gray-500">⏳</span>
+                  </div>
+                  
+                  <div className="space-y-2 mb-3 text-sm">
+                    <p className="text-gray-600">
+                      <span className="font-medium">Vehículo:</span> {order.vehicle?.licensePlate || 'N/A'}
+                    </p>
+                    <p className="text-gray-600">
+                      <span className="font-medium">Tipo:</span> {order.workType}
+                    </p>
+                  </div>
+                  
+                  {order.description && (
+                    <div className="mb-3">
+                      <p className="text-xs font-medium text-gray-700 mb-1">Descripción del trabajo:</p>
+                      <p className="text-sm text-gray-600 line-clamp-3 bg-white p-2 rounded border">
+                        {order.description}
+                      </p>
+                    </div>
+                  )}
+                  
+                  <div className="flex items-center justify-between text-xs text-gray-500">
+                    <span>Asignada: {formatDate(order.createdAt)}</span>
+                    <Link
+                      to={`/work-orders/${order.id}`}
+                      className="text-blue-600 hover:text-blue-800 font-medium"
+                    >
+                      Ver detalles →
+                    </Link>
                   </div>
                 </div>
-              )}
+              ))}
             </div>
           ) : (
             <div className="text-center py-8">

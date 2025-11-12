@@ -148,8 +148,8 @@ export default function Reports() {
             <h3 className="text-lg font-semibold text-gray-900">Rendimiento de Mecánicos</h3>
           </div>
           {mechanicsPerformance.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-left text-sm">
+            <div className="md:overflow-visible overflow-x-auto">
+              <table className="min-w-full table-fixed text-left text-sm">
                 <thead>
                   <tr className="text-gray-600">
                     <th className="py-2 pr-4">Mecánico</th>
@@ -163,7 +163,7 @@ export default function Reports() {
                 <tbody>
                   {mechanicsPerformance.map((m: any) => (
                     <tr key={m.id} className="border-t">
-                      <td className="py-2 pr-4">{m.name}</td>
+                      <td className="py-2 pr-4 break-words">{m.name}</td>
                       <td className="py-2 pr-4">{m.totalOrders}</td>
                       <td className="py-2 pr-4">{m.inProgressOrders}</td>
                       <td className="py-2 pr-4">{m.completedOrders}</td>
