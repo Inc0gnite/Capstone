@@ -1,9 +1,11 @@
 import { useState, useRef, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useNotifications } from '../../hooks/useNotifications'
 
 export function NotificationDropdown() {
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const navigate = useNavigate()
   const {
     notifications,
     unreadCount,
@@ -175,10 +177,10 @@ export function NotificationDropdown() {
             <div className="px-4 py-3 border-t border-gray-200 text-center">
               <button
                 onClick={() => {
-                  // Aquí podrías navegar a una página de notificaciones completa
-                  console.log('Ver todas las notificaciones')
+                  setIsOpen(false)
+                  navigate('/notifications')
                 }}
-                className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                className="text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
               >
                 Ver todas las notificaciones
               </button>

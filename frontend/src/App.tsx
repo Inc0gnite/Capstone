@@ -24,6 +24,7 @@ import Reports from './pages/Reports'
 import ResetPassword from './pages/ResetPassword'
 import Inventory from './pages/Inventory'
 import Workshops from './pages/Workshops'
+import Notifications from './pages/Notifications'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -193,6 +194,14 @@ function App() {
               <RoleBasedRoute allowedRoles={['Inventario', 'Administrador']}>
                 <InventarioDashboard />
               </RoleBasedRoute>
+            }
+          />
+          <Route
+            path="/notifications"
+            element={
+              <PrivateRoute>
+                <Notifications />
+              </PrivateRoute>
             }
           />
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
