@@ -4,18 +4,40 @@ import { notificationService } from '../services/notificationService'
 
 type AppNotification = BackendNotification & { data?: Record<string, any> }
 
-const POLLING_INTERVAL_MS = 15000
+const POLLING_INTERVAL_MS = 30000 // Aumentado a 30 segundos
+const MAX_POLLING_INTERVAL_MS = 300000 // Máximo 5 minutos si hay errores 429
 
 export function useNotifications() {
   const [notifications, setNotifications] = useState<AppNotification[]>([])
   const [loading, setLoading] = useState(true)
   const [unreadCount, setUnreadCount] = useState(0)
   const pollingRef = useRef<number | null>(null)
+  const currentPollingInterval = useRef(POLLING_INTERVAL_MS)
+  const lastFetchTimeRef = useRef(0)
+  const isFetchingRef = useRef(false)
+  const setupPollingRef = useRef<() => void>()
+  const MIN_FETCH_INTERVAL = 5000 // Mínimo 5 segundos entre fetches
 
   const fetchNotifications = useCallback(async (showSpinner = false) => {
+    // Evitar llamadas concurrentes
+    if (isFetchingRef.current) {
+      console.log('⏸️ Ya hay una petición de notificaciones en curso, omitiendo...')
+      return
+    }
+    
+    // Throttling: evitar fetches muy frecuentes
+    const now = Date.now()
+    if (now - lastFetchTimeRef.current < MIN_FETCH_INTERVAL) {
+      console.log('⏸️ Fetch de notificaciones demasiado reciente, omitiendo...')
+      return
+    }
+    
     if (showSpinner) {
       setLoading(true)
     }
+    
+    isFetchingRef.current = true
+    lastFetchTimeRef.current = now
 
     try {
       const response = await notificationService.getMyNotifications(1, 50)
@@ -25,10 +47,32 @@ export function useNotifications() {
         ? response.unreadCount
         : list.filter(n => !n.isRead).length
       setUnreadCount(unread)
-    } catch (error) {
+      
+      // Si funciona, resetear intervalo a valor normal
+      currentPollingInterval.current = POLLING_INTERVAL_MS
+    } catch (error: any) {
       console.error('Error obteniendo notificaciones:', error)
+      
+      // Si es error 429, aumentar intervalo exponencialmente
+      if (error.response?.status === 429) {
+        console.warn('⚠️ Rate limit alcanzado en notificaciones, aumentando intervalo de polling')
+        currentPollingInterval.current = Math.min(
+          currentPollingInterval.current * 2,
+          MAX_POLLING_INTERVAL_MS
+        )
+        
+        // Reiniciar polling con nuevo intervalo
+        if (pollingRef.current) {
+          window.clearInterval(pollingRef.current)
+        }
+        // Reiniciar polling en el siguiente tick usando ref
+        setTimeout(() => {
+          setupPollingRef.current?.()
+        }, 0)
+      }
     } finally {
       setLoading(false)
+      isFetchingRef.current = false
     }
   }, [])
 
@@ -87,15 +131,37 @@ export function useNotifications() {
 
     pollingRef.current = window.setInterval(() => {
       fetchNotifications()
-    }, POLLING_INTERVAL_MS)
+    }, currentPollingInterval.current)
   }, [fetchNotifications])
+  
+  // Guardar referencia para uso en fetchNotifications
+  setupPollingRef.current = setupPolling
 
   useEffect(() => {
     fetchNotifications(true)
     setupPolling()
 
-    const handleRefresh = () => fetchNotifications()
-    const handleVehicleEvent = () => fetchNotifications()
+    let debounceTimer: NodeJS.Timeout | null = null
+    
+    const handleRefresh = () => {
+      // Debounce para eventos
+      if (debounceTimer) {
+        clearTimeout(debounceTimer)
+      }
+      debounceTimer = setTimeout(() => {
+        fetchNotifications()
+      }, 1000)
+    }
+    
+    const handleVehicleEvent = () => {
+      // Debounce para eventos de vehículos
+      if (debounceTimer) {
+        clearTimeout(debounceTimer)
+      }
+      debounceTimer = setTimeout(() => {
+        fetchNotifications()
+      }, 1000)
+    }
 
     window.addEventListener('notifications:refresh', handleRefresh)
     window.addEventListener('vehicle-entry-created', handleVehicleEvent)
@@ -108,6 +174,9 @@ export function useNotifications() {
     }
 
     return () => {
+      if (debounceTimer) {
+        clearTimeout(debounceTimer)
+      }
       if (pollingRef.current) {
         window.clearInterval(pollingRef.current)
       }

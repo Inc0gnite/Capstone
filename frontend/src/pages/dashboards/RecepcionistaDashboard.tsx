@@ -39,15 +39,22 @@ export default function RecepcionistaDashboard() {
     loadAllData()
   }
 
-  // Escuchar eventos de órdenes marcadas como listas y salidas registradas
+  // Escuchar eventos de órdenes marcadas como listas y salidas registradas con debouncing
   useEffect(() => {
+    let debounceTimer: NodeJS.Timeout | null = null
+    
     const handleOrderMarkedReady = (event: any) => {
       console.log('✅ Evento order-marked-ready recibido en recepcionista, actualizando dashboard...')
       if (event.detail?.vehicle) {
         console.log('📊 Orden marcada como lista para:', event.detail.vehicle.plate)
       }
-      // Recargar datos para que el vehículo desaparezca del dashboard
-      loadAllData()
+      // Debounce: esperar 500ms antes de recargar para agrupar eventos
+      if (debounceTimer) {
+        clearTimeout(debounceTimer)
+      }
+      debounceTimer = setTimeout(() => {
+        loadAllData()
+      }, 500)
     }
 
     const handleExitRegistered = (event: any) => {
@@ -55,18 +62,27 @@ export default function RecepcionistaDashboard() {
       if (event.detail?.vehicle) {
         console.log('📊 Salida registrada para:', event.detail.vehicle.plate)
       }
-      // Recargar datos para que el vehículo desaparezca del dashboard
-      loadAllData()
+      // Debounce: esperar 500ms antes de recargar para agrupar eventos
+      if (debounceTimer) {
+        clearTimeout(debounceTimer)
+      }
+      debounceTimer = setTimeout(() => {
+        loadAllData()
+      }, 500)
     }
 
     window.addEventListener('order-marked-ready', handleOrderMarkedReady)
     window.addEventListener('exit-registered', handleExitRegistered)
 
     return () => {
+      if (debounceTimer) {
+        clearTimeout(debounceTimer)
+      }
       window.removeEventListener('order-marked-ready', handleOrderMarkedReady)
       window.removeEventListener('exit-registered', handleExitRegistered)
     }
-  }, [loadAllData])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workshopId]) // Solo depender de workshopId
 
   const handleCreateOrder = () => {
     setShowCreateModal(true)

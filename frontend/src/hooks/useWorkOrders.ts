@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { workOrderService, WorkOrder, WorkOrderStats } from '../services/workOrderService'
 
 export function useWorkOrders(workshopId?: string, assignedToId?: string) {
@@ -14,8 +14,29 @@ export function useWorkOrders(workshopId?: string, assignedToId?: string) {
   })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  
+  // Refs para evitar llamadas concurrentes
+  const isLoadingRef = useRef(false)
+  const lastLoadTimeRef = useRef(0)
+  const MIN_LOAD_INTERVAL = 2000 // Mínimo 2 segundos entre cargas
 
   const loadWorkOrders = useCallback(async () => {
+    // Evitar llamadas concurrentes
+    if (isLoadingRef.current) {
+      console.log('⏸️ Ya hay una carga de órdenes en curso, omitiendo...')
+      return
+    }
+    
+    // Throttling: evitar cargas muy frecuentes
+    const now = Date.now()
+    if (now - lastLoadTimeRef.current < MIN_LOAD_INTERVAL) {
+      console.log('⏸️ Carga de órdenes demasiado reciente, omitiendo...')
+      return
+    }
+    
+    isLoadingRef.current = true
+    lastLoadTimeRef.current = now
+    
     try {
       setLoading(true)
       setError(null)
@@ -52,6 +73,7 @@ export function useWorkOrders(workshopId?: string, assignedToId?: string) {
       setError(err.response?.data?.message || 'Error cargando órdenes de trabajo')
     } finally {
       setLoading(false)
+      isLoadingRef.current = false
     }
   }, [workshopId, assignedToId])
 
@@ -203,9 +225,13 @@ export function useWorkOrders(workshopId?: string, assignedToId?: string) {
     }
   }, [loadWorkOrders])
 
+  // Cargar solo cuando cambien workshopId o assignedToId
   useEffect(() => {
-    loadWorkOrders()
-  }, [loadWorkOrders])
+    if (workshopId) {
+      loadWorkOrders()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workshopId, assignedToId]) // Solo depender de los IDs, no de la función
 
   // Polling automático con manejo de rate limiting
   // Si hay error 429, aumentamos el intervalo exponencialmente
@@ -251,17 +277,27 @@ export function useWorkOrders(workshopId?: string, assignedToId?: string) {
     return () => clearInterval(interval)
   }, [loadWorkOrders, pollingInterval])
 
-  // Escuchar eventos de actualización
+  // Escuchar eventos de actualización con debouncing
   useEffect(() => {
+    let debounceTimer: NodeJS.Timeout | null = null
+    
     const handleDataUpdate = () => {
-      console.log('📡 Evento recibido, actualizando datos desde BD...')
-      loadWorkOrders()
-      loadStatsFromDB() // Actualizar estadísticas inmediatamente
+      // Debounce: esperar 500ms antes de cargar para agrupar eventos
+      if (debounceTimer) {
+        clearTimeout(debounceTimer)
+      }
+      
+      debounceTimer = setTimeout(() => {
+        console.log('📡 Evento recibido, actualizando datos desde BD...')
+        loadWorkOrders()
+        loadStatsFromDB() // Actualizar estadísticas inmediatamente
+      }, 500)
     }
 
     const handleStatusChange = (event: any) => {
       console.log('🔄 Estado de orden cambiado:', event.detail)
-      loadStatsFromDB() // Actualizar solo estadísticas para cambios de estado
+      // Para cambios de estado, solo actualizar stats (más ligero)
+      loadStatsFromDB()
     }
 
     const handleStatsUpdate = () => {
@@ -276,13 +312,17 @@ export function useWorkOrders(workshopId?: string, assignedToId?: string) {
     window.addEventListener('work-order-cancelled', handleStatsUpdate)
 
     return () => {
+      if (debounceTimer) {
+        clearTimeout(debounceTimer)
+      }
       window.removeEventListener('work-order-created', handleDataUpdate)
       window.removeEventListener('work-order-updated', handleDataUpdate)
       window.removeEventListener('work-order-status-changed', handleStatusChange)
       window.removeEventListener('work-order-completed', handleStatsUpdate)
       window.removeEventListener('work-order-cancelled', handleStatsUpdate)
     }
-  }, [loadWorkOrders, loadStatsFromDB])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workshopId, assignedToId]) // Solo depender de los IDs
 
   return {
     workOrders,

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { vehicleEntryService } from '../services/vehicleEntryService'
 import { workOrderService } from '../services/workOrderService'
 // import { VehicleEntry } from '../services/vehicleEntryService'
@@ -63,6 +63,18 @@ export function useRecepcionista(workshopId?: string) {
   const [cancelledOrders, setCancelledOrders] = useState<WorkOrder[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  
+  // Refs para evitar llamadas concurrentes y loops infinitos
+  const isLoadingRef = useRef(false)
+  const lastLoadTimeRef = useRef(0)
+  const MIN_LOAD_INTERVAL = 2000 // Mínimo 2 segundos entre cargas
+  
+  // Refs para mantener referencias a las funciones sin causar re-renderizados
+  const loadStatsRef = useRef<() => Promise<void>>()
+  const loadPendingVehiclesRef = useRef<() => Promise<void>>()
+  const loadActiveOrdersRef = useRef<() => Promise<void>>()
+  const loadReadyVehiclesRef = useRef<() => Promise<void>>()
+  const loadCancelledOrdersRef = useRef<() => Promise<void>>()
 
   const loadStats = useCallback(async () => {
     try {
@@ -100,6 +112,9 @@ export function useRecepcionista(workshopId?: string) {
       setLoading(false)
     }
   }, [workshopId])
+  
+  // Actualizar ref cuando la función cambia
+  loadStatsRef.current = loadStats
 
   const loadPendingVehicles = useCallback(async () => {
     try {
@@ -158,6 +173,8 @@ export function useRecepcionista(workshopId?: string) {
       setError(err.response?.data?.message || 'Error cargando vehículos pendientes')
     }
   }, [workshopId])
+  
+  loadPendingVehiclesRef.current = loadPendingVehicles
 
   const loadActiveOrders = useCallback(async () => {
     try {
@@ -173,6 +190,8 @@ export function useRecepcionista(workshopId?: string) {
       setError(err.response?.data?.message || 'Error cargando órdenes activas')
     }
   }, [workshopId])
+  
+  loadActiveOrdersRef.current = loadActiveOrders
 
   const loadCancelledOrders = useCallback(async () => {
     try {
@@ -186,7 +205,8 @@ export function useRecepcionista(workshopId?: string) {
       setError(err.response?.data?.message || 'Error cargando órdenes canceladas')
     }
   }, [workshopId])
-
+  
+  loadCancelledOrdersRef.current = loadCancelledOrders
 
   const loadReadyVehicles = useCallback(async () => {
     try {
@@ -235,6 +255,8 @@ export function useRecepcionista(workshopId?: string) {
       setError(err.response?.data?.message || 'Error cargando vehículos listos')
     }
   }, [workshopId])
+  
+  loadReadyVehiclesRef.current = loadReadyVehicles
 
   const createWorkOrder = useCallback(async (data: any) => {
     try {
@@ -283,23 +305,63 @@ export function useRecepcionista(workshopId?: string) {
   }, [])
 
   const loadAllData = useCallback(async () => {
-    await Promise.all([
-      loadStats(),
-      loadPendingVehicles(),
-      loadActiveOrders(),
-      loadReadyVehicles(),
-      loadCancelledOrders()
-    ])
-  }, [loadStats, loadPendingVehicles, loadActiveOrders, loadReadyVehicles, loadCancelledOrders])
+    // Evitar llamadas concurrentes
+    if (isLoadingRef.current) {
+      console.log('⏸️ Ya hay una carga en curso, omitiendo...')
+      return
+    }
+    
+    // Throttling: evitar cargas muy frecuentes
+    const now = Date.now()
+    if (now - lastLoadTimeRef.current < MIN_LOAD_INTERVAL) {
+      console.log('⏸️ Carga demasiado reciente, omitiendo...')
+      return
+    }
+    
+    isLoadingRef.current = true
+    lastLoadTimeRef.current = now
+    
+    try {
+      // Usar refs para evitar dependencias que causan loops
+      await Promise.all([
+        loadStatsRef.current?.(),
+        loadPendingVehiclesRef.current?.(),
+        loadActiveOrdersRef.current?.(),
+        loadReadyVehiclesRef.current?.(),
+        loadCancelledOrdersRef.current?.()
+      ])
+    } finally {
+      isLoadingRef.current = false
+    }
+  }, [workshopId]) // Solo depender de workshopId, no de las funciones
 
+  // Cargar datos solo cuando cambie el workshopId o al montar
+  // Esperar a que todas las funciones estén disponibles
   useEffect(() => {
-    loadAllData()
-  }, [loadAllData])
-
-  // Escuchar eventos de actualización
-  useEffect(() => {
-    const handleDataUpdate = () => {
+    if (workshopId && 
+        loadStatsRef.current && 
+        loadPendingVehiclesRef.current && 
+        loadActiveOrdersRef.current && 
+        loadReadyVehiclesRef.current && 
+        loadCancelledOrdersRef.current) {
       loadAllData()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workshopId]) // Solo workshopId como dependencia
+
+  // Escuchar eventos de actualización con debouncing
+  useEffect(() => {
+    let debounceTimer: NodeJS.Timeout | null = null
+    
+    const handleDataUpdate = () => {
+      // Debounce: esperar 500ms antes de cargar para agrupar eventos
+      if (debounceTimer) {
+        clearTimeout(debounceTimer)
+      }
+      
+      debounceTimer = setTimeout(() => {
+        loadAllData()
+      }, 500)
     }
 
     window.addEventListener('entry-created', handleDataUpdate)
@@ -309,13 +371,17 @@ export function useRecepcionista(workshopId?: string) {
     window.addEventListener('work-order-status-changed', handleDataUpdate)
 
     return () => {
+      if (debounceTimer) {
+        clearTimeout(debounceTimer)
+      }
       window.removeEventListener('entry-created', handleDataUpdate)
       window.removeEventListener('entry-updated', handleDataUpdate)
       window.removeEventListener('work-order-created', handleDataUpdate)
       window.removeEventListener('work-order-updated', handleDataUpdate)
       window.removeEventListener('work-order-status-changed', handleDataUpdate)
     }
-  }, [loadAllData])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workshopId]) // Solo depender de workshopId
 
   return {
     stats,
