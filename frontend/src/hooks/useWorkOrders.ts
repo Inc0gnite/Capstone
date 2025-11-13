@@ -17,8 +17,11 @@ export function useWorkOrders(workshopId?: string, assignedToId?: string) {
   
   // Refs para evitar llamadas concurrentes
   const isLoadingRef = useRef(false)
+  const isStatsLoadingRef = useRef(false)
   const lastLoadTimeRef = useRef(0)
-  const MIN_LOAD_INTERVAL = 2000 // Mínimo 2 segundos entre cargas
+  const lastStatsLoadTimeRef = useRef(0)
+  const MIN_LOAD_INTERVAL = 5000 // Mínimo 5 segundos entre cargas
+  const MIN_STATS_INTERVAL = 10000 // Mínimo 10 segundos entre cargas de stats
 
   const loadWorkOrders = useCallback(async () => {
     // Evitar llamadas concurrentes
@@ -43,30 +46,18 @@ export function useWorkOrders(workshopId?: string, assignedToId?: string) {
       
       console.log('🔄 Cargando órdenes de trabajo con workshopId:', workshopId, 'assignedToId:', assignedToId)
       
-      const [ordersData, statsData] = await Promise.all([
-        workOrderService.getAll({ workshopId, assignedToId }),
-        workOrderService.getStats(workshopId)
-      ])
+      // Cargar solo órdenes, no stats (se cargan por separado para evitar 429)
+      const ordersData = await workOrderService.getAll({ workshopId, assignedToId })
       
       console.log('📋 Datos de órdenes recibidos:', ordersData)
-      console.log('📊 Estadísticas desde BD:', statsData)
       
       setWorkOrders(ordersData.data || [])
       
-      // Mapear estadísticas del backend al frontend
-      if (statsData && typeof statsData === 'object') {
-        const mappedStats = {
-          total: statsData.total || 0,
-          pendientes: statsData.pending || 0,
-          en_progreso: statsData.inProgress || 0,
-          pausados: statsData.paused || 0,
-          completados: statsData.completed || 0,
-          cancelados: statsData.cancelled || 0,
-          completadosHoy: statsData.completedToday || 0
-        }
-        setStats(mappedStats)
-        console.log('📊 Estadísticas mapeadas en loadWorkOrders:', mappedStats)
-      }
+      // Cargar stats por separado (con throttling propio)
+      // No bloquear la carga de órdenes si falla stats
+      loadStatsFromDB().catch(err => {
+        console.warn('⚠️ Error cargando stats (no crítico):', err)
+      })
     } catch (err: any) {
       console.error('❌ Error cargando órdenes de trabajo:', err)
       console.error('❌ Error response:', err.response?.data)
@@ -75,15 +66,30 @@ export function useWorkOrders(workshopId?: string, assignedToId?: string) {
       setLoading(false)
       isLoadingRef.current = false
     }
-  }, [workshopId, assignedToId])
+  }, [workshopId, assignedToId, loadStatsFromDB])
 
   // Función específica para cargar solo estadísticas desde la BD
   const loadStatsFromDB = useCallback(async () => {
+    // Evitar llamadas concurrentes
+    if (isStatsLoadingRef.current) {
+      console.log('⏸️ Ya hay una carga de estadísticas en curso, omitiendo...')
+      return
+    }
+    
+    // Throttling: evitar cargas muy frecuentes
+    const now = Date.now()
+    if (now - lastStatsLoadTimeRef.current < MIN_STATS_INTERVAL) {
+      console.log('⏸️ Carga de estadísticas demasiado reciente, omitiendo...')
+      return
+    }
+    
+    isStatsLoadingRef.current = true
+    lastStatsLoadTimeRef.current = now
+    
     try {
       console.log('📊 Actualizando estadísticas desde BD...', { workshopId })
       const statsData = await workOrderService.getStats(workshopId)
       console.log('📊 Estadísticas actualizadas desde BD:', statsData)
-      console.log('📊 Tipo de datos:', typeof statsData, 'Es objeto:', typeof statsData === 'object')
       
       if (statsData && typeof statsData === 'object') {
         // Mapear los nombres de propiedades del backend al frontend
@@ -108,8 +114,10 @@ export function useWorkOrders(workshopId?: string, assignedToId?: string) {
       console.error('❌ Error response:', err.response?.data)
       // Re-lanzar el error para que el polling pueda manejarlo
       throw err
+    } finally {
+      isStatsLoadingRef.current = false
     }
-  }, [workshopId, assignedToId])
+  }, [workshopId])
 
   const loadPendingOrders = useCallback(async () => {
     try {
@@ -235,8 +243,8 @@ export function useWorkOrders(workshopId?: string, assignedToId?: string) {
 
   // Polling automático con manejo de rate limiting
   // Si hay error 429, aumentamos el intervalo exponencialmente
-  const [pollingInterval, setPollingInterval] = useState(60000) // Empezar con 60 segundos
-  const [statsPollingInterval, setStatsPollingInterval] = useState(120000) // Empezar con 2 minutos
+  const [pollingInterval, setPollingInterval] = useState(120000) // Empezar con 2 minutos
+  const [statsPollingInterval, setStatsPollingInterval] = useState(180000) // Empezar con 3 minutos
 
   useEffect(() => {
     const interval = setInterval(async () => {
@@ -244,7 +252,7 @@ export function useWorkOrders(workshopId?: string, assignedToId?: string) {
         console.log('🔄 Actualización automática de estadísticas desde BD...')
         await loadStatsFromDB()
         // Si funciona, resetear intervalo a valor normal
-        setStatsPollingInterval(120000) // 2 minutos
+        setStatsPollingInterval(180000) // 3 minutos
       } catch (err: any) {
         if (err.response?.status === 429) {
           console.warn('⚠️ Rate limit alcanzado, aumentando intervalo de polling de estadísticas')
@@ -264,7 +272,7 @@ export function useWorkOrders(workshopId?: string, assignedToId?: string) {
         console.log('🔄 Actualización automática de lista de órdenes...')
         await loadWorkOrders()
         // Si funciona, resetear intervalo a valor normal
-        setPollingInterval(60000) // 1 minuto
+        setPollingInterval(120000) // 2 minutos
       } catch (err: any) {
         if (err.response?.status === 429) {
           console.warn('⚠️ Rate limit alcanzado, aumentando intervalo de polling de órdenes')
@@ -289,9 +297,9 @@ export function useWorkOrders(workshopId?: string, assignedToId?: string) {
       
       debounceTimer = setTimeout(() => {
         console.log('📡 Evento recibido, actualizando datos desde BD...')
+        // Solo cargar órdenes, stats se actualizarán automáticamente
         loadWorkOrders()
-        loadStatsFromDB() // Actualizar estadísticas inmediatamente
-      }, 500)
+      }, 1000) // Aumentar debounce a 1 segundo
     }
 
     const handleStatusChange = (event: any) => {

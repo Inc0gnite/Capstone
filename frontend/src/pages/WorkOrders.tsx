@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { MainLayout } from '../components/Layout/MainLayout'
 import { useWorkOrders } from '../hooks/useWorkOrders'
 import { ActiveOrderCard } from '../components/recepcionista/ActiveOrderCard'
@@ -32,16 +32,40 @@ export default function WorkOrders() {
     loadCancelledOrders
   } = useWorkOrders(workshopId, selectedMechanic || undefined)
 
-  // Cargar mecánicos del taller
+  // Cargar mecánicos del taller (solo una vez, con protección)
+  const mechanicsLoadingRef = useRef(false)
+  const lastMechanicsLoadRef = useRef(0)
+  
   useEffect(() => {
     const loadMechanics = async () => {
       if (!workshopId) return
       
+      // Protección contra llamadas concurrentes y frecuentes
+      if (mechanicsLoadingRef.current) {
+        console.log('⏸️ Ya hay una carga de mecánicos en curso, omitiendo...')
+        return
+      }
+      
+      const now = Date.now()
+      if (now - lastMechanicsLoadRef.current < 30000) { // Mínimo 30 segundos
+        console.log('⏸️ Carga de mecánicos demasiado reciente, omitiendo...')
+        return
+      }
+      
+      mechanicsLoadingRef.current = true
+      lastMechanicsLoadRef.current = now
+      
       try {
         const mechanicsData = await mechanicService.getAvailableMechanics(workshopId)
         setMechanics(mechanicsData)
-      } catch (err) {
+      } catch (err: any) {
         console.error('Error cargando mecánicos:', err)
+        // Si es 429, esperar más tiempo antes de reintentar
+        if (err.response?.status === 429) {
+          lastMechanicsLoadRef.current = Date.now() + 60000 // Esperar 1 minuto adicional
+        }
+      } finally {
+        mechanicsLoadingRef.current = false
       }
     }
     
