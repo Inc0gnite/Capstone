@@ -23,51 +23,6 @@ export function useWorkOrders(workshopId?: string, assignedToId?: string) {
   const MIN_LOAD_INTERVAL = 5000 // Mínimo 5 segundos entre cargas
   const MIN_STATS_INTERVAL = 10000 // Mínimo 10 segundos entre cargas de stats
 
-  const loadWorkOrders = useCallback(async () => {
-    // Evitar llamadas concurrentes
-    if (isLoadingRef.current) {
-      console.log('⏸️ Ya hay una carga de órdenes en curso, omitiendo...')
-      return
-    }
-    
-    // Throttling: evitar cargas muy frecuentes
-    const now = Date.now()
-    if (now - lastLoadTimeRef.current < MIN_LOAD_INTERVAL) {
-      console.log('⏸️ Carga de órdenes demasiado reciente, omitiendo...')
-      return
-    }
-    
-    isLoadingRef.current = true
-    lastLoadTimeRef.current = now
-    
-    try {
-      setLoading(true)
-      setError(null)
-      
-      console.log('🔄 Cargando órdenes de trabajo con workshopId:', workshopId, 'assignedToId:', assignedToId)
-      
-      // Cargar solo órdenes, no stats (se cargan por separado para evitar 429)
-      const ordersData = await workOrderService.getAll({ workshopId, assignedToId })
-      
-      console.log('📋 Datos de órdenes recibidos:', ordersData)
-      
-      setWorkOrders(ordersData.data || [])
-      
-      // Cargar stats por separado (con throttling propio)
-      // No bloquear la carga de órdenes si falla stats
-      loadStatsFromDB().catch(err => {
-        console.warn('⚠️ Error cargando stats (no crítico):', err)
-      })
-    } catch (err: any) {
-      console.error('❌ Error cargando órdenes de trabajo:', err)
-      console.error('❌ Error response:', err.response?.data)
-      setError(err.response?.data?.message || 'Error cargando órdenes de trabajo')
-    } finally {
-      setLoading(false)
-      isLoadingRef.current = false
-    }
-  }, [workshopId, assignedToId, loadStatsFromDB])
-
   // Función específica para cargar solo estadísticas desde la BD
   const loadStatsFromDB = useCallback(async () => {
     // Evitar llamadas concurrentes
@@ -118,6 +73,51 @@ export function useWorkOrders(workshopId?: string, assignedToId?: string) {
       isStatsLoadingRef.current = false
     }
   }, [workshopId])
+
+  const loadWorkOrders = useCallback(async () => {
+    // Evitar llamadas concurrentes
+    if (isLoadingRef.current) {
+      console.log('⏸️ Ya hay una carga de órdenes en curso, omitiendo...')
+      return
+    }
+    
+    // Throttling: evitar cargas muy frecuentes
+    const now = Date.now()
+    if (now - lastLoadTimeRef.current < MIN_LOAD_INTERVAL) {
+      console.log('⏸️ Carga de órdenes demasiado reciente, omitiendo...')
+      return
+    }
+    
+    isLoadingRef.current = true
+    lastLoadTimeRef.current = now
+    
+    try {
+      setLoading(true)
+      setError(null)
+      
+      console.log('🔄 Cargando órdenes de trabajo con workshopId:', workshopId, 'assignedToId:', assignedToId)
+      
+      // Cargar solo órdenes, no stats (se cargan por separado para evitar 429)
+      const ordersData = await workOrderService.getAll({ workshopId, assignedToId })
+      
+      console.log('📋 Datos de órdenes recibidos:', ordersData)
+      
+      setWorkOrders(ordersData.data || [])
+      
+      // Cargar stats por separado (con throttling propio)
+      // No bloquear la carga de órdenes si falla stats
+      loadStatsFromDB().catch(err => {
+        console.warn('⚠️ Error cargando stats (no crítico):', err)
+      })
+    } catch (err: any) {
+      console.error('❌ Error cargando órdenes de trabajo:', err)
+      console.error('❌ Error response:', err.response?.data)
+      setError(err.response?.data?.message || 'Error cargando órdenes de trabajo')
+    } finally {
+      setLoading(false)
+      isLoadingRef.current = false
+    }
+  }, [workshopId, assignedToId, loadStatsFromDB])
 
   const loadPendingOrders = useCallback(async () => {
     try {
