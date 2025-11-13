@@ -10,7 +10,6 @@ import { CancelledOrderCard } from '../../components/recepcionista/CancelledOrde
 import { SearchVehicles } from '../../components/recepcionista/SearchVehicles'
 import { AvailableMechanicsList } from '../../components/recepcionista/AvailableMechanicsList'
 import { CreateWorkOrderFromVehicleModal } from '../../components/modals/CreateWorkOrderFromVehicleModal'
-import { NotificationDropdown } from '../../components/Notifications/NotificationDropdown'
 import { useAuthStore } from '../../store/authStore'
 
 export default function RecepcionistaDashboard() {
@@ -121,7 +120,6 @@ export default function RecepcionistaDashboard() {
             <p className="text-sm sm:text-base text-gray-600">Recepción y coordinación de trabajos</p>
           </div>
           <div className="flex items-center space-x-2 sm:space-x-3">
-            <NotificationDropdown />
             <button
               onClick={handleCreateOrder}
               className="px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors text-sm sm:text-base"

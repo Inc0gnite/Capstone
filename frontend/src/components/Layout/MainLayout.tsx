@@ -1,6 +1,7 @@
 import { ReactNode, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
+import { NotificationDropdown } from '../Notifications/NotificationDropdown'
 
 interface MainLayoutProps {
   children: ReactNode
@@ -105,6 +106,8 @@ export function MainLayout({ children }: MainLayoutProps) {
 
             {/* User Menu */}
             <div className="flex items-center space-x-2 sm:space-x-4">
+              {/* Notificaciones - Disponible para todos los usuarios */}
+              <NotificationDropdown />
 
               {/* Usuario - Responsive */}
               <div className="flex items-center space-x-2 sm:space-x-3">
