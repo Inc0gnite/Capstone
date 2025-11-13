@@ -173,6 +173,13 @@ export class NotificationService {
       where: { id: entryId },
       include: {
         vehicle: true,
+        createdBy: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
         workshop: {
           include: {
             users: {
@@ -192,10 +199,15 @@ export class NotificationService {
     if (!entry) return
 
     const userIds = entry.workshop.users.map((u) => u.id)
+    
+    // Obtener nombre del actor responsable
+    const actorName = entry.createdBy
+      ? `${entry.createdBy.firstName} ${entry.createdBy.lastName}`.trim()
+      : 'Sistema'
 
     await this.createMany(userIds, {
       title: 'Nuevo ingreso de vehículo',
-      message: `Vehículo ${entry.vehicle.licensePlate} ingresado - Código: ${entry.entryCode}`,
+      message: `Vehículo ${entry.vehicle.licensePlate} ingresado por ${actorName} - Código: ${entry.entryCode}`,
       type: 'vehicle_entry',
       relatedTo: 'vehicle-entries',
       relatedId: entry.id,
@@ -211,16 +223,28 @@ export class NotificationService {
       include: {
         vehicle: true,
         assignedTo: true,
+        createdBy: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
       },
     })
 
     if (!workOrder) return
 
     if (workOrder.assignedToId) {
+      // Obtener nombre del actor responsable
+      const actorName = workOrder.createdBy
+        ? `${workOrder.createdBy.firstName} ${workOrder.createdBy.lastName}`.trim()
+        : 'Sistema'
+
       await this.create({
         userId: workOrder.assignedToId,
         title: 'Nueva orden de trabajo asignada',
-        message: `Se le ha asignado la orden ${workOrder.orderNumber} para ${workOrder.vehicle.licensePlate}`,
+        message: `Se le ha asignado la orden ${workOrder.orderNumber} para ${workOrder.vehicle.licensePlate} por ${actorName}`,
         type: 'work_order_assigned',
         relatedTo: 'work-orders',
         relatedId: workOrder.id,
