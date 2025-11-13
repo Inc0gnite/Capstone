@@ -74,6 +74,27 @@ export function CreateEntryModalAdvanced({ isOpen, onClose, onSuccess }: CreateE
     }
   }, [isOpen])
 
+  // Protección contra cierre accidental con Escape
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) {
+        // Si hay un vehículo creado, usar handleClose que tiene confirmación
+        if (createdVehicle) {
+          e.preventDefault()
+          handleClose()
+        }
+      }
+    }
+
+    if (isOpen) {
+      window.addEventListener('keydown', handleEscape)
+      return () => {
+        window.removeEventListener('keydown', handleEscape)
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, createdVehicle])
+
   const loadVehicles = async () => {
     try {
       console.log('🔄 Cargando vehículos...')
@@ -213,6 +234,13 @@ export function CreateEntryModalAdvanced({ isOpen, onClose, onSuccess }: CreateE
 
   const handleVehicleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Protección contra submit doble
+    if (loading) {
+      console.log('⏸️ Ya hay una operación en curso, omitiendo submit...')
+      return
+    }
+    
     if (!vehicleData.licensePlate || !vehicleData.brand || !vehicleData.regionId) {
       alert('Por favor completa todos los campos obligatorios del vehículo')
       return
@@ -316,6 +344,13 @@ export function CreateEntryModalAdvanced({ isOpen, onClose, onSuccess }: CreateE
 
   const handleEntrySubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Protección contra submit doble
+    if (loading) {
+      console.log('⏸️ Ya hay una operación en curso, omitiendo submit...')
+      return
+    }
+    
     if (!entryData.entryKm) {
       alert('Por favor completa todos los campos obligatorios del ingreso')
       return
@@ -351,23 +386,48 @@ export function CreateEntryModalAdvanced({ isOpen, onClose, onSuccess }: CreateE
       
       console.log('📤 Datos finales para crear ingreso:', entryDataToSend)
       
-      await vehicleEntryService.create(entryDataToSend)
+      const createdEntry = await vehicleEntryService.create(entryDataToSend)
+      
+      // Si llegamos aquí, el ingreso se creó exitosamente
+      // El vehículo ya no necesita ser eliminado en caso de error
+      setCreatedVehicle(null)
       
       // Emitir evento para actualizar estadísticas
       window.dispatchEvent(new CustomEvent('entry-created'))
+      
+      // Subir fotos si hay alguna (opcional, no bloquea el proceso)
+      if (photos.length > 0 && createdEntry?.id) {
+        try {
+          console.log('📸 Subiendo fotos del ingreso...')
+          // Las fotos se suben después del ingreso para no bloquear el proceso principal
+          // Esto se puede hacer en background
+          window.dispatchEvent(new CustomEvent('entry-photos-pending', { 
+            detail: { entryId: createdEntry.id, photos } 
+          }))
+        } catch (photoError) {
+          console.error('⚠️ Error subiendo fotos (no crítico):', photoError)
+          // No fallar el proceso si las fotos no se suben
+        }
+      }
       
       onSuccess()
       onClose()
       resetForm()
     } catch (error: any) {
-      console.error('Error creando ingreso:', error)
+      console.error('❌ Error creando ingreso:', error)
       
       // ROLLBACK: Eliminar el vehículo creado si falla el ingreso
+      // Esto asegura que no queden datos huérfanos en el sistema
       if (createdVehicle) {
         try {
-          console.log('🔄 Eliminando vehículo creado debido a error en ingreso...')
+          console.log('🔄 Iniciando rollback: eliminando vehículo creado debido a error en ingreso...')
+          console.log('📋 Vehículo a eliminar:', {
+            id: createdVehicle.id,
+            licensePlate: createdVehicle.licensePlate
+          })
+          
           await vehicleService.delete(createdVehicle.id)
-          console.log('✅ Vehículo eliminado correctamente')
+          console.log('✅ Rollback exitoso: vehículo eliminado correctamente')
           
           // Limpiar el vehículo creado del estado
           setCreatedVehicle(null)
@@ -375,17 +435,19 @@ export function CreateEntryModalAdvanced({ isOpen, onClose, onSuccess }: CreateE
           // Actualizar la lista de vehículos
           await loadVehicles()
           
-          alert('❌ Error al crear el ingreso. El vehículo ha sido eliminado automáticamente.')
+          const errorMessage = error.response?.data?.error || error.response?.data?.message || error.message || 'Error desconocido'
+          alert(`❌ Error al crear el ingreso: ${errorMessage}\n\n✅ El vehículo ha sido eliminado automáticamente para mantener la integridad de los datos.`)
         } catch (deleteError: any) {
-          console.error('❌ Error eliminando vehículo:', deleteError)
+          console.error('❌ Error crítico en rollback:', deleteError)
           
           // Si no se puede eliminar, informar al usuario con detalles
           const deleteErrorMessage = deleteError.response?.data?.error || deleteError.message
+          const originalErrorMessage = error.response?.data?.error || error.response?.data?.message || error.message || 'Error desconocido'
           
           if (deleteError.response?.status === 403) {
-            alert(`❌ Error al crear el ingreso.\n\n⚠️ El vehículo fue creado pero no se pudo eliminar automáticamente (sin permisos).\n\n📋 Vehículo creado:\n- Patente: ${createdVehicle.licensePlate}\n- ID: ${createdVehicle.id}\n\n💡 Contacta al administrador para eliminar este vehículo huérfano.`)
+            alert(`❌ Error al crear el ingreso: ${originalErrorMessage}\n\n⚠️ CRÍTICO: El vehículo fue creado pero no se pudo eliminar automáticamente (sin permisos).\n\n📋 Vehículo huérfano creado:\n- Patente: ${createdVehicle.licensePlate}\n- ID: ${createdVehicle.id}\n\n🚨 Contacta al administrador INMEDIATAMENTE para eliminar este vehículo huérfano.`)
           } else {
-            alert(`❌ Error al crear el ingreso.\n\n⚠️ El vehículo fue creado pero no se pudo eliminar automáticamente.\n\n📋 Vehículo creado:\n- Patente: ${createdVehicle.licensePlate}\n- ID: ${createdVehicle.id}\n\n💡 Contacta al administrador para resolver este problema.`)
+            alert(`❌ Error al crear el ingreso: ${originalErrorMessage}\n\n⚠️ CRÍTICO: El vehículo fue creado pero no se pudo eliminar automáticamente.\n\n📋 Vehículo huérfano creado:\n- Patente: ${createdVehicle.licensePlate}\n- ID: ${createdVehicle.id}\n\n🚨 Contacta al administrador INMEDIATAMENTE para resolver este problema.`)
           }
         }
       } else {
@@ -399,12 +461,41 @@ export function CreateEntryModalAdvanced({ isOpen, onClose, onSuccess }: CreateE
   }
 
   const handleClose = () => {
-    // Si hay un vehículo creado pero no se completó el ingreso, eliminarlo
-    if (createdVehicle && step !== 'entry') {
+    // Verificar si hay fotos sin guardar
+    const hasUnsavedPhotos = photos.length > 0
+    
+    // Si hay un vehículo creado pero no se completó el ingreso, preguntar al usuario
+    if (createdVehicle) {
+      let confirmMessage = step === 'entry' 
+        ? '¿Estás seguro de cerrar? El vehículo ya fue creado pero el ingreso no se ha registrado. El vehículo será eliminado automáticamente.'
+        : '¿Estás seguro de cerrar? El vehículo ya fue creado y será eliminado automáticamente.'
+      
+      // Agregar advertencia sobre fotos si las hay
+      if (hasUnsavedPhotos) {
+        confirmMessage += `\n\n⚠️ ADVERTENCIA: Tienes ${photos.length} ${photos.length === 1 ? 'foto' : 'fotos'} sin guardar que se perderán al cerrar.`
+      }
+      
+      if (!confirm(confirmMessage)) {
+        return // El usuario canceló el cierre
+      }
+      
+      // Eliminar el vehículo creado
       console.log('🔄 Eliminando vehículo creado al cerrar modal...')
-      vehicleService.delete(createdVehicle.id).catch(error => {
-        console.error('❌ Error eliminando vehículo al cerrar:', error)
-      })
+      vehicleService.delete(createdVehicle.id)
+        .then(() => {
+          console.log('✅ Vehículo eliminado correctamente al cerrar')
+        })
+        .catch(error => {
+          console.error('❌ Error eliminando vehículo al cerrar:', error)
+          alert('⚠️ El vehículo fue creado pero no se pudo eliminar automáticamente. Contacta al administrador.')
+        })
+    } else if (hasUnsavedPhotos) {
+      // Si no hay vehículo pero hay fotos, advertir
+      const confirmMessage = `¿Estás seguro de cerrar?\n\n⚠️ ADVERTENCIA: Tienes ${photos.length} ${photos.length === 1 ? 'foto' : 'fotos'} sin guardar que se perderán al cerrar.`
+      
+      if (!confirm(confirmMessage)) {
+        return // El usuario canceló el cierre
+      }
     }
     
     resetForm()
@@ -422,6 +513,7 @@ export function CreateEntryModalAdvanced({ isOpen, onClose, onSuccess }: CreateE
               Registrar Nuevo Ingreso Completo
             </h3>
             <button
+              type="button"
               onClick={handleClose}
               className="text-gray-400 hover:text-gray-600 p-1"
               aria-label="Cerrar"

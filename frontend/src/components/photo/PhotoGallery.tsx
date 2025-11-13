@@ -128,6 +128,7 @@ export function PhotoGallery({
 
       {/* Botón para subir foto */}
       <button
+        type="button"
         onClick={handleUploadButtonClick}
         className="w-full bg-blue-500 hover:bg-blue-600 text-white p-2.5 sm:p-3 rounded-lg flex items-center justify-center gap-2 font-medium transition-colors text-sm sm:text-base"
       >
