@@ -87,6 +87,41 @@ export function NotificationDetailModal({
     }
   }
 
+  const getFriendlyTypeName = (type: string): string => {
+    const typeMap: Record<string, string> = {
+      'vehicle_entry': 'Ingreso de Vehículo',
+      'vehicle_exit': 'Salida de Vehículo',
+      'vehicle_ready_for_exit': 'Vehículo Listo para Salida',
+      'work_order_created': 'Orden de Trabajo Creada',
+      'work_order_assigned': 'Orden de Trabajo Asignada',
+      'work_order_started': 'Orden de Trabajo Iniciada',
+      'work_order_completed': 'Orden de Trabajo Completada',
+      'work_order_paused': 'Orden de Trabajo Pausada',
+      'work_order_cancelled': 'Orden de Trabajo Cancelada',
+      'work_order_reassigned': 'Orden de Trabajo Reasignada',
+      'spare_part_requested': 'Repuesto Solicitado',
+      'spare_part_delivered': 'Repuesto Entregado',
+      'low_stock': 'Stock Bajo',
+      'critical_stock': 'Stock Crítico',
+      'success': 'Éxito',
+      'warning': 'Advertencia',
+      'error': 'Error',
+      'info': 'Información'
+    }
+    return typeMap[type] || type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+  }
+
+  const getFriendlyRelatedToName = (relatedTo: string): string => {
+    const relatedMap: Record<string, string> = {
+      'work-orders': 'Orden de Trabajo',
+      'vehicle-entries': 'Ingreso de Vehículo',
+      'spare-parts': 'Repuesto',
+      'vehicles': 'Vehículo',
+      'users': 'Usuario'
+    }
+    return relatedMap[relatedTo] || relatedTo.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+  }
+
   const handleNavigateToRelated = () => {
     if (!notification.relatedTo || !notification.relatedId) return
 
@@ -205,7 +240,7 @@ export function NotificationDetailModal({
             <div className="space-y-2 text-sm">
               <div className="flex items-center space-x-2">
                 <span className="text-gray-600 font-medium w-32">Tipo:</span>
-                <span className="text-gray-900">{notification.type}</span>
+                <span className="text-gray-900 font-medium">{getFriendlyTypeName(notification.type)}</span>
               </div>
               <div className="flex items-center space-x-2">
                 <span className="text-gray-600 font-medium w-32">Estado:</span>
@@ -226,7 +261,7 @@ export function NotificationDetailModal({
               {notification.relatedTo && (
                 <div className="flex items-center space-x-2">
                   <span className="text-gray-600 font-medium w-32">Relacionado con:</span>
-                  <span className="text-gray-900 capitalize">{notification.relatedTo.replace('-', ' ')}</span>
+                  <span className="text-gray-900 font-medium">{getFriendlyRelatedToName(notification.relatedTo)}</span>
                 </div>
               )}
             </div>

@@ -159,6 +159,18 @@ export function NotificationDropdown() {
                           )}
                         </div>
                       )}
+                      <div className="mt-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setIsOpen(false)
+                            navigate('/notifications')
+                          }}
+                          className="text-xs text-blue-500 hover:text-blue-700 underline transition-colors"
+                        >
+                          Ver todas →
+                        </button>
+                      </div>
                     </div>
                     <button
                       onClick={(e) => {
@@ -176,19 +188,29 @@ export function NotificationDropdown() {
           </div>
 
           {/* Footer */}
-          {notifications.length > 0 && (
-            <div className="px-4 py-3 border-t border-gray-200 text-center">
+          <div className="px-4 py-3 border-t border-gray-200">
+            {notifications.length > 0 ? (
               <button
                 onClick={() => {
                   setIsOpen(false)
                   navigate('/notifications')
                 }}
-                className="text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
+                className="w-full text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors text-center"
               >
                 Ver todas las notificaciones
               </button>
-            </div>
-          )}
+            ) : (
+              <button
+                onClick={() => {
+                  setIsOpen(false)
+                  navigate('/notifications')
+                }}
+                className="w-full text-sm text-gray-500 hover:text-gray-700 font-medium transition-colors text-center"
+              >
+                Ver historial de notificaciones
+              </button>
+            )}
+          </div>
         </div>
       )}
 
