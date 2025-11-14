@@ -1,5 +1,6 @@
 import prisma from '../config/database'
 import type { SparePartFilters } from '../types'
+import notificationService from './notificationService'
 
 /**
  * Servicio de repuestos
@@ -252,12 +253,13 @@ export class SparePartService {
     }
 
     // Actualizar stock y registrar movimiento en transacción
-    await prisma.$transaction([
-      prisma.sparePart.update({
+    const updated = await prisma.$transaction(async (tx) => {
+      const updatedPart = await tx.sparePart.update({
         where: { id },
         data: { currentStock: newStock },
-      }),
-      prisma.sparePartMovement.create({
+      })
+
+      await tx.sparePartMovement.create({
         data: {
           sparePartId: id,
           movementType,
@@ -269,8 +271,23 @@ export class SparePartService {
           reason,
           reference,
         },
-      }),
-    ])
+      })
+
+      return updatedPart
+    })
+
+    // Verificar stock crítico (menor o igual a minStock/2 o menor o igual a 0)
+    const criticalThreshold = updated.minStock ? updated.minStock / 2 : 0
+    if (updated.currentStock <= criticalThreshold || updated.currentStock <= 0) {
+      notificationService
+        .notifyCriticalStock(id)
+        .catch((error) => console.error('❌ Error notificando stock crítico:', error))
+    } else if (updated.currentStock <= updated.minStock) {
+      // Stock bajo (ya existe, pero lo mantenemos)
+      notificationService
+        .notifyLowStock(id)
+        .catch((error) => console.error('❌ Error notificando stock bajo:', error))
+    }
 
     return this.getById(id)
   }
@@ -425,9 +442,14 @@ export class SparePartService {
 
       // Descontar stock
       const newStock = currentSparePart.currentStock - quantity
-      await tx.sparePart.update({
+      const updatedPart = await tx.sparePart.update({
         where: { id: sparePartId },
         data: { currentStock: newStock },
+        select: {
+          id: true,
+          currentStock: true,
+          minStock: true,
+        },
       })
 
       // Registrar movimiento
@@ -443,10 +465,27 @@ export class SparePartService {
         },
       })
 
-      return request
+      return { request, updatedPart }
     })
 
-    return result
+    // Notificar solicitud de repuesto
+    notificationService
+      .notifySparePartRequested(result.request.id)
+      .catch((error) => console.error('❌ Error notificando solicitud de repuesto:', error))
+
+    // Verificar stock crítico después de descontar
+    const criticalThreshold = result.updatedPart.minStock ? result.updatedPart.minStock / 2 : 0
+    if (result.updatedPart.currentStock <= criticalThreshold || result.updatedPart.currentStock <= 0) {
+      notificationService
+        .notifyCriticalStock(result.updatedPart.id)
+        .catch((error) => console.error('❌ Error notificando stock crítico:', error))
+    } else if (result.updatedPart.currentStock <= result.updatedPart.minStock) {
+      notificationService
+        .notifyLowStock(result.updatedPart.id)
+        .catch((error) => console.error('❌ Error notificando stock bajo:', error))
+    }
+
+    return result.request
   }
 
   /**
@@ -603,6 +642,11 @@ export class SparePartService {
         deliveredAt: new Date(),
       },
     })
+
+    // Notificar repuesto entregado
+    notificationService
+      .notifySparePartDelivered(id)
+      .catch((error) => console.error('❌ Error notificando repuesto entregado:', error))
 
     return this.getById(request.sparePartId)
   }

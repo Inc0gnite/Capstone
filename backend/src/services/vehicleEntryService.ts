@@ -361,6 +361,11 @@ export class VehicleEntryService {
       }),
     ])
 
+    // Notificar salida de vehículo
+    notificationService
+      .notifyVehicleExit(id)
+      .catch((error) => console.error('❌ Error notificando salida de vehículo:', error))
+
     return this.getById(id)
   }
 

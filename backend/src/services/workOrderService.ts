@@ -350,6 +350,45 @@ export class WorkOrderService {
       })
     })
 
+    // Notificar según el estado
+    if (newStatus === 'completado') {
+      notificationService
+        .notifyWorkOrderCompleted(id)
+        .catch((error) => console.error('❌ Error notificando orden completada:', error))
+      
+      // Verificar si todas las órdenes del vehículo están completadas
+      const completedOrder = await prisma.workOrder.findUnique({
+        where: { id },
+        include: {
+          entry: {
+            include: {
+              workOrders: {
+                where: {
+                  currentStatus: { not: 'completado' },
+                  id: { not: id }
+                }
+              }
+            }
+          }
+        }
+      })
+
+      // Si no hay más órdenes pendientes, el vehículo está listo para salida
+      if (completedOrder?.entry && completedOrder.entry.workOrders.length === 0) {
+        notificationService
+          .notifyVehicleReadyForExit(completedOrder.entryId)
+          .catch((error) => console.error('❌ Error notificando vehículo listo para salida:', error))
+      }
+    } else if (newStatus === 'cancelado') {
+      notificationService
+        .notifyWorkOrderCancelled(id)
+        .catch((error) => console.error('❌ Error notificando orden cancelada:', error))
+    } else if (newStatus === 'en_progreso') {
+      notificationService
+        .notifyWorkOrderStarted(id)
+        .catch((error) => console.error('❌ Error notificando orden iniciada:', error))
+    }
+
     return this.getById(id)
   }
 
@@ -387,6 +426,11 @@ export class WorkOrderService {
         data: { currentStatus: 'pausado' },
       }),
     ])
+
+    // Notificar orden pausada
+    notificationService
+      .notifyWorkOrderPaused(id, reason)
+      .catch((error) => console.error('❌ Error notificando orden pausada:', error))
 
     return this.getById(id)
   }
@@ -500,12 +544,20 @@ export class WorkOrderService {
     // Obtener información de la orden de trabajo
     const workOrder = await prisma.workOrder.findUnique({
       where: { id: workOrderId },
-      select: { workshopId: true, orderNumber: true, estimatedHours: true }
+      select: { 
+        workshopId: true, 
+        orderNumber: true, 
+        estimatedHours: true,
+        assignedToId: true
+      }
     })
 
     if (!workOrder) {
       throw new Error('Orden de trabajo no encontrada')
     }
+
+    const previousMechanicId = workOrder.assignedToId
+    const isReassignment = previousMechanicId && previousMechanicId !== mechanicId
 
     // Validar capacidad del mecánico por horas estimadas
     await this.validateMechanicCapacity(mechanicId, workOrder.workshopId, workOrder.estimatedHours || undefined)
@@ -523,17 +575,24 @@ export class WorkOrderService {
 
     console.log('✅ Mecánico asignado exitosamente:', updatedOrder.assignedTo)
 
-    // Notificar al mecánico asignado
-    notificationService
-      .create({
-        userId: mechanicId,
-        title: 'Nueva orden asignada',
-        message: `Se te ha asignado la orden ${workOrder.orderNumber}.`,
-        type: 'work_order_assigned',
-        relatedTo: 'work-orders',
-        relatedId: workOrderId,
-      })
-      .catch((error) => console.error('❌ Error notificando asignación de OT:', error))
+    // Notificar según si es reasignación o asignación nueva
+    if (isReassignment) {
+      notificationService
+        .notifyWorkOrderReassigned(workOrderId, previousMechanicId!, mechanicId)
+        .catch((error) => console.error('❌ Error notificando reasignación de OT:', error))
+    } else {
+      // Notificar al mecánico asignado
+      notificationService
+        .create({
+          userId: mechanicId,
+          title: 'Nueva orden asignada',
+          message: `Se te ha asignado la orden ${workOrder.orderNumber}.`,
+          type: 'work_order_assigned',
+          relatedTo: 'work-orders',
+          relatedId: workOrderId,
+        })
+        .catch((error) => console.error('❌ Error notificando asignación de OT:', error))
+    }
 
     return updatedOrder
   }
