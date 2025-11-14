@@ -56,6 +56,7 @@ export class NotificationService {
 
   /**
    * Crear notificaciones para múltiples usuarios
+   * Optimizado para usar batch insert cuando hay múltiples usuarios
    */
   async createMany(
     userIds: string[],
@@ -67,18 +68,102 @@ export class NotificationService {
       relatedId?: string
     }
   ) {
-    const notifications = await Promise.all(
-      userIds.map((userId) =>
-        prisma.notification.create({
-          data: {
-            userId,
-            ...data,
-          },
-        })
-      )
-    )
+    if (userIds.length === 0) {
+      return []
+    }
 
-    return notifications
+    // Si hay un solo usuario, usar create normal
+    if (userIds.length === 1) {
+      const notification = await prisma.notification.create({
+        data: {
+          userId: userIds[0],
+          ...data,
+        },
+      })
+      return [notification]
+    }
+
+    // Para múltiples usuarios, usar createMany de Prisma (mucho más eficiente)
+    // Prisma createMany no retorna los registros, pero es mucho más rápido
+    // Agrupamos en batches de 100 para evitar límites de la base de datos
+    const BATCH_SIZE = 100
+    const batches: string[][] = []
+    
+    for (let i = 0; i < userIds.length; i += BATCH_SIZE) {
+      batches.push(userIds.slice(i, i + BATCH_SIZE))
+    }
+
+    // Usar createMany de Prisma para cada batch (mucho más eficiente que múltiples creates)
+    for (const batch of batches) {
+      await prisma.notification.createMany({
+        data: batch.map((userId) => ({
+          userId,
+          title: data.title,
+          message: data.message,
+          type: data.type,
+          relatedTo: data.relatedTo,
+          relatedId: data.relatedId,
+          isRead: false,
+        })),
+        skipDuplicates: true, // Evitar errores si hay duplicados
+      })
+    }
+
+    // Retornar array vacío ya que createMany no retorna los registros
+    // Esto es aceptable porque las notificaciones se pueden consultar después si es necesario
+    return []
+  }
+
+  /**
+   * Cache de administradores activos (se actualiza cada 5 minutos)
+   */
+  private adminCache: { userIds: string[]; timestamp: number } | null = null
+  private readonly ADMIN_CACHE_TTL = 5 * 60 * 1000 // 5 minutos
+
+  /**
+   * Obtener IDs de administradores activos (con caché)
+   */
+  private async getAdminIds(): Promise<string[]> {
+    const now = Date.now()
+    
+    // Si el caché es válido, usarlo
+    if (this.adminCache && (now - this.adminCache.timestamp) < this.ADMIN_CACHE_TTL) {
+      return this.adminCache.userIds
+    }
+
+    // Obtener administradores de la base de datos
+    const admins = await prisma.user.findMany({
+      where: {
+        isActive: true,
+        role: {
+          name: 'Administrador',
+        },
+      },
+      select: { id: true },
+    })
+
+    const adminIds = admins.map((u) => u.id)
+    
+    // Actualizar caché
+    this.adminCache = {
+      userIds: adminIds,
+      timestamp: now,
+    }
+
+    return adminIds
+  }
+
+  /**
+   * Ejecutar notificación de forma completamente asíncrona
+   * para no bloquear el hilo principal
+   */
+  private executeAsync<T>(fn: () => Promise<T>): void {
+    // Usar setImmediate para ejecutar en el siguiente tick del event loop
+    setImmediate(() => {
+      fn().catch((error) => {
+        console.error('❌ Error en notificación asíncrona:', error)
+      })
+    })
   }
 
   /**
@@ -169,6 +254,8 @@ export class NotificationService {
    * Notificar sobre nuevo ingreso de vehículo
    */
   async notifyVehicleEntry(entryId: string) {
+    if (!entryId) return
+
     const entry = await prisma.vehicleEntry.findUnique({
       where: { id: entryId },
       include: {
@@ -201,17 +288,8 @@ export class NotificationService {
     // Obtener usuarios del taller (Jefe de Taller y Recepcionista)
     const workshopUserIds = entry.workshop.users.map((u) => u.id)
     
-    // Obtener todos los Administradores activos
-    const admins = await prisma.user.findMany({
-      where: {
-        isActive: true,
-        role: {
-          name: 'Administrador',
-        },
-      },
-      select: { id: true },
-    })
-    const adminIds = admins.map((u) => u.id)
+    // Obtener administradores (con caché)
+    const adminIds = await this.getAdminIds()
     
     // Combinar todos los IDs, eliminando duplicados
     const userIds = [...new Set([...workshopUserIds, ...adminIds])]
@@ -236,6 +314,8 @@ export class NotificationService {
    * Notificar sobre nueva orden de trabajo
    */
   async notifyWorkOrderCreated(workOrderId: string) {
+    if (!workOrderId) return
+
     const workOrder = await prisma.workOrder.findUnique({
       where: { id: workOrderId },
       include: {
@@ -265,17 +345,8 @@ export class NotificationService {
       userIds.push(workOrder.assignedToId)
     }
 
-    // Obtener todos los Administradores activos
-    const admins = await prisma.user.findMany({
-      where: {
-        isActive: true,
-        role: {
-          name: 'Administrador',
-        },
-      },
-      select: { id: true },
-    })
-    const adminIds = admins.map((u) => u.id)
+    // Obtener administradores (con caché)
+    const adminIds = await this.getAdminIds()
     
     // Combinar todos los IDs, eliminando duplicados
     const allUserIds = [...new Set([...userIds, ...adminIds])]
@@ -299,6 +370,8 @@ export class NotificationService {
    * Notificar sobre orden de trabajo completada
    */
   async notifyWorkOrderCompleted(workOrderId: string) {
+    if (!workOrderId) return
+
     const workOrder = await prisma.workOrder.findUnique({
       where: { id: workOrderId },
       include: {
@@ -334,17 +407,8 @@ export class NotificationService {
     const receptionistIds = workOrder.workshop.users.map((u) => u.id)
     userIds.push(...receptionistIds)
 
-    // Obtener todos los Administradores activos
-    const admins = await prisma.user.findMany({
-      where: {
-        isActive: true,
-        role: {
-          name: 'Administrador',
-        },
-      },
-      select: { id: true },
-    })
-    const adminIds = admins.map((u) => u.id)
+    // Obtener administradores (con caché)
+    const adminIds = await this.getAdminIds()
     userIds.push(...adminIds)
 
     // Obtener todos los Guardias activos del taller
@@ -384,6 +448,8 @@ export class NotificationService {
    * Notificar sobre stock bajo de repuestos
    */
   async notifyLowStock(sparePartId: string) {
+    if (!sparePartId) return
+
     const sparePart = await prisma.sparePart.findUnique({
       where: { id: sparePartId },
     })
@@ -416,6 +482,8 @@ export class NotificationService {
    * Notificar sobre salida de vehículo registrada
    */
   async notifyVehicleExit(entryId: string) {
+    if (!entryId) return
+
     const entry = await prisma.vehicleEntry.findUnique({
       where: { id: entryId },
       include: {
@@ -451,17 +519,8 @@ export class NotificationService {
     const workshopUserIds = entry.workshop.users.map((u) => u.id)
     userIds.push(...workshopUserIds)
 
-    // Obtener todos los Administradores activos
-    const admins = await prisma.user.findMany({
-      where: {
-        isActive: true,
-        role: {
-          name: 'Administrador',
-        },
-      },
-      select: { id: true },
-    })
-    const adminIds = admins.map((u) => u.id)
+    // Obtener administradores (con caché)
+    const adminIds = await this.getAdminIds()
     userIds.push(...adminIds)
 
     // Obtener nombre del guardia que registró la salida
@@ -486,6 +545,8 @@ export class NotificationService {
    * Notificar sobre orden de trabajo pausada
    */
   async notifyWorkOrderPaused(workOrderId: string, reason: string) {
+    if (!workOrderId) return
+
     const workOrder = await prisma.workOrder.findUnique({
       where: { id: workOrderId },
       include: {
@@ -526,17 +587,8 @@ export class NotificationService {
     const workshopManagerIds = workOrder.workshop.users.map((u) => u.id)
     userIds.push(...workshopManagerIds)
 
-    // Obtener todos los Administradores activos
-    const admins = await prisma.user.findMany({
-      where: {
-        isActive: true,
-        role: {
-          name: 'Administrador',
-        },
-      },
-      select: { id: true },
-    })
-    const adminIds = admins.map((u) => u.id)
+    // Obtener administradores (con caché)
+    const adminIds = await this.getAdminIds()
     userIds.push(...adminIds)
 
     const allUserIds = [...new Set(userIds)]
@@ -556,6 +608,8 @@ export class NotificationService {
    * Notificar sobre orden de trabajo cancelada
    */
   async notifyWorkOrderCancelled(workOrderId: string) {
+    if (!workOrderId) return
+
     const workOrder = await prisma.workOrder.findUnique({
       where: { id: workOrderId },
       include: {
@@ -596,17 +650,8 @@ export class NotificationService {
     const workshopUserIds = workOrder.workshop.users.map((u) => u.id)
     userIds.push(...workshopUserIds)
 
-    // Obtener todos los Administradores activos
-    const admins = await prisma.user.findMany({
-      where: {
-        isActive: true,
-        role: {
-          name: 'Administrador',
-        },
-      },
-      select: { id: true },
-    })
-    const adminIds = admins.map((u) => u.id)
+    // Obtener administradores (con caché)
+    const adminIds = await this.getAdminIds()
     userIds.push(...adminIds)
 
     const allUserIds = [...new Set(userIds)]
@@ -626,6 +671,8 @@ export class NotificationService {
    * Notificar sobre orden de trabajo iniciada (en_progreso)
    */
   async notifyWorkOrderStarted(workOrderId: string) {
+    if (!workOrderId) return
+
     const workOrder = await prisma.workOrder.findUnique({
       where: { id: workOrderId },
       include: {
@@ -661,17 +708,8 @@ export class NotificationService {
     const workshopManagerIds = workOrder.workshop.users.map((u) => u.id)
     userIds.push(...workshopManagerIds)
 
-    // Obtener todos los Administradores activos
-    const admins = await prisma.user.findMany({
-      where: {
-        isActive: true,
-        role: {
-          name: 'Administrador',
-        },
-      },
-      select: { id: true },
-    })
-    const adminIds = admins.map((u) => u.id)
+    // Obtener administradores (con caché)
+    const adminIds = await this.getAdminIds()
     userIds.push(...adminIds)
 
     // Obtener nombre del mecánico
@@ -696,6 +734,8 @@ export class NotificationService {
    * Notificar sobre solicitud de repuesto
    */
   async notifySparePartRequested(workOrderSparePartId: string) {
+    if (!workOrderSparePartId) return
+
     const request = await prisma.workOrderSparePart.findUnique({
       where: { id: workOrderSparePartId },
       include: {
@@ -732,17 +772,8 @@ export class NotificationService {
     const managerIds = inventoryManagers.map((u) => u.id)
     userIds.push(...managerIds)
 
-    // Obtener todos los Administradores activos
-    const admins = await prisma.user.findMany({
-      where: {
-        isActive: true,
-        role: {
-          name: 'Administrador',
-        },
-      },
-      select: { id: true },
-    })
-    const adminIds = admins.map((u) => u.id)
+    // Obtener administradores (con caché)
+    const adminIds = await this.getAdminIds()
     userIds.push(...adminIds)
 
     const mechanicName = request.workOrder.assignedTo
@@ -766,6 +797,8 @@ export class NotificationService {
    * Notificar sobre repuesto entregado
    */
   async notifySparePartDelivered(workOrderSparePartId: string) {
+    if (!workOrderSparePartId) return
+
     const request = await prisma.workOrderSparePart.findUnique({
       where: { id: workOrderSparePartId },
       include: {
@@ -802,6 +835,8 @@ export class NotificationService {
    * Notificar sobre vehículo listo para salida
    */
   async notifyVehicleReadyForExit(entryId: string) {
+    if (!entryId) return
+
     const entry = await prisma.vehicleEntry.findUnique({
       where: { id: entryId },
       include: {
@@ -830,17 +865,8 @@ export class NotificationService {
     const workshopUserIds = entry.workshop.users.map((u) => u.id)
     userIds.push(...workshopUserIds)
 
-    // Obtener todos los Administradores activos
-    const admins = await prisma.user.findMany({
-      where: {
-        isActive: true,
-        role: {
-          name: 'Administrador',
-        },
-      },
-      select: { id: true },
-    })
-    const adminIds = admins.map((u) => u.id)
+    // Obtener administradores (con caché)
+    const adminIds = await this.getAdminIds()
     userIds.push(...adminIds)
 
     const allUserIds = [...new Set(userIds)]
@@ -860,6 +886,8 @@ export class NotificationService {
    * Notificar sobre stock crítico de repuestos
    */
   async notifyCriticalStock(sparePartId: string) {
+    if (!sparePartId) return
+
     const sparePart = await prisma.sparePart.findUnique({
       where: { id: sparePartId },
     })
@@ -894,6 +922,8 @@ export class NotificationService {
    * Notificar sobre orden de trabajo reasignada
    */
   async notifyWorkOrderReassigned(workOrderId: string, previousMechanicId: string, newMechanicId: string) {
+    if (!workOrderId) return
+
     const workOrder = await prisma.workOrder.findUnique({
       where: { id: workOrderId },
       include: {
@@ -936,17 +966,8 @@ export class NotificationService {
     const managerIds = managers.map((u) => u.id)
     userIds.push(...managerIds)
 
-    // Obtener todos los Administradores activos
-    const admins = await prisma.user.findMany({
-      where: {
-        isActive: true,
-        role: {
-          name: 'Administrador',
-        },
-      },
-      select: { id: true },
-    })
-    const adminIds = admins.map((u) => u.id)
+    // Obtener administradores (con caché)
+    const adminIds = await this.getAdminIds()
     userIds.push(...adminIds)
 
     const newMechanicName = workOrder.assignedTo

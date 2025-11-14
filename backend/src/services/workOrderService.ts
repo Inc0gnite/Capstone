@@ -356,29 +356,34 @@ export class WorkOrderService {
         .notifyWorkOrderCompleted(id)
         .catch((error) => console.error('❌ Error notificando orden completada:', error))
       
-      // Verificar si todas las órdenes del vehículo están completadas
-      const completedOrder = await prisma.workOrder.findUnique({
-        where: { id },
-        include: {
-          entry: {
+      // Verificar si todas las órdenes del vehículo están completadas (de forma asíncrona)
+      // Esto evita bloquear la respuesta mientras se verifica
+      setImmediate(async () => {
+        try {
+          const completedOrder = await prisma.workOrder.findUnique({
+            where: { id },
             include: {
-              workOrders: {
-                where: {
-                  currentStatus: { not: 'completado' },
-                  id: { not: id }
+              entry: {
+                include: {
+                  workOrders: {
+                    where: {
+                      currentStatus: { not: 'completado' },
+                      id: { not: id }
+                    }
+                  }
                 }
               }
             }
+          })
+
+          // Si no hay más órdenes pendientes, el vehículo está listo para salida
+          if (completedOrder?.entry && completedOrder.entry.workOrders.length === 0) {
+            await notificationService.notifyVehicleReadyForExit(completedOrder.entryId)
           }
+        } catch (error) {
+          console.error('❌ Error verificando vehículo listo para salida:', error)
         }
       })
-
-      // Si no hay más órdenes pendientes, el vehículo está listo para salida
-      if (completedOrder?.entry && completedOrder.entry.workOrders.length === 0) {
-        notificationService
-          .notifyVehicleReadyForExit(completedOrder.entryId)
-          .catch((error) => console.error('❌ Error notificando vehículo listo para salida:', error))
-      }
     } else if (newStatus === 'cancelado') {
       notificationService
         .notifyWorkOrderCancelled(id)
