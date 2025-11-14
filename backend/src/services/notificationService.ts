@@ -154,19 +154,6 @@ export class NotificationService {
   }
 
   /**
-   * Ejecutar notificación de forma completamente asíncrona
-   * para no bloquear el hilo principal
-   */
-  private executeAsync<T>(fn: () => Promise<T>): void {
-    // Usar setImmediate para ejecutar en el siguiente tick del event loop
-    setImmediate(() => {
-      fn().catch((error) => {
-        console.error('❌ Error en notificación asíncrona:', error)
-      })
-    })
-  }
-
-  /**
    * Marcar notificación como leída
    */
   async markAsRead(id: string, userId: string) {
