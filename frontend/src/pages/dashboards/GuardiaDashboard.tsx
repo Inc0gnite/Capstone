@@ -16,7 +16,7 @@ export default function GuardiaDashboard() {
   const { isAuthenticated } = useAuthStore()
   const [searchPlate, setSearchPlate] = useState('')
   const [searchResult, setSearchResult] = useState<Vehicle | null>(null)
-  const [activeVehicles, setActiveVehicles] = useState<VehicleEntry[]>([])
+  const [activeVehicles, setActiveVehicles] = useState<(VehicleEntry & { isReadyForExit?: boolean })[]>([])
   const [recentActivity, setRecentActivity] = useState<VehicleEntry[]>([])
   const [loadingData, setLoadingData] = useState(true)
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -81,7 +81,28 @@ export default function GuardiaDashboard() {
         vehicleEntryService.getAll({ limit: 10, dateFrom: new Date().toISOString().split('T')[0] })
       ])
       
-      setActiveVehicles(activeEntries)
+      // Verificar qué vehículos están listos para salida (en paralelo con límite de concurrencia)
+      // Procesar en batches para evitar sobrecargar el servidor
+      const BATCH_SIZE = 5
+      const entriesWithReadyStatus: (VehicleEntry & { isReadyForExit?: boolean })[] = []
+      
+      for (let i = 0; i < activeEntries.length; i += BATCH_SIZE) {
+        const batch = activeEntries.slice(i, i + BATCH_SIZE)
+        const batchResults = await Promise.all(
+          batch.map(async (entry) => {
+            try {
+              const isReady = await vehicleEntryService.isReadyForExit(entry.id)
+              return { ...entry, isReadyForExit: isReady }
+            } catch (error) {
+              console.error(`Error verificando si ${entry.id} está listo:`, error)
+              return { ...entry, isReadyForExit: false }
+            }
+          })
+        )
+        entriesWithReadyStatus.push(...batchResults)
+      }
+      
+      setActiveVehicles(entriesWithReadyStatus)
       setRecentActivity(recentEntries.data || [])
       console.log('✅ Datos del dashboard cargados exitosamente')
     } catch (error) {
@@ -416,7 +437,7 @@ export default function GuardiaDashboard() {
               🔄 Actualizar
             </button>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-6">
             {loadingData ? (
               <div className="text-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
@@ -451,13 +472,75 @@ export default function GuardiaDashboard() {
                 </div>
               </div>
             ) : (
-              activeVehicles.map((entry) => (
-                <VehicleInWorkshop
-                  key={entry.id}
-                  entry={entry}
-                  onClick={() => handleVehicleClick(entry.vehicleId)}
-                />
-              ))
+              <>
+                {/* Vehículos Listos para Salida */}
+                <div>
+                  <div className="flex items-center space-x-2 mb-3">
+                    <span className="text-2xl">✅</span>
+                    <h4 className="text-md font-semibold text-green-700">
+                      Listos para Salida
+                    </h4>
+                    <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+                      {activeVehicles.filter(v => v.isReadyForExit).length}
+                    </span>
+                  </div>
+                  <div className="space-y-3">
+                    {activeVehicles.filter(v => v.isReadyForExit).length === 0 ? (
+                      <div className="text-center py-4 text-gray-400 text-sm">
+                        No hay vehículos listos para salida
+                      </div>
+                    ) : (
+                      activeVehicles
+                        .filter(v => v.isReadyForExit)
+                        .map((entry) => (
+                          <VehicleInWorkshop
+                            key={entry.id}
+                            entry={entry}
+                            onClick={() => handleVehicleClick(entry.vehicleId)}
+                            isReadyForExit={true}
+                          />
+                        ))
+                    )}
+                  </div>
+                </div>
+
+                {/* Separador */}
+                {activeVehicles.filter(v => v.isReadyForExit).length > 0 && 
+                 activeVehicles.filter(v => !v.isReadyForExit).length > 0 && (
+                  <div className="border-t border-gray-200 my-4"></div>
+                )}
+
+                {/* Vehículos En Proceso */}
+                <div>
+                  <div className="flex items-center space-x-2 mb-3">
+                    <span className="text-2xl">🔧</span>
+                    <h4 className="text-md font-semibold text-yellow-700">
+                      En Proceso
+                    </h4>
+                    <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">
+                      {activeVehicles.filter(v => !v.isReadyForExit).length}
+                    </span>
+                  </div>
+                  <div className="space-y-3">
+                    {activeVehicles.filter(v => !v.isReadyForExit).length === 0 ? (
+                      <div className="text-center py-4 text-gray-400 text-sm">
+                        No hay vehículos en proceso
+                      </div>
+                    ) : (
+                      activeVehicles
+                        .filter(v => !v.isReadyForExit)
+                        .map((entry) => (
+                          <VehicleInWorkshop
+                            key={entry.id}
+                            entry={entry}
+                            onClick={() => handleVehicleClick(entry.vehicleId)}
+                            isReadyForExit={false}
+                          />
+                        ))
+                    )}
+                  </div>
+                </div>
+              </>
             )}
           </div>
         </div>
@@ -563,29 +646,11 @@ function StatCard({ title, value, icon, color }: any) {
   )
 }
 
-function VehicleInWorkshop({ entry, onClick }: { entry: VehicleEntry, onClick: () => void }) {
-  const [hasCompletedOrders, setHasCompletedOrders] = useState<boolean | null>(null)
-  const [loadingOrders, setLoadingOrders] = useState(true)
-
-  useEffect(() => {
-    checkCompletedOrders()
-  }, [entry.id])
-
-  const checkCompletedOrders = async () => {
-    try {
-      setLoadingOrders(true)
-      // El guardia no tiene permisos para ver órdenes de trabajo
-      // Simplemente establecer como false para evitar errores 403
-      setHasCompletedOrders(false)
-    } catch (error) {
-      console.error('Error verificando órdenes:', error)
-      // Si hay error de permisos, asumir que no hay órdenes completadas
-      setHasCompletedOrders(false)
-    } finally {
-      setLoadingOrders(false)
-    }
-  }
-
+function VehicleInWorkshop({ entry, onClick, isReadyForExit }: { 
+  entry: VehicleEntry & { isReadyForExit?: boolean }, 
+  onClick: () => void,
+  isReadyForExit?: boolean 
+}) {
   const formatTime = (dateString: string) => {
     return new Date(dateString).toLocaleTimeString('es-CL', { 
       hour: '2-digit', 
@@ -593,31 +658,31 @@ function VehicleInWorkshop({ entry, onClick }: { entry: VehicleEntry, onClick: (
     })
   }
 
-  const getStatusInfo = (entry: VehicleEntry) => {
+  const getStatusInfo = () => {
     if (entry.exitDate) {
-      return { label: 'Completado', color: 'bg-green-100 text-green-800' }
+      return { label: 'Completado', color: 'bg-green-100 text-green-800', borderColor: 'border-green-500' }
     }
-    if (entry.status === 'ingresado') {
-      if (hasCompletedOrders === null || loadingOrders) {
-        return { label: 'Verificando...', color: 'bg-gray-100 text-gray-800' }
-      }
-      if (hasCompletedOrders) {
-        return { label: 'Listo para Salida', color: 'bg-green-100 text-green-800' }
-      }
-      return { label: 'Esperando Orden', color: 'bg-yellow-100 text-yellow-800' }
+    if (isReadyForExit) {
+      return { label: '✅ Listo para Salida', color: 'bg-green-100 text-green-800', borderColor: 'border-green-500' }
     }
-    return { label: 'Esperando', color: 'bg-yellow-100 text-yellow-800' }
+    return { label: '🔧 En Proceso', color: 'bg-yellow-100 text-yellow-800', borderColor: 'border-yellow-500' }
   }
 
-  const statusInfo = getStatusInfo(entry)
+  const statusInfo = getStatusInfo()
 
   return (
     <div 
-      className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition cursor-pointer"
+      className={`flex items-center justify-between p-4 rounded-lg hover:shadow-md transition cursor-pointer border-l-4 ${statusInfo.borderColor} ${
+        isReadyForExit 
+          ? 'bg-green-50 hover:bg-green-100' 
+          : 'bg-yellow-50 hover:bg-yellow-100'
+      }`}
       onClick={onClick}
     >
       <div className="flex items-center space-x-4">
-        <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
+        <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
+          isReadyForExit ? 'bg-green-600' : 'bg-yellow-600'
+        }`}>
           <span className="text-white font-bold text-lg">🚗</span>
         </div>
         <div>
@@ -628,23 +693,20 @@ function VehicleInWorkshop({ entry, onClick }: { entry: VehicleEntry, onClick: (
           <p className="text-xs text-gray-500">
             Ingreso: {formatTime(entry.entryDate)}
           </p>
-          <p className="text-xs text-gray-500">
-            ID Vehículo: {entry.vehicleId}
-          </p>
         </div>
       </div>
       <div className="text-right">
         <span className={`px-3 py-1 rounded-full text-sm font-medium ${statusInfo.color}`}>
           {statusInfo.label}
         </span>
-        {entry.status === 'ingresado' && hasCompletedOrders === false && (
-          <p className="text-xs text-yellow-600 mt-1 font-medium">
-            ⚠️ Esperando recepcionista
+        {isReadyForExit && (
+          <p className="text-xs text-green-700 mt-1 font-semibold">
+            ✅ Puede registrar salida
           </p>
         )}
-        {entry.status === 'ingresado' && hasCompletedOrders === true && (
-          <p className="text-xs text-green-600 mt-1 font-medium">
-            ✅ Listo para salida
+        {!isReadyForExit && (
+          <p className="text-xs text-yellow-700 mt-1 font-medium">
+            ⚠️ Esperando órdenes completadas
           </p>
         )}
         <p className="text-xs text-gray-500 mt-1">
