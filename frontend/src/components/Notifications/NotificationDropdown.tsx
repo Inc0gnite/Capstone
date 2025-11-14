@@ -1,9 +1,12 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useNotifications } from '../../hooks/useNotifications'
+import { NotificationDetailModal } from './NotificationDetailModal'
 
 export function NotificationDropdown() {
   const [isOpen, setIsOpen] = useState(false)
+  const [selectedNotification, setSelectedNotification] = useState<any>(null)
+  const [showDetailModal, setShowDetailModal] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const navigate = useNavigate()
   const {
@@ -29,9 +32,9 @@ export function NotificationDropdown() {
   }, [])
 
   const handleNotificationClick = async (notification: any) => {
-    if (!notification.isRead) {
-      await markAsRead(notification.id)
-    }
+    setSelectedNotification(notification)
+    setShowDetailModal(true)
+    setIsOpen(false)
   }
 
   const formatTime = (dateString: string) => {
@@ -188,6 +191,18 @@ export function NotificationDropdown() {
           )}
         </div>
       )}
+
+      {/* Modal de vista previa detallada */}
+      <NotificationDetailModal
+        isOpen={showDetailModal}
+        notification={selectedNotification}
+        onClose={() => {
+          setShowDetailModal(false)
+          setSelectedNotification(null)
+        }}
+        onMarkAsRead={markAsRead}
+        onDelete={deleteNotification}
+      />
     </div>
   )
 }

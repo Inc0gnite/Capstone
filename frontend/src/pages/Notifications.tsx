@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { MainLayout } from '../components/Layout/MainLayout'
 import { notificationService } from '../services/notificationService'
+import { NotificationDetailModal } from '../components/Notifications/NotificationDetailModal'
 import type { Notification } from '../../../shared/types'
 
 export default function Notifications() {
@@ -10,6 +11,8 @@ export default function Notifications() {
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [unreadCount, setUnreadCount] = useState(0)
+  const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null)
+  const [showDetailModal, setShowDetailModal] = useState(false)
   const limit = 20
 
   useEffect(() => {
@@ -243,7 +246,11 @@ export default function Notifications() {
             {filteredNotifications.map((notification) => (
               <div
                 key={notification.id}
-                className={`p-4 hover:bg-gray-50 transition-colors ${
+                onClick={() => {
+                  setSelectedNotification(notification)
+                  setShowDetailModal(true)
+                }}
+                className={`p-4 hover:bg-gray-50 transition-colors cursor-pointer ${
                   !notification.isRead ? 'bg-blue-50' : ''
                 }`}
               >
@@ -293,14 +300,20 @@ export default function Notifications() {
                       <div className="flex items-center gap-2 ml-4">
                         {!notification.isRead && (
                           <button
-                            onClick={() => handleMarkAsRead(notification.id)}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleMarkAsRead(notification.id)
+                            }}
                             className="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors"
                           >
                             Marcar como leída
                           </button>
                         )}
                         <button
-                          onClick={() => handleDelete(notification.id)}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleDelete(notification.id)
+                          }}
                           className="text-gray-400 hover:text-red-500 transition-colors p-1"
                           title="Eliminar"
                         >
@@ -337,6 +350,18 @@ export default function Notifications() {
             </button>
           </div>
         )}
+
+        {/* Modal de vista previa detallada */}
+        <NotificationDetailModal
+          isOpen={showDetailModal}
+          notification={selectedNotification}
+          onClose={() => {
+            setShowDetailModal(false)
+            setSelectedNotification(null)
+          }}
+          onMarkAsRead={handleMarkAsRead}
+          onDelete={handleDelete}
+        />
       </div>
     </MainLayout>
   )
