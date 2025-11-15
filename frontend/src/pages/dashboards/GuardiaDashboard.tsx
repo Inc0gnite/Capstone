@@ -12,7 +12,8 @@ import type { VehicleEntry, Vehicle, WorkOrder } from '../../../../shared/types'
 
 export default function GuardiaDashboard() {
   const navigate = useNavigate()
-  const { stats, loading, refreshStats } = useStats()
+  const [period, setPeriod] = useState<'diario' | 'semanal' | 'mensual'>('diario')
+  const { stats, loading, refreshStats } = useStats(period)
   const { isAuthenticated } = useAuthStore()
   const [searchPlate, setSearchPlate] = useState('')
   const [searchResult, setSearchResult] = useState<Vehicle | null>(null)
@@ -309,12 +310,31 @@ export default function GuardiaDashboard() {
             icon="✅"
             color="purple"
           />
-          <StatCard
-            title="Total Ingresos"
-            value={loading ? "..." : stats.totalEntries.toString()}
-            icon="📊"
-            color="orange"
-          />
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm font-medium text-gray-600">
+                Total Ingresos
+              </p>
+              <select
+                value={period}
+                onChange={(e) => setPeriod(e.target.value as 'diario' | 'semanal' | 'mensual')}
+                className="text-xs px-2 py-1 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-700"
+              >
+                <option value="diario">Diario</option>
+                <option value="semanal">Semanal</option>
+                <option value="mensual">Mensual</option>
+              </select>
+            </div>
+            <div className="flex items-center justify-between">
+              <p className="text-3xl font-bold text-gray-900">
+                {loading ? "..." : stats.totalEntries.toString()}
+              </p>
+              <div className="text-5xl bg-orange-50 text-orange-600 p-4 rounded-lg">📊</div>
+            </div>
+            <p className="text-xs text-gray-500 mt-2">
+              Período: {period === 'diario' ? 'Hoy' : period === 'semanal' ? 'Últimos 7 días' : 'Último mes'}
+            </p>
+          </div>
         </div>
 
 

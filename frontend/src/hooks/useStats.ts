@@ -1,19 +1,23 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { vehicleEntryService } from '../services/vehicleEntryService'
 
+export type PeriodType = 'diario' | 'semanal' | 'mensual'
+
 interface Stats {
   vehiclesInWorkshop: number
   entriesToday: number
   exitsToday: number
   totalEntries: number
+  period: PeriodType
 }
 
-export function useStats() {
+export function useStats(period: PeriodType = 'diario') {
   const [stats, setStats] = useState<Stats>({
     vehiclesInWorkshop: 0,
     entriesToday: 0,
     exitsToday: 0,
-    totalEntries: 0
+    totalEntries: 0,
+    period
   })
   const [loading, setLoading] = useState(true)
 
@@ -29,33 +33,59 @@ export function useStats() {
           vehiclesInWorkshop: 0,
           entriesToday: 0,
           exitsToday: 0,
-          totalEntries: 0
+          totalEntries: 0,
+          period
         })
         // Redirigir al login si no hay token
         window.location.href = '/login'
         return
       }
       
-      // Optimizado: usar solo una petición con filtro de fecha para obtener todo
+      // Calcular fecha de inicio según el período
+      const now = new Date()
+      const startDate = new Date()
+      
+      if (period === 'diario') {
+        startDate.setHours(0, 0, 0, 0)
+      } else if (period === 'semanal') {
+        startDate.setDate(now.getDate() - 7)
+        startDate.setHours(0, 0, 0, 0)
+      } else if (period === 'mensual') {
+        startDate.setMonth(now.getMonth() - 1)
+        startDate.setHours(0, 0, 0, 0)
+      }
+      
+      const dateFrom = startDate.toISOString().split('T')[0]
       const today = new Date().toISOString().split('T')[0]
-      const [activeEntries, todayEntries] = await Promise.all([
+      
+      const [activeEntries, periodEntriesResponse] = await Promise.all([
         vehicleEntryService.getActiveEntries(),
-        vehicleEntryService.getAll({ limit: 100, dateFrom: today })
+        vehicleEntryService.getAll({ limit: 1000, dateFrom })
       ])
       
-      const entriesToday = todayEntries.data?.filter((entry: any) => 
-        entry.entryDate && entry.entryDate.startsWith(today)
-      ).length || 0
+      // La respuesta tiene estructura: { data: entries[], total, page, limit, totalPages }
+      const periodEntries = periodEntriesResponse.data || []
       
-      const exitsToday = todayEntries.data?.filter((entry: any) => 
+      // Ingresos de hoy (siempre diario)
+      const entriesToday = periodEntries.filter((entry: any) => 
+        entry.entryDate && entry.entryDate.startsWith(today)
+      ).length
+      
+      // Salidas de hoy (siempre diario)
+      const exitsToday = periodEntries.filter((entry: any) => 
         entry.exitDate && entry.exitDate.startsWith(today)
-      ).length || 0
+      ).length
+
+      // totalEntries: Total real de ingresos según el período seleccionado
+      // Usar 'total' de la respuesta paginada para obtener el total real
+      const totalEntries = periodEntriesResponse.total || 0
 
       const newStats = {
         vehiclesInWorkshop: activeEntries.length,
         entriesToday,
         exitsToday,
-        totalEntries: todayEntries.data?.length || 0
+        totalEntries,
+        period
       }
 
       setStats(newStats)
@@ -88,13 +118,14 @@ export function useStats() {
           vehiclesInWorkshop: 0,
           entriesToday: 0,
           exitsToday: 0,
-          totalEntries: 0
+          totalEntries: 0,
+          period
         })
       }
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [period])
 
   const refreshStats = useCallback(() => {
     loadStats()
