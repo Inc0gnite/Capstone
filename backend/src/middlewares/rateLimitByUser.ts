@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express'
+import { Request, Response } from 'express'
 import rateLimit from 'express-rate-limit'
 import { sendError } from '../utils/response'
 
@@ -20,7 +20,7 @@ export const userRateLimiter = rateLimit({
     // Fallback a IP si no hay usuario (no debería pasar en rutas protegidas)
     return req.ip || req.socket.remoteAddress || 'unknown'
   },
-  handler: (req: Request, res: Response) => {
+  handler: (_req: Request, res: Response) => {
     sendError(res, 'Demasiadas solicitudes. Por favor intente más tarde.', 429)
   },
   skip: (req: Request) => {

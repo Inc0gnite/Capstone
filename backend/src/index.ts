@@ -69,7 +69,7 @@ const limiter = rateLimit({
     return process.env.NODE_ENV === 'development'
   },
   // Handler personalizado para errores 429
-  handler: (req, res) => {
+  handler: (_req, res) => {
     res.status(429).json({
       success: false,
       message: 'Demasiadas solicitudes desde esta IP, por favor intente más tarde.',
