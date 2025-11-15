@@ -44,6 +44,8 @@ export function useStats(period: PeriodType = 'diario') {
       // Calcular fecha de inicio según el período
       const now = new Date()
       const startDate = new Date()
+      const endDate = new Date()
+      endDate.setHours(23, 59, 59, 999) // Hasta el final del día de hoy
       
       if (period === 'diario') {
         startDate.setHours(0, 0, 0, 0)
@@ -51,34 +53,49 @@ export function useStats(period: PeriodType = 'diario') {
         startDate.setDate(now.getDate() - 7)
         startDate.setHours(0, 0, 0, 0)
       } else if (period === 'mensual') {
-        startDate.setMonth(now.getMonth() - 1)
+        // Último mes: desde hace 30 días
+        startDate.setDate(now.getDate() - 30)
         startDate.setHours(0, 0, 0, 0)
       }
       
       const dateFrom = startDate.toISOString().split('T')[0]
+      const dateTo = endDate.toISOString().split('T')[0]
       const today = new Date().toISOString().split('T')[0]
       
-      const [activeEntries, periodEntriesResponse] = await Promise.all([
+      console.log(`📊 Cargando estadísticas - Período: ${period}`, {
+        dateFrom,
+        dateTo,
+        today
+      })
+      
+      const [activeEntries, periodEntriesResponse, todayEntriesResponse] = await Promise.all([
         vehicleEntryService.getActiveEntries(),
-        vehicleEntryService.getAll({ limit: 1000, dateFrom })
+        vehicleEntryService.getAll({ limit: 100, dateFrom, dateTo }), // Límite máximo permitido por el backend
+        vehicleEntryService.getAll({ limit: 100, dateFrom: today, dateTo: today })
       ])
       
       // La respuesta tiene estructura: { data: entries[], total, page, limit, totalPages }
       const periodEntries = periodEntriesResponse.data || []
+      const todayEntries = todayEntriesResponse.data || []
       
-      // Ingresos de hoy (siempre diario)
-      const entriesToday = periodEntries.filter((entry: any) => 
-        entry.entryDate && entry.entryDate.startsWith(today)
-      ).length
+      // Ingresos de hoy (siempre diario) - usar consulta separada para hoy
+      const entriesToday = todayEntriesResponse.total || 0
       
-      // Salidas de hoy (siempre diario)
-      const exitsToday = periodEntries.filter((entry: any) => 
+      // Salidas de hoy (siempre diario) - contar desde los datos de hoy
+      const exitsToday = todayEntries.filter((entry: any) => 
         entry.exitDate && entry.exitDate.startsWith(today)
       ).length
 
       // totalEntries: Total real de ingresos según el período seleccionado
       // Usar 'total' de la respuesta paginada para obtener el total real
       const totalEntries = periodEntriesResponse.total || 0
+      
+      console.log(`✅ Estadísticas cargadas - Total: ${totalEntries}, Hoy: ${entriesToday}`, {
+        periodEntriesCount: periodEntries.length,
+        periodTotal: periodEntriesResponse.total,
+        todayEntriesCount: todayEntries.length,
+        todayTotal: todayEntriesResponse.total
+      })
 
       const newStats = {
         vehiclesInWorkshop: activeEntries.length,
