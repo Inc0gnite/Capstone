@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { requestCache, generateCacheKey } from '../utils/requestCache'
 
 const API_URL = import.meta.env.VITE_API_URL || '/api'
 
@@ -10,9 +11,17 @@ const api = axios.create({
   },
 })
 
-// Interceptor para agregar token a las peticiones
+// Configuración de caché por endpoint
+const CACHE_CONFIG: Record<string, { ttl: number; methods: string[] }> = {
+  '/vehicle-entries/active': { ttl: 30000, methods: ['GET'] }, // 30 segundos
+  '/notifications': { ttl: 20000, methods: ['GET'] }, // 20 segundos
+  '/dashboard': { ttl: 60000, methods: ['GET'] }, // 60 segundos
+  '/work-orders': { ttl: 30000, methods: ['GET'] }, // 30 segundos
+}
+
+// Interceptor para agregar token a las peticiones y manejar caché
 api.interceptors.request.use(
-  (config) => {
+  async (config) => {
     // No agregar token para peticiones públicas de auth
     const url = config.url || ''
     const isPublicAuth =
@@ -33,6 +42,17 @@ api.interceptors.request.use(
     } else {
       console.warn('⚠️ No hay token disponible para la petición:', config.url)
     }
+
+    // Verificar si esta petición debe usar caché
+    const cacheConfig = Object.entries(CACHE_CONFIG).find(([endpoint]) => 
+      url.includes(endpoint)
+    )
+    
+    if (cacheConfig && config.method?.toUpperCase() === 'GET') {
+      const cacheKey = generateCacheKey(url, config.params)
+      config.metadata = { cacheKey, cacheConfig: cacheConfig[1] }
+    }
+
     return config
   },
   (error) => {
@@ -40,17 +60,57 @@ api.interceptors.request.use(
   }
 )
 
-// Interceptor para manejar errores de autenticación
+// Interceptor para manejar errores de autenticación y rate limiting
 api.interceptors.response.use(
   (response) => {
+    // Guardar en caché si está configurado
+    const metadata = response.config.metadata
+    if (metadata?.cacheKey && response.status === 200) {
+      requestCache.set(metadata.cacheKey, response.data, metadata.cacheConfig.ttl)
+    }
+
     console.log('✅ Respuesta exitosa:', response.config.url, response.status)
     return response
   },
   async (error) => {
+
     console.error('❌ Error en petición:', error.config?.url, error.response?.status, error.response?.data)
     console.error('❌ Error completo:', error)
     
     const originalRequest = error.config
+
+    // Manejar error 429 (Rate Limit)
+    if (error.response?.status === 429) {
+      const retryAfter = error.response.headers['retry-after'] || 
+                        error.response.data?.retryAfter || 
+                        60 // Default: 60 segundos
+      
+      console.warn(`⚠️ Rate limit alcanzado. Reintentando después de ${retryAfter} segundos...`)
+      
+      // Invalidar caché para esta petición
+      if (originalRequest.metadata?.cacheKey) {
+        requestCache.invalidate(originalRequest.metadata.cacheKey)
+      }
+
+      // Retry con exponential backoff
+      if (!originalRequest._retryCount) {
+        originalRequest._retryCount = 0
+      }
+      
+      originalRequest._retryCount++
+      
+      if (originalRequest._retryCount <= 3) {
+        const delay = retryAfter * 1000 * originalRequest._retryCount
+        console.log(`⏳ Esperando ${delay / 1000} segundos antes de reintentar...`)
+        
+        await new Promise((resolve) => setTimeout(resolve, delay))
+        
+        return api(originalRequest)
+      } else {
+        console.error('❌ Máximo de reintentos alcanzado para rate limit')
+        return Promise.reject(error)
+      }
+    }
 
     // Si el error es 401 y no es un retry, intentar refrescar el token
     if (error.response?.status === 401 && !originalRequest._retry) {

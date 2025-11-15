@@ -76,33 +76,14 @@ export default function GuardiaDashboard() {
       setLoadingData(true)
       
       console.log('🔄 Cargando datos del dashboard...')
+      // El backend ahora incluye isReadyForExit en getActiveEntries, evitando peticiones adicionales
       const [activeEntries, recentEntries] = await Promise.all([
         vehicleEntryService.getActiveEntries(),
         vehicleEntryService.getAll({ limit: 10, dateFrom: new Date().toISOString().split('T')[0] })
       ])
       
-      // Verificar qué vehículos están listos para salida (en paralelo con límite de concurrencia)
-      // Procesar en batches para evitar sobrecargar el servidor
-      const BATCH_SIZE = 5
-      const entriesWithReadyStatus: (VehicleEntry & { isReadyForExit?: boolean })[] = []
-      
-      for (let i = 0; i < activeEntries.length; i += BATCH_SIZE) {
-        const batch = activeEntries.slice(i, i + BATCH_SIZE)
-        const batchResults = await Promise.all(
-          batch.map(async (entry) => {
-            try {
-              const isReady = await vehicleEntryService.isReadyForExit(entry.id)
-              return { ...entry, isReadyForExit: isReady }
-            } catch (error) {
-              console.error(`Error verificando si ${entry.id} está listo:`, error)
-              return { ...entry, isReadyForExit: false }
-            }
-          })
-        )
-        entriesWithReadyStatus.push(...batchResults)
-      }
-      
-      setActiveVehicles(entriesWithReadyStatus)
+      // activeEntries ya incluye isReadyForExit desde el backend
+      setActiveVehicles(activeEntries as (VehicleEntry & { isReadyForExit?: boolean })[])
       setRecentActivity(recentEntries.data || [])
       console.log('✅ Datos del dashboard cargados exitosamente')
     } catch (error) {
@@ -158,6 +139,10 @@ export default function GuardiaDashboard() {
 
   const handleEntryCreated = (entryData?: any) => {
     setShowCreateModal(false)
+    
+    // Invalidar caché de vehicle-entries antes de recargar
+    requestCache.invalidate(/vehicle-entries/)
+    
     loadDashboardData()
     refreshStats()
     

@@ -1,4 +1,5 @@
 import api from './api'
+import { requestCache } from '../utils/requestCache'
 import type { VehicleEntry, PaginationParams } from '../../../shared/types'
 
 // Re-export VehicleEntry for local use
@@ -124,11 +125,22 @@ export const vehicleEntryService = {
 
   /**
    * Obtener ingresos activos (sin salida)
+   * Usa caché para evitar peticiones duplicadas
    */
   async getActiveEntries(workshopId?: string): Promise<VehicleEntry[]> {
-    const response = await api.get('/vehicle-entries/active', {
-      params: workshopId ? { workshopId } : {}
-    })
-    return response.data.data
+    const cacheKey = `/vehicle-entries/active${workshopId ? `?workshopId=${workshopId}` : ''}`
+    
+    const response = await requestCache.get(
+      cacheKey,
+      async () => {
+        const apiResponse = await api.get('/vehicle-entries/active', {
+          params: workshopId ? { workshopId } : {}
+        })
+        return apiResponse.data.data
+      },
+      { ttl: 30000 } // 30 segundos
+    )
+    
+    return response
   }
 }

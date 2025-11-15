@@ -55,15 +55,27 @@ const corsOptions: cors.CorsOptions = {
 app.use(cors(corsOptions))
 app.options('*', cors(corsOptions))
 
-// Rate limiting - más permisivo en desarrollo
+// Rate limiting - más permisivo para usuarios autenticados
+// NOTA: Se aplica por IP porque se ejecuta antes de la autenticación
+// Si múltiples usuarios comparten IP, pueden verse afectados
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
-  max: process.env.NODE_ENV === 'development' ? 1000 : 100, // Más permisivo en desarrollo
+  max: process.env.NODE_ENV === 'development' ? 1000 : 500, // Aumentado a 500 en producción
   message: 'Demasiadas solicitudes desde esta IP, por favor intente más tarde.',
+  standardHeaders: true, // Incluye headers X-RateLimit-*
+  legacyHeaders: false,
   skip: () => {
     // En desarrollo, permitir más requests
     return process.env.NODE_ENV === 'development'
-  }
+  },
+  // Handler personalizado para errores 429
+  handler: (req, res) => {
+    res.status(429).json({
+      success: false,
+      message: 'Demasiadas solicitudes desde esta IP, por favor intente más tarde.',
+      retryAfter: Math.ceil((15 * 60 * 1000) / 1000), // Segundos hasta que se reinicie la ventana (15 min)
+    })
+  },
 })
 app.use('/api', limiter)
 

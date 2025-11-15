@@ -416,6 +416,7 @@ export class VehicleEntryService {
 
   /**
    * Obtener ingresos activos (sin salida)
+   * Incluye información de si está listo para salida
    */
   async getActiveEntries(workshopId?: string) {
     const where: any = {
@@ -451,7 +452,20 @@ export class VehicleEntryService {
       },
     })
 
-    return entries
+    // Agregar información de si está listo para salida
+    const entriesWithReadyStatus = entries.map(entry => {
+      // Verificar si tiene órdenes completadas
+      const hasCompletedOrders = entry.workOrders.some(
+        order => order.currentStatus === 'completado'
+      )
+      
+      return {
+        ...entry,
+        isReadyForExit: hasCompletedOrders && entry.workOrders.length > 0,
+      }
+    })
+
+    return entriesWithReadyStatus
   }
 }
 

@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Notification as BackendNotification } from '../../../shared/types'
 import { notificationService } from '../services/notificationService'
+import { pageVisibility } from '../utils/pageVisibility'
 
 type AppNotification = BackendNotification & { data?: Record<string, any> }
 
-const POLLING_INTERVAL_MS = 30000 // Aumentado a 30 segundos
-const MAX_POLLING_INTERVAL_MS = 300000 // Máximo 5 minutos si hay errores 429
+const POLLING_INTERVAL_MS = 60000 // Aumentado a 60 segundos (1 minuto)
+const MAX_POLLING_INTERVAL_MS = 600000 // Máximo 10 minutos si hay errores 429
 
 export function useNotifications() {
   const [notifications, setNotifications] = useState<AppNotification[]>([])
@@ -130,7 +131,12 @@ export function useNotifications() {
     }
 
     pollingRef.current = window.setInterval(() => {
-      fetchNotifications()
+      // Solo hacer polling si la pestaña está visible
+      if (pageVisibility.getIsVisible()) {
+        fetchNotifications()
+      } else {
+        console.log('⏸️ Polling pausado - pestaña no visible')
+      }
     }, currentPollingInterval.current)
   }, [fetchNotifications])
   
@@ -140,6 +146,22 @@ export function useNotifications() {
   useEffect(() => {
     fetchNotifications(true)
     setupPolling()
+
+    // Detener polling cuando la pestaña está oculta, reanudar cuando está visible
+    const unsubscribeVisibility = pageVisibility.subscribe((isVisible) => {
+      if (isVisible) {
+        console.log('▶️ Reanudando polling - pestaña visible')
+        // Recargar notificaciones cuando la pestaña vuelve a estar visible
+        fetchNotifications()
+        setupPolling()
+      } else {
+        console.log('⏸️ Pausando polling - pestaña oculta')
+        if (pollingRef.current) {
+          window.clearInterval(pollingRef.current)
+          pollingRef.current = null
+        }
+      }
+    })
 
     let debounceTimer: NodeJS.Timeout | null = null
     
@@ -180,6 +202,7 @@ export function useNotifications() {
       if (pollingRef.current) {
         window.clearInterval(pollingRef.current)
       }
+      unsubscribeVisibility()
       window.removeEventListener('notifications:refresh', handleRefresh)
       window.removeEventListener('vehicle-entry-created', handleVehicleEvent)
       window.removeEventListener('vehicle-exit-registered', handleVehicleEvent)

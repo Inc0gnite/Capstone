@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { vehicleEntryService } from '../services/vehicleEntryService'
 
 interface Stats {
@@ -36,18 +36,18 @@ export function useStats() {
         return
       }
       
-      // Cargar estadísticas básicas
-      const [activeEntries, allEntries] = await Promise.all([
+      // Optimizado: usar solo una petición con filtro de fecha para obtener todo
+      const today = new Date().toISOString().split('T')[0]
+      const [activeEntries, todayEntries] = await Promise.all([
         vehicleEntryService.getActiveEntries(),
-        vehicleEntryService.getAll({ limit: 100 })
+        vehicleEntryService.getAll({ limit: 100, dateFrom: today })
       ])
       
-      const today = new Date().toISOString().split('T')[0]
-      const entriesToday = allEntries.data?.filter((entry: any) => 
-        entry.entryDate.startsWith(today)
+      const entriesToday = todayEntries.data?.filter((entry: any) => 
+        entry.entryDate && entry.entryDate.startsWith(today)
       ).length || 0
       
-      const exitsToday = allEntries.data?.filter((entry: any) => 
+      const exitsToday = todayEntries.data?.filter((entry: any) => 
         entry.exitDate && entry.exitDate.startsWith(today)
       ).length || 0
 
@@ -55,7 +55,7 @@ export function useStats() {
         vehiclesInWorkshop: activeEntries.length,
         entriesToday,
         exitsToday,
-        totalEntries: allEntries.data?.length || 0
+        totalEntries: todayEntries.data?.length || 0
       }
 
       setStats(newStats)
@@ -71,6 +71,10 @@ export function useStats() {
         window.location.href = '/login'
       } else if (error.response?.status === 403) {
         console.warn('🚫 Sin permisos para acceder a los datos')
+      } else if (error.response?.status === 429) {
+        console.warn('⚠️ Rate limit alcanzado, esperando antes de reintentar...')
+        // No actualizar stats para mantener los valores anteriores
+        return
       } else if (error.code === 'ECONNREFUSED') {
         console.warn('🌐 Error de conexión: Backend no disponible en puerto 3000')
         console.warn('💡 Verificar que el backend esté ejecutándose')
@@ -78,13 +82,15 @@ export function useStats() {
         console.warn('🌐 Error de conexión con el servidor:', error.message)
       }
       
-      // Mantener valores en 0 en caso de error
-      setStats({
-        vehiclesInWorkshop: 0,
-        entriesToday: 0,
-        exitsToday: 0,
-        totalEntries: 0
-      })
+      // Mantener valores en 0 en caso de error (excepto 429)
+      if (error.response?.status !== 429) {
+        setStats({
+          vehiclesInWorkshop: 0,
+          entriesToday: 0,
+          exitsToday: 0,
+          totalEntries: 0
+        })
+      }
     } finally {
       setLoading(false)
     }
@@ -94,8 +100,23 @@ export function useStats() {
     loadStats()
   }, [loadStats])
 
+  // Throttle: evitar cargar stats muy frecuentemente
+  const lastLoadTimeRef = useRef(0)
+  const MIN_LOAD_INTERVAL = 10000 // Mínimo 10 segundos entre cargas
+
   useEffect(() => {
+    const now = Date.now()
+    if (now - lastLoadTimeRef.current < MIN_LOAD_INTERVAL) {
+      // Si se intenta cargar muy pronto, esperar
+      const timeout = setTimeout(() => {
+        loadStats()
+        lastLoadTimeRef.current = Date.now()
+      }, MIN_LOAD_INTERVAL - (now - lastLoadTimeRef.current))
+      return () => clearTimeout(timeout)
+    }
+    
     loadStats()
+    lastLoadTimeRef.current = now
   }, [loadStats])
 
   // Escuchar eventos de actualización de datos
