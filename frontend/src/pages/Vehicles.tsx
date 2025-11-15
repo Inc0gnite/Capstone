@@ -1,14 +1,16 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { MainLayout } from '../components/Layout/MainLayout'
 import { vehicleService } from '../services/vehicleService'
+import { regionService } from '../services/regionService'
 import { DeleteVehicleModal } from '../components/modals/DeleteVehicleModal'
 import { EditVehicleModal } from '../components/modals/EditVehicleModal'
 import { DocumentUpload } from '../components/DocumentUpload'
 import { useAuthStore } from '../store/authStore'
-import type { Vehicle } from '../../../shared/types'
+import type { Vehicle, VehicleFilters, Region } from '../../../shared/types'
 
 export default function Vehicles() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
+  const [allVehicles, setAllVehicles] = useState<Vehicle[]>([]) // Todos los vehículos sin filtrar
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null)
@@ -18,15 +20,39 @@ export default function Vehicles() {
   const [vehicleToEdit, setVehicleToEdit] = useState<Vehicle | null>(null)
   const { user } = useAuthStore()
 
+  // Filtros
+  const [filterType, setFilterType] = useState<string>('')
+  const [filterRegion, setFilterRegion] = useState<string>('')
+  const [filterStatus, setFilterStatus] = useState<string>('')
+  const [regions, setRegions] = useState<Region[]>([])
+
+  // Obtener tipos de vehículos únicos
+  const vehicleTypes = useMemo(() => {
+    const types = new Set(allVehicles.map(v => v.vehicleType).filter(Boolean))
+    return Array.from(types).sort()
+  }, [allVehicles])
+
   useEffect(() => {
     loadVehicles()
+    loadRegions()
   }, [])
+
+  const loadRegions = async () => {
+    try {
+      const response = await regionService.getAll()
+      setRegions(response.data || [])
+    } catch (error) {
+      console.error('Error cargando regiones:', error)
+    }
+  }
 
   const loadVehicles = async () => {
     try {
       setLoading(true)
       const response = await vehicleService.getAll()
-      setVehicles(response.data || [])
+      const vehiclesData = response.data || []
+      setAllVehicles(vehiclesData)
+      setVehicles(vehiclesData)
     } catch (error) {
       console.error('Error cargando vehículos:', error)
     } finally {
@@ -35,17 +61,38 @@ export default function Vehicles() {
   }
 
   const handleSearch = async () => {
-    if (!searchTerm.trim()) {
-      loadVehicles()
-      return
-    }
-
     try {
       setLoading(true)
-      const vehicle = await vehicleService.getByLicensePlate(searchTerm.trim().toUpperCase())
-      setVehicles([vehicle])
+      
+      // Si hay búsqueda por patente, usar ese método
+      if (searchTerm.trim()) {
+        try {
+          const vehicle = await vehicleService.getByLicensePlate(searchTerm.trim().toUpperCase())
+          setVehicles([vehicle])
+          return
+        } catch (error) {
+          console.error('Error buscando vehículo por patente:', error)
+          setVehicles([])
+          return
+        }
+      }
+
+      // Aplicar filtros
+      const filters: VehicleFilters = {}
+      if (filterType) filters.vehicleType = filterType
+      if (filterRegion) filters.regionId = filterRegion
+      if (filterStatus) filters.status = filterStatus
+
+      // Si hay filtros, buscar con ellos
+      if (Object.keys(filters).length > 0) {
+        const response = await vehicleService.getAll(filters)
+        setVehicles(response.data || [])
+      } else {
+        // Si no hay filtros, mostrar todos
+        setVehicles(allVehicles)
+      }
     } catch (error) {
-      console.error('Error buscando vehículo:', error)
+      console.error('Error buscando vehículos:', error)
       setVehicles([])
     } finally {
       setLoading(false)
@@ -54,8 +101,13 @@ export default function Vehicles() {
 
   const handleClearSearch = () => {
     setSearchTerm('')
-    loadVehicles()
+    setFilterType('')
+    setFilterRegion('')
+    setFilterStatus('')
+    setVehicles(allVehicles)
   }
+
+  const hasActiveFilters = searchTerm || filterType || filterRegion || filterStatus
 
   const handleDeleteVehicle = (vehicle: Vehicle) => {
     setVehicleToDelete(vehicle)
@@ -194,37 +246,104 @@ export default function Vehicles() {
           </div>
         </div>
 
-        {/* Search */}
+        {/* Search and Filters */}
         <div className="bg-white rounded-lg shadow p-4 sm:p-6">
           <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">
-            Búsqueda de Vehículos
+            Búsqueda y Filtros de Vehículos
           </h3>
-          <div className="flex flex-col sm:flex-row gap-3">
-            <input
-              type="text"
-              placeholder="Ingresa patente (ej: ABCD12)"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="flex-1 px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
-              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-            />
-            <div className="flex gap-2 sm:gap-3">
-              <button
-                onClick={handleSearch}
-                className="flex-1 sm:flex-none px-4 sm:px-6 py-2 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors text-sm sm:text-base"
-              >
-                <span className="sm:hidden">🔍</span>
-                <span className="hidden sm:inline">🔍 Buscar</span>
-              </button>
-              {searchTerm && (
-                <button
-                  onClick={handleClearSearch}
-                  className="flex-1 sm:flex-none px-4 sm:px-6 py-2 sm:py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 font-medium transition-colors text-sm sm:text-base"
-                >
-                  Limpiar
-                </button>
-              )}
+          
+          {/* Búsqueda por patente */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Búsqueda por Patente
+            </label>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <input
+                type="text"
+                placeholder="Ingresa patente (ej: ABCD12)"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="flex-1 px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+              />
             </div>
+          </div>
+
+          {/* Filtros */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+            {/* Filtro por Tipo */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Tipo de Vehículo
+              </label>
+              <select
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value)}
+                className="w-full px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base bg-white"
+              >
+                <option value="">Todos los tipos</option>
+                {vehicleTypes.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Filtro por Región */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Región
+              </label>
+              <select
+                value={filterRegion}
+                onChange={(e) => setFilterRegion(e.target.value)}
+                className="w-full px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base bg-white"
+              >
+                <option value="">Todas las regiones</option>
+                {regions.map((region) => (
+                  <option key={region.id} value={region.id}>
+                    {region.code} - {region.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Filtro por Estado */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Estado
+              </label>
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="w-full px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base bg-white"
+              >
+                <option value="">Todos los estados</option>
+                <option value="active">Activo</option>
+                <option value="in_maintenance">En Mantenimiento</option>
+                <option value="inactive">Inactivo</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Botones de acción */}
+          <div className="flex gap-2 sm:gap-3">
+            <button
+              onClick={handleSearch}
+              className="flex-1 sm:flex-none px-4 sm:px-6 py-2 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors text-sm sm:text-base flex items-center justify-center space-x-2"
+            >
+              <span>🔍</span>
+              <span>Buscar</span>
+            </button>
+            {hasActiveFilters && (
+              <button
+                onClick={handleClearSearch}
+                className="flex-1 sm:flex-none px-4 sm:px-6 py-2 sm:py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 font-medium transition-colors text-sm sm:text-base"
+              >
+                Limpiar Filtros
+              </button>
+            )}
           </div>
         </div>
 
@@ -232,11 +351,37 @@ export default function Vehicles() {
         <div className="bg-white rounded-lg shadow">
           <div className="p-4 sm:p-6 border-b border-gray-200">
             <h3 className="text-base sm:text-lg font-semibold text-gray-900">
-              {searchTerm ? `Resultados para "${searchTerm}"` : 'Lista de Vehículos'}
+              {hasActiveFilters ? 'Resultados de Búsqueda' : 'Lista de Vehículos'}
             </h3>
             <p className="text-sm sm:text-base text-gray-600">
-              {searchTerm ? `Mostrando resultados de búsqueda` : 'Todos los vehículos registrados'}
+              {hasActiveFilters 
+                ? `Mostrando ${vehicles.length} vehículo(s) con los filtros aplicados`
+                : `Todos los vehículos registrados (${vehicles.length} total)`}
             </p>
+            {hasActiveFilters && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {searchTerm && (
+                  <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">
+                    Patente: {searchTerm}
+                  </span>
+                )}
+                {filterType && (
+                  <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs">
+                    Tipo: {filterType}
+                  </span>
+                )}
+                {filterRegion && (
+                  <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded text-xs">
+                    Región: {regions.find(r => r.id === filterRegion)?.code || filterRegion}
+                  </span>
+                )}
+                {filterStatus && (
+                  <span className="px-2 py-1 bg-orange-100 text-orange-800 rounded text-xs">
+                    Estado: {getStatusText(filterStatus)}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
           {/* Vista de tabla para desktop, cards para móvil */}
           <div className="hidden md:block">
@@ -324,7 +469,9 @@ export default function Vehicles() {
             </table>
             {vehicles.length === 0 && (
               <div className="text-center py-8 text-gray-500">
-                {searchTerm ? 'No se encontraron vehículos con esa patente' : 'No hay vehículos registrados'}
+                {hasActiveFilters 
+                  ? 'No se encontraron vehículos con los filtros aplicados' 
+                  : 'No hay vehículos registrados'}
               </div>
             )}
           </div>
@@ -333,7 +480,9 @@ export default function Vehicles() {
           <div className="md:hidden p-4 space-y-4">
             {vehicles.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
-                {searchTerm ? 'No se encontraron vehículos con esa patente' : 'No hay vehículos registrados'}
+                {hasActiveFilters 
+                  ? 'No se encontraron vehículos con los filtros aplicados' 
+                  : 'No hay vehículos registrados'}
               </div>
             ) : (
               vehicles.map((vehicle) => (
