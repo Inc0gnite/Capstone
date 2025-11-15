@@ -12,6 +12,7 @@ import { sparePartService } from '../services/sparePartService'
 import { useAuthStore } from '../store/authStore'
 import { CameraCapture } from '../components/photo/CameraCapture'
 import photoService, { VehicleEntryPhoto } from '../services/photoService'
+import { DocumentUpload } from '../components/DocumentUpload'
 
 type DisplayPhoto = {
   id: string
@@ -830,9 +831,23 @@ export default function WorkOrderDetail() {
                   >
                     ▶️ Reanudar
                   </button>
-                )}
-              </div>
+              )}
             </div>
+
+            {/* Documentos */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+              <DocumentUpload
+                relatedTo="work-order"
+                relatedId={workOrder.id}
+                onDocumentUploaded={(doc) => {
+                  console.log('Documento subido:', doc)
+                }}
+                onDocumentDeleted={(docId) => {
+                  console.log('Documento eliminado:', docId)
+                }}
+              />
+            </div>
+          </div>
 
             {/* Cronología */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">

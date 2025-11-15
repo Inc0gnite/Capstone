@@ -11,6 +11,7 @@ import regionRoutes from './regionRoutes'
 import dashboardRoutes from './dashboardRoutes'
 import notificationRoutes from './notificationRoutes'
 import photoRoutes from './photoRoutes'
+import documentRoutes from './documentRoutes'
 import mechanicRoutes from './mechanicRoutes'
 import testRoutes from './testRoutes'
 
@@ -31,6 +32,7 @@ router.use('/regions', regionRoutes)
 router.use('/dashboard', dashboardRoutes)
 router.use('/notifications', notificationRoutes)
 router.use('/photos', photoRoutes)
+router.use('/documents', documentRoutes)
 router.use('/mechanics', mechanicRoutes)
 router.use('/test', testRoutes)
 

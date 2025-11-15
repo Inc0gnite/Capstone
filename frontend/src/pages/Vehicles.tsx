@@ -3,6 +3,7 @@ import { MainLayout } from '../components/Layout/MainLayout'
 import { vehicleService } from '../services/vehicleService'
 import { DeleteVehicleModal } from '../components/modals/DeleteVehicleModal'
 import { EditVehicleModal } from '../components/modals/EditVehicleModal'
+import { DocumentUpload } from '../components/DocumentUpload'
 import { useAuthStore } from '../store/authStore'
 import type { Vehicle } from '../../../shared/types'
 
@@ -485,6 +486,20 @@ export default function Vehicles() {
                     </span>
                   </div>
                 </div>
+              </div>
+
+              {/* Documentos del Vehículo */}
+              <div className="mt-6 pt-4 border-t border-gray-200">
+                <DocumentUpload
+                  relatedTo="vehicle"
+                  relatedId={selectedVehicle.id}
+                  onDocumentUploaded={(doc) => {
+                    console.log('Documento subido:', doc)
+                  }}
+                  onDocumentDeleted={(docId) => {
+                    console.log('Documento eliminado:', docId)
+                  }}
+                />
               </div>
             </div>
           </div>

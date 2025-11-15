@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { MainLayout } from '../components/Layout/MainLayout'
 import { vehicleEntryService, VehicleEntry } from '../services/vehicleEntryService'
 import { vehicleService, Vehicle } from '../services/vehicleService'
+import { DocumentUpload } from '../components/DocumentUpload'
 
 export default function EntryDetail() {
   const { id } = useParams<{ id: string }>()
@@ -231,6 +232,20 @@ export default function EntryDetail() {
                   </div>
                 )}
               </div>
+            </div>
+
+            {/* Documentos */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+              <DocumentUpload
+                relatedTo="vehicle-entry"
+                relatedId={entry.id}
+                onDocumentUploaded={(doc) => {
+                  console.log('Documento subido:', doc)
+                }}
+                onDocumentDeleted={(docId) => {
+                  console.log('Documento eliminado:', docId)
+                }}
+              />
             </div>
 
             {/* Fotos del Vehículo */}
