@@ -47,6 +47,7 @@ export class WorkOrderService {
       if (priority) where.priority = priority
       if (workshopId) where.workshopId = workshopId
       if (assignedToId) where.assignedToId = assignedToId
+      if (filters.vehicleId) where.vehicleId = filters.vehicleId
       
       console.log('🔍 Where clause:', where)
     

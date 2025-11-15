@@ -139,9 +139,47 @@ export function DocumentUpload({
     }
   }
 
-  const handleDownload = (document: Document) => {
-    // Abrir documento en nueva pestaña
-    window.open(document.url, '_blank')
+  const handleDownload = async (doc: Document) => {
+    try {
+      // Si la URL es base64, convertirla a blob y descargar
+      if (doc.url.startsWith('data:application/pdf;base64,')) {
+        const base64Data = doc.url.split(',')[1]
+        const byteCharacters = atob(base64Data)
+        const byteNumbers = new Array(byteCharacters.length)
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i)
+        }
+        const byteArray = new Uint8Array(byteNumbers)
+        const blob = new Blob([byteArray], { type: 'application/pdf' })
+        
+        // Crear URL temporal y descargar
+        const url = window.URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = `${doc.name}.pdf`
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        window.URL.revokeObjectURL(url)
+      } else {
+        // Si es una URL normal, descargar directamente
+        const response = await fetch(doc.url)
+        const blob = await response.blob()
+        const url = window.URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = `${doc.name}.pdf`
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        window.URL.revokeObjectURL(url)
+      }
+    } catch (error) {
+      console.error('Error descargando documento:', error)
+      alert('Error al descargar el documento. Intenta abrirlo en una nueva pestaña.')
+      // Fallback: abrir en nueva pestaña
+      window.open(doc.url, '_blank')
+    }
   }
 
   if (loading) {
@@ -284,9 +322,9 @@ export function DocumentUpload({
                 <button
                   onClick={() => handleDownload(document)}
                   className="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 font-medium transition-colors text-sm"
-                  title="Ver/Descargar"
+                  title="Descargar documento"
                 >
-                  👁️ Ver
+                  ⬇️ Descargar
                 </button>
                 <button
                   onClick={() => handleDelete(document.id)}

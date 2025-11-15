@@ -1,7 +1,10 @@
 import { useState, useEffect, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { MainLayout } from '../components/Layout/MainLayout'
 import { vehicleService } from '../services/vehicleService'
 import { regionService } from '../services/regionService'
+import { vehicleEntryService, type VehicleEntry } from '../services/vehicleEntryService'
+import { workOrderService, type WorkOrder } from '../services/workOrderService'
 import { DeleteVehicleModal } from '../components/modals/DeleteVehicleModal'
 import { EditVehicleModal } from '../components/modals/EditVehicleModal'
 import { DocumentUpload } from '../components/DocumentUpload'
@@ -14,11 +17,21 @@ export default function Vehicles() {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null)
+  const [vehicleHistory, setVehicleHistory] = useState<{
+    entries: VehicleEntry[]
+    workOrders: WorkOrder[]
+    loading: boolean
+  }>({
+    entries: [],
+    workOrders: [],
+    loading: false,
+  })
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [vehicleToDelete, setVehicleToDelete] = useState<Vehicle | null>(null)
   const [showEditModal, setShowEditModal] = useState(false)
   const [vehicleToEdit, setVehicleToEdit] = useState<Vehicle | null>(null)
   const { user } = useAuthStore()
+  const navigate = useNavigate()
 
   // Filtros
   const [filterType, setFilterType] = useState<string>('')
@@ -128,6 +141,31 @@ export default function Vehicles() {
   const handleEditVehicle = (vehicle: Vehicle) => {
     setVehicleToEdit(vehicle)
     setShowEditModal(true)
+  }
+
+  const loadVehicleHistory = async (vehicleId: string) => {
+    try {
+      setVehicleHistory({ entries: [], workOrders: [], loading: true })
+      
+      const [entriesResponse, workOrdersResponse] = await Promise.all([
+        vehicleEntryService.getAll({ vehicleId, limit: 100 }),
+        workOrderService.getAll({ vehicleId, limit: 100 }),
+      ])
+
+      setVehicleHistory({
+        entries: entriesResponse.data || [],
+        workOrders: workOrdersResponse.data || [],
+        loading: false,
+      })
+    } catch (error) {
+      console.error('Error cargando historial del vehículo:', error)
+      setVehicleHistory({ entries: [], workOrders: [], loading: false })
+    }
+  }
+
+  const handleViewVehicle = (vehicle: Vehicle) => {
+    setSelectedVehicle(vehicle)
+    loadVehicleHistory(vehicle.id)
   }
 
   const handleEditSuccess = () => {
@@ -440,7 +478,7 @@ export default function Vehicles() {
                     <td className="px-4 py-3 text-sm font-medium">
                       <div className="flex flex-wrap gap-2">
                         <button
-                          onClick={() => setSelectedVehicle(vehicle)}
+                          onClick={() => handleViewVehicle(vehicle)}
                           className="text-blue-600 hover:text-blue-900"
                         >
                           Ver Detalles
@@ -518,7 +556,7 @@ export default function Vehicles() {
                   
                   <div className="flex flex-wrap gap-2 pt-3 border-t border-gray-200">
                     <button
-                      onClick={() => setSelectedVehicle(vehicle)}
+                      onClick={() => handleViewVehicle(vehicle)}
                       className="flex-1 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
                     >
                       Ver Detalles
@@ -649,6 +687,124 @@ export default function Vehicles() {
                     console.log('Documento eliminado:', docId)
                   }}
                 />
+              </div>
+
+              {/* Historial del Vehículo */}
+              <div className="mt-6 pt-4 border-t border-gray-200">
+                <h4 className="font-medium text-gray-900 mb-4">📋 Historial del Vehículo</h4>
+                
+                {vehicleHistory.loading ? (
+                  <div className="text-center py-4">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
+                    <p className="text-sm text-gray-500 mt-2">Cargando historial...</p>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {/* Historial de Ingresos */}
+                    <div>
+                      <h5 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                        <span className="mr-2">📝</span>
+                        Ingresos al Taller ({vehicleHistory.entries.length})
+                      </h5>
+                      {vehicleHistory.entries.length === 0 ? (
+                        <p className="text-sm text-gray-500 text-center py-2">No hay ingresos registrados</p>
+                      ) : (
+                        <div className="space-y-2 max-h-60 overflow-y-auto">
+                          {vehicleHistory.entries.map((entry) => (
+                            <div
+                              key={entry.id}
+                              className="bg-gray-50 rounded-lg p-3 border border-gray-200 hover:bg-gray-100 transition-colors cursor-pointer"
+                              onClick={() => {
+                                setSelectedVehicle(null)
+                                navigate(`/entries/${entry.id}`)
+                              }}
+                            >
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <div className="flex items-center space-x-2 mb-1">
+                                    <span className="text-xs font-semibold text-blue-600">{entry.entryCode}</span>
+                                    <span className={`px-2 py-0.5 text-xs rounded-full ${
+                                      entry.status === 'ingresado' 
+                                        ? 'bg-yellow-100 text-yellow-800' 
+                                        : 'bg-green-100 text-green-800'
+                                    }`}>
+                                      {entry.status === 'ingresado' ? 'En Taller' : 'Salida'}
+                                    </span>
+                                  </div>
+                                  <p className="text-xs text-gray-600">
+                                    <span className="font-medium">{entry.driverName}</span> • {entry.driverRut}
+                                  </p>
+                                  <p className="text-xs text-gray-500 mt-1">
+                                    {new Date(entry.entryDate).toLocaleDateString('es-CL')} • 
+                                    {entry.entryKm.toLocaleString()} km
+                                    {entry.exitKm && ` → ${entry.exitKm.toLocaleString()} km`}
+                                  </p>
+                                </div>
+                                <span className="text-xs text-gray-400">→</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Historial de Órdenes de Trabajo */}
+                    <div>
+                      <h5 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                        <span className="mr-2">🔨</span>
+                        Órdenes de Trabajo ({vehicleHistory.workOrders.length})
+                      </h5>
+                      {vehicleHistory.workOrders.length === 0 ? (
+                        <p className="text-sm text-gray-500 text-center py-2">No hay órdenes de trabajo registradas</p>
+                      ) : (
+                        <div className="space-y-2 max-h-60 overflow-y-auto">
+                          {vehicleHistory.workOrders.map((order) => (
+                            <div
+                              key={order.id}
+                              className="bg-gray-50 rounded-lg p-3 border border-gray-200 hover:bg-gray-100 transition-colors cursor-pointer"
+                              onClick={() => {
+                                setSelectedVehicle(null)
+                                navigate(`/work-orders/${order.id}`)
+                              }}
+                            >
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <div className="flex items-center space-x-2 mb-1">
+                                    <span className="text-xs font-semibold text-purple-600">{order.orderNumber}</span>
+                                    <span className={`px-2 py-0.5 text-xs rounded-full ${
+                                      order.currentStatus === 'completado' 
+                                        ? 'bg-green-100 text-green-800'
+                                        : order.currentStatus === 'en_progreso'
+                                        ? 'bg-blue-100 text-blue-800'
+                                        : order.currentStatus === 'pausado'
+                                        ? 'bg-yellow-100 text-yellow-800'
+                                        : 'bg-gray-100 text-gray-800'
+                                    }`}>
+                                      {order.currentStatus === 'completado' ? 'Completado' :
+                                       order.currentStatus === 'en_progreso' ? 'En Progreso' :
+                                       order.currentStatus === 'pausado' ? 'Pausado' : 'Pendiente'}
+                                    </span>
+                                  </div>
+                                  <p className="text-xs text-gray-700 font-medium">{order.workType}</p>
+                                  <p className="text-xs text-gray-500 mt-1 line-clamp-2">{order.description}</p>
+                                  {order.assignedTo && (
+                                    <p className="text-xs text-gray-500 mt-1">
+                                      Mecánico: {order.assignedTo.firstName} {order.assignedTo.lastName}
+                                    </p>
+                                  )}
+                                  <p className="text-xs text-gray-400 mt-1">
+                                    {new Date(order.createdAt).toLocaleDateString('es-CL')}
+                                  </p>
+                                </div>
+                                <span className="text-xs text-gray-400">→</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

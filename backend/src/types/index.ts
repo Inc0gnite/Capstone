@@ -53,6 +53,7 @@ export interface WorkOrderFilters {
   priority?: string
   workshopId?: string
   assignedToId?: string
+  vehicleId?: string
   dateFrom?: string
   dateTo?: string
   sortBy?: string

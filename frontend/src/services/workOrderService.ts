@@ -102,6 +102,7 @@ export const workOrderService = {
     status?: string
     workshopId?: string
     assignedToId?: string
+    vehicleId?: string
   }) {
     const searchParams = new URLSearchParams()
     if (params?.page) searchParams.append('page', params.page.toString())
@@ -109,6 +110,7 @@ export const workOrderService = {
     if (params?.status) searchParams.append('status', params.status)
     if (params?.workshopId) searchParams.append('workshopId', params.workshopId)
     if (params?.assignedToId) searchParams.append('assignedToId', params.assignedToId)
+    if (params?.vehicleId) searchParams.append('vehicleId', params.vehicleId)
 
     const response = await api.get(`/work-orders?${searchParams.toString()}`)
     return response.data

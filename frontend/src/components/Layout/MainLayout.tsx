@@ -151,11 +151,12 @@ export function MainLayout({ children }: MainLayoutProps) {
 
         {/* Sidebar */}
         <aside className={`
-          fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 min-h-[calc(100vh-4rem)] 
+          fixed lg:sticky inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200
           transform transition-transform duration-300 ease-in-out
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+          lg:top-16 lg:h-[calc(100vh-4rem)]
         `}>
-          <nav className="p-3 sm:p-4 space-y-1">
+          <nav className="p-3 sm:p-4 space-y-1 h-full overflow-y-auto">
             {navItems.map((item) => (
               <a
                 key={item.name}
