@@ -176,6 +176,19 @@ export class MechanicService {
         )
       }
 
+      // Obtener información completa de la orden para la notificación
+      const workOrderForNotification = await prisma.workOrder.findUnique({
+        where: { id: assignment.workOrderId },
+        select: {
+          orderNumber: true,
+          vehicle: {
+            select: {
+              licensePlate: true
+            }
+          }
+        }
+      })
+
       // Actualizar la orden con el mecánico asignado (mantener estado pendiente)
       await prisma.workOrder.update({
         where: { id: assignment.workOrderId },
@@ -197,6 +210,21 @@ export class MechanicService {
             changedById: assignment.mechanicId
           }
         })
+      }
+
+      // Notificar al mecánico asignado
+      if (workOrderForNotification) {
+        const notificationService = (await import('./notificationService')).default
+        notificationService
+          .create({
+            userId: assignment.mechanicId,
+            title: 'Nueva orden asignada',
+            message: `Se te ha asignado la orden ${workOrderForNotification.orderNumber} para el vehículo ${workOrderForNotification.vehicle?.licensePlate || 'N/A'}.`,
+            type: 'work_order_assigned',
+            relatedTo: 'work-orders',
+            relatedId: assignment.workOrderId,
+          })
+          .catch((error) => console.error('❌ Error notificando asignación de OT:', error))
       }
 
     } catch (error) {
@@ -251,11 +279,20 @@ export class MechanicService {
       await prisma.workOrderStatus.create({
         data: {
           workOrderId: assignment.workOrderId,
-          status: 'en_progreso',
-          observations: `Mecánico reasignado a: ${assignment.mechanicId}. Notas: ${assignment.notes || 'Sin notas'}`,
+          status: workOrder.currentStatus, // Mantener el estado actual
+          observations: `Mecánico reasignado. Notas: ${assignment.notes || 'Sin notas'}`,
           changedById: assignment.mechanicId
         }
       })
+
+      // Notificar al mecánico anterior y al nuevo usando el servicio de notificaciones
+      const previousMechanicId = workOrder.assignedToId
+      if (previousMechanicId && previousMechanicId !== assignment.mechanicId) {
+        const notificationService = (await import('./notificationService')).default
+        notificationService
+          .notifyWorkOrderReassigned(assignment.workOrderId, previousMechanicId, assignment.mechanicId)
+          .catch((error) => console.error('❌ Error notificando reasignación de OT:', error))
+      }
 
     } catch (error) {
       console.error('Error reasignando mecánico:', error)
