@@ -50,6 +50,33 @@ export function WorkOrderTimer({
 
       // Calcular tiempo total transcurrido desde que se inició
       const totalElapsed = Math.max(0, endDate.getTime() - startDate.getTime())
+      
+      // Verificar si startedAt es razonable (no más de 7 días antes de ahora)
+      const daysSinceStart = (now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
+      if (daysSinceStart > 7) {
+        console.warn('⚠️ ADVERTENCIA: startedAt es muy antiguo:', {
+          startedAt: startDate.toISOString(),
+          daysSinceStart: daysSinceStart.toFixed(2),
+          message: 'El tiempo activo podría estar calculándose incorrectamente. Verificar que startedAt se estableció cuando la orden pasó a "en_progreso"'
+        })
+      }
+      
+      // Debug: Log detallado
+      console.log('⏱️ DEBUG - Cálculo de tiempos:', {
+        startedAt: startDate.toISOString(),
+        now: now.toISOString(),
+        endDate: endDate.toISOString(),
+        totalElapsedMs: totalElapsed,
+        totalElapsedHours: (totalElapsed / (1000 * 60 * 60)).toFixed(2),
+        daysSinceStart: daysSinceStart.toFixed(2),
+        currentStatus,
+        pausesCount: pauses.length,
+        pauses: pauses.map(p => ({
+          pausedAt: p.pausedAt,
+          resumedAt: p.resumedAt,
+          reason: p.reason
+        }))
+      })
 
       // Calcular tiempo total en pausa (pausas completadas)
       let totalPauseTime = 0
@@ -87,44 +114,72 @@ export function WorkOrderTimer({
       // Calcular tiempo activo: solo cuenta cuando está en "en_progreso"
       let activeTime = 0
       
-      // Ordenar pausas por fecha
-      const sortedPauses = [...pauses].sort((a, b) => 
-        new Date(a.pausedAt).getTime() - new Date(b.pausedAt).getTime()
-      )
-      
-      // Calcular períodos activos (entre startedAt y primera pausa, entre pausas, y desde última reanudación)
-      let currentTime = startDate.getTime()
-      const endTime = completedAt ? endDate.getTime() : now.getTime()
-      
-      for (const pause of sortedPauses) {
-        const pauseStart = new Date(pause.pausedAt).getTime()
+      // Si la orden está pausada, no contar tiempo activo adicional
+      if (currentStatus === 'pausado' && !completedAt) {
+        // Solo contar períodos activos antes de la pausa actual
+        const sortedPauses = [...pauses].sort((a, b) => 
+          new Date(a.pausedAt).getTime() - new Date(b.pausedAt).getTime()
+        )
         
-        // Si la pausa es después del tiempo actual, sumar período activo hasta la pausa
-        if (pauseStart > currentTime && pauseStart <= endTime) {
-          activeTime += pauseStart - currentTime
-        }
+        let currentTime = startDate.getTime()
         
-        // Si la pausa está reanudada, actualizar currentTime al momento de reanudación
-        if (pause.resumedAt) {
-          const pauseEnd = new Date(pause.resumedAt).getTime()
-          if (pauseEnd > pauseStart) {
-            currentTime = pauseEnd
+        for (const pause of sortedPauses) {
+          const pauseStart = new Date(pause.pausedAt).getTime()
+          
+          // Si la pausa es después del tiempo actual, sumar período activo hasta la pausa
+          if (pauseStart > currentTime) {
+            activeTime += pauseStart - currentTime
           }
-        } else {
-          // Si la pausa no está reanudada y estamos en estado pausado, detener aquí
-          if (currentStatus === 'pausado') {
+          
+          // Si la pausa está reanudada, actualizar currentTime al momento de reanudación
+          if (pause.resumedAt) {
+            const pauseEnd = new Date(pause.resumedAt).getTime()
+            if (pauseEnd > pauseStart) {
+              currentTime = pauseEnd
+            }
+          } else {
+            // Si la pausa no está reanudada, detener aquí (es la pausa actual)
+            break
+          }
+        }
+      } else {
+        // Si está en progreso o completada, calcular todos los períodos activos
+        const sortedPauses = [...pauses].sort((a, b) => 
+          new Date(a.pausedAt).getTime() - new Date(b.pausedAt).getTime()
+        )
+        
+        // Calcular períodos activos (entre startedAt y primera pausa, entre pausas, y desde última reanudación)
+        let currentTime = startDate.getTime()
+        const endTime = completedAt ? endDate.getTime() : now.getTime()
+        
+        for (const pause of sortedPauses) {
+          const pauseStart = new Date(pause.pausedAt).getTime()
+          
+          // Si la pausa es después del tiempo actual, sumar período activo hasta la pausa
+          if (pauseStart > currentTime && pauseStart <= endTime) {
+            activeTime += pauseStart - currentTime
+          }
+          
+          // Si la pausa está reanudada, actualizar currentTime al momento de reanudación
+          if (pause.resumedAt) {
+            const pauseEnd = new Date(pause.resumedAt).getTime()
+            if (pauseEnd > pauseStart) {
+              currentTime = pauseEnd
+            }
+          } else {
+            // Si la pausa no está reanudada, detener aquí
             currentTime = pauseStart
             break
           }
         }
-      }
-      
-      // Si estamos en progreso y no hay pausa activa, sumar tiempo desde última reanudación hasta ahora
-      if (currentStatus === 'en_progreso' && !completedAt) {
-        activeTime += endTime - currentTime
-      } else if (completedAt && currentTime < endTime) {
-        // Si está completada, sumar cualquier tiempo activo restante
-        activeTime += endTime - currentTime
+        
+        // Si estamos en progreso y no hay pausa activa, sumar tiempo desde última reanudación hasta ahora
+        if (currentStatus === 'en_progreso' && !completedAt) {
+          activeTime += Math.max(0, endTime - currentTime)
+        } else if (completedAt && currentTime < endTime) {
+          // Si está completada, sumar cualquier tiempo activo restante
+          activeTime += Math.max(0, endTime - currentTime)
+        }
       }
 
       // Tiempo en pausa total
@@ -132,6 +187,22 @@ export function WorkOrderTimer({
       
       // Tiempo total = tiempo activo + tiempo en pausa
       const totalTime = activeTime + totalPause
+      
+      // Debug: Log de resultados
+      console.log('⏱️ DEBUG - Resultados finales:', {
+        activeTimeMs: activeTime,
+        activeTimeHours: (activeTime / (1000 * 60 * 60)).toFixed(2),
+        totalPauseTimeMs: totalPauseTime,
+        totalPauseTimeHours: (totalPauseTime / (1000 * 60 * 60)).toFixed(2),
+        currentPauseMs: currentPause,
+        currentPauseHours: (currentPause / (1000 * 60 * 60)).toFixed(2),
+        totalPauseMs: totalPause,
+        totalPauseHours: (totalPause / (1000 * 60 * 60)).toFixed(2),
+        totalTimeMs: totalTime,
+        totalTimeHours: (totalTime / (1000 * 60 * 60)).toFixed(2),
+        totalElapsedMs: totalElapsed,
+        totalElapsedHours: (totalElapsed / (1000 * 60 * 60)).toFixed(2)
+      })
 
       setActiveTime(activeTime)
       setPauseTime(totalPauseTime)
