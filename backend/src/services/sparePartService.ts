@@ -485,6 +485,16 @@ export class SparePartService {
         .catch((error) => console.error('❌ Error notificando stock bajo:', error))
     }
 
+    // Notificar a jefes de taller si el stock queda por debajo de 10
+    if (result.updatedPart.currentStock < 10 && result.request.sparePart) {
+      this.notifyWorkshopManagersLowStock(
+        workOrder.workshopId,
+        result.request.sparePart,
+        result.updatedPart.currentStock,
+        workOrder.orderNumber
+      ).catch((error) => console.error('❌ Error notificando a jefes de taller:', error))
+    }
+
     return result.request
   }
 
@@ -580,9 +590,14 @@ export class SparePartService {
 
         // Descontar stock
         const newStock = currentSparePart.currentStock - request.quantity
-        await tx.sparePart.update({
+        const updatedPart = await tx.sparePart.update({
           where: { id: request.sparePartId },
           data: { currentStock: newStock },
+          select: {
+            id: true,
+            currentStock: true,
+            minStock: true,
+          },
         })
 
         // Registrar movimiento
@@ -597,6 +612,23 @@ export class SparePartService {
             reference: workOrder.orderNumber,
           },
         })
+
+        // Notificar a jefes de taller si el stock queda por debajo de 10
+        if (updatedPart.currentStock < 10) {
+          // Obtener el repuesto completo para la notificación
+          const sparePartFull = await tx.sparePart.findUnique({
+            where: { id: request.sparePartId },
+          })
+          
+          if (sparePartFull) {
+            this.notifyWorkshopManagersLowStock(
+              workOrder.workshopId,
+              sparePartFull,
+              updatedPart.currentStock,
+              workOrder.orderNumber
+            ).catch((error) => console.error('❌ Error notificando a jefes de taller:', error))
+          }
+        }
 
         createdRequests.push(createdRequest)
       }
@@ -751,6 +783,53 @@ export class SparePartService {
     ])
 
     return request
+  }
+
+  /**
+   * Notificar a jefes de taller cuando el stock de un repuesto queda por debajo de 10
+   */
+  private async notifyWorkshopManagersLowStock(
+    workshopId: string,
+    sparePart: SparePart,
+    currentStock: number,
+    workOrderNumber: string
+  ): Promise<void> {
+    try {
+      // Obtener jefes de taller del taller
+      const workshopManagers = await prisma.user.findMany({
+        where: {
+          workshopId: workshopId,
+          isActive: true,
+          role: {
+            name: 'Jefe de Taller',
+          },
+        },
+        select: {
+          id: true,
+        },
+      })
+
+      if (workshopManagers.length === 0) {
+        console.log(`⚠️ No se encontraron jefes de taller para el taller ${workshopId}`)
+        return
+      }
+
+      const managerIds = workshopManagers.map((m) => m.id)
+
+      // Crear notificaciones para todos los jefes de taller
+      await notificationService.createMany(managerIds, {
+        title: '⚠️ Stock bajo de repuesto',
+        message: `El repuesto "${sparePart.name}" (${sparePart.code}) tiene stock bajo (${currentStock} unidades) después de la solicitud para la orden ${workOrderNumber}. Por favor, revisar el inventario.`,
+        type: 'spare_part_low_stock',
+        relatedTo: 'spare-parts',
+        relatedId: sparePart.id,
+      })
+
+      console.log(`✅ Notificaciones enviadas a ${managerIds.length} jefe(s) de taller sobre stock bajo de ${sparePart.name}`)
+    } catch (error) {
+      console.error('❌ Error notificando a jefes de taller:', error)
+      throw error
+    }
   }
 }
 

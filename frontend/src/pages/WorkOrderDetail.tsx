@@ -845,6 +845,7 @@ export default function WorkOrderDetail() {
               <DocumentUpload
                 relatedTo="work-order"
                 relatedId={workOrder.id}
+                readOnly={(user as any)?.role?.name === 'Mecánico'}
                 onDocumentUploaded={(doc) => {
                   console.log('Documento subido:', doc)
                 }}

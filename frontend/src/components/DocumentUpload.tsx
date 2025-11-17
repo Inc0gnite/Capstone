@@ -7,6 +7,7 @@ interface DocumentUploadProps {
   relatedId: string
   onDocumentUploaded?: (document: Document) => void
   onDocumentDeleted?: (documentId: string) => void
+  readOnly?: boolean // Si es true, solo permite visualizar, no subir ni eliminar
 }
 
 export function DocumentUpload({
@@ -14,6 +15,7 @@ export function DocumentUpload({
   relatedId,
   onDocumentUploaded,
   onDocumentDeleted,
+  readOnly = false,
 }: DocumentUploadProps) {
   const [documents, setDocuments] = useState<Document[]>([])
   const [documentTypes, setDocumentTypes] = useState<string[]>([])
@@ -199,13 +201,15 @@ export function DocumentUpload({
           <span className="mr-2 text-xl">📄</span>
           Documentos ({documents.length})
         </h3>
-        <button
-          onClick={() => setShowUploadForm(!showUploadForm)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors text-sm flex items-center space-x-2"
-        >
-          <span>{showUploadForm ? '✕' : '+'}</span>
-          <span>{showUploadForm ? 'Cancelar' : 'Subir Documento'}</span>
-        </button>
+        {!readOnly && (
+          <button
+            onClick={() => setShowUploadForm(!showUploadForm)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors text-sm flex items-center space-x-2"
+          >
+            <span>{showUploadForm ? '✕' : '+'}</span>
+            <span>{showUploadForm ? 'Cancelar' : 'Subir Documento'}</span>
+          </button>
+        )}
       </div>
 
       {/* Formulario de subida */}
@@ -326,13 +330,15 @@ export function DocumentUpload({
                 >
                   ⬇️ Descargar
                 </button>
-                <button
-                  onClick={() => handleDelete(document.id)}
-                  className="px-3 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 font-medium transition-colors text-sm"
-                  title="Eliminar"
-                >
-                  🗑️ Eliminar
-                </button>
+                {!readOnly && (
+                  <button
+                    onClick={() => handleDelete(document.id)}
+                    className="px-3 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 font-medium transition-colors text-sm"
+                    title="Eliminar"
+                  >
+                    🗑️ Eliminar
+                  </button>
+                )}
               </div>
             </div>
           ))}
