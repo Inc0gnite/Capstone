@@ -296,12 +296,18 @@ async function main() {
     }),
   ])
 
-  // Mecánico: ver dashboard, órdenes de trabajo (propias), repuestos
+  // Mecánico: ver dashboard, órdenes de trabajo (propias), repuestos, ingresos (para ver fotos y documentos)
   await Promise.all([
     prisma.rolePermission.create({
       data: {
         roleId: roles[3].id, // Mecánico
         permissionId: permissions[0].id, // dashboard:read
+      },
+    }),
+    prisma.rolePermission.create({
+      data: {
+        roleId: roles[3].id, // Mecánico
+        permissionId: permissions[9].id, // vehicle-entries:read (para ver fotos y documentos de órdenes)
       },
     }),
     prisma.rolePermission.create({
