@@ -12,6 +12,7 @@ export default function EntryDetail() {
   const [vehicle, setVehicle] = useState<Vehicle | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [showDocuments, setShowDocuments] = useState(false)
 
   useEffect(() => {
     if (id) {
@@ -236,16 +237,40 @@ export default function EntryDetail() {
 
             {/* Documentos */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
-              <DocumentUpload
-                relatedTo="vehicle-entry"
-                relatedId={entry.id}
-                onDocumentUploaded={(doc) => {
-                  console.log('Documento subido:', doc)
-                }}
-                onDocumentDeleted={(docId) => {
-                  console.log('Documento eliminado:', docId)
-                }}
-              />
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <span className="mr-2 text-xl">📄</span>
+                  Documentos
+                </h3>
+                <button
+                  onClick={() => setShowDocuments(!showDocuments)}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors text-sm flex items-center space-x-2"
+                >
+                  <span>{showDocuments ? '👁️ Ocultar' : '👁️ Ver'}</span>
+                  <span>Documentos</span>
+                </button>
+              </div>
+              
+              {showDocuments && (
+                <div className="mt-4">
+                  <DocumentUpload
+                    relatedTo="vehicle-entry"
+                    relatedId={entry.id}
+                    onDocumentUploaded={(doc) => {
+                      console.log('Documento subido:', doc)
+                    }}
+                    onDocumentDeleted={(docId) => {
+                      console.log('Documento eliminado:', docId)
+                    }}
+                  />
+                </div>
+              )}
+              
+              {!showDocuments && (
+                <div className="text-center py-8 bg-gray-50 rounded-lg border border-gray-200">
+                  <p className="text-gray-500">Haz clic en "Ver Documentos" para gestionar los documentos del ingreso</p>
+                </div>
+              )}
             </div>
 
             {/* Fotos del Vehículo */}

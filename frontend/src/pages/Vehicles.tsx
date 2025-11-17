@@ -30,6 +30,7 @@ export default function Vehicles() {
   const [vehicleToDelete, setVehicleToDelete] = useState<Vehicle | null>(null)
   const [showEditModal, setShowEditModal] = useState(false)
   const [vehicleToEdit, setVehicleToEdit] = useState<Vehicle | null>(null)
+  const [showDocuments, setShowDocuments] = useState(false)
   const { user } = useAuthStore()
   const navigate = useNavigate()
 
@@ -165,7 +166,13 @@ export default function Vehicles() {
 
   const handleViewVehicle = (vehicle: Vehicle) => {
     setSelectedVehicle(vehicle)
+    setShowDocuments(false) // Resetear estado de documentos al abrir modal
     loadVehicleHistory(vehicle.id)
+  }
+  
+  const handleCloseVehicleModal = () => {
+    setSelectedVehicle(null)
+    setShowDocuments(false) // Resetear estado de documentos al cerrar modal
   }
 
   const handleEditSuccess = () => {
@@ -595,7 +602,7 @@ export default function Vehicles() {
                   Detalles del Vehículo
                 </h3>
                 <button
-                  onClick={() => setSelectedVehicle(null)}
+                  onClick={handleCloseVehicleModal}
                   className="text-gray-400 hover:text-gray-600"
                 >
                   <span className="sr-only">Cerrar</span>
@@ -677,16 +684,40 @@ export default function Vehicles() {
 
               {/* Documentos del Vehículo */}
               <div className="mt-6 pt-4 border-t border-gray-200">
-                <DocumentUpload
-                  relatedTo="vehicle"
-                  relatedId={selectedVehicle.id}
-                  onDocumentUploaded={(doc) => {
-                    console.log('Documento subido:', doc)
-                  }}
-                  onDocumentDeleted={(docId) => {
-                    console.log('Documento eliminado:', docId)
-                  }}
-                />
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="font-medium text-gray-900 flex items-center">
+                    <span className="mr-2 text-xl">📄</span>
+                    Documentos
+                  </h4>
+                  <button
+                    onClick={() => setShowDocuments(!showDocuments)}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors text-sm flex items-center space-x-2"
+                  >
+                    <span>{showDocuments ? '👁️ Ocultar' : '👁️ Ver'}</span>
+                    <span>Documentos</span>
+                  </button>
+                </div>
+                
+                {showDocuments && (
+                  <div className="mt-4">
+                    <DocumentUpload
+                      relatedTo="vehicle"
+                      relatedId={selectedVehicle.id}
+                      onDocumentUploaded={(doc) => {
+                        console.log('Documento subido:', doc)
+                      }}
+                      onDocumentDeleted={(docId) => {
+                        console.log('Documento eliminado:', docId)
+                      }}
+                    />
+                  </div>
+                )}
+                
+                {!showDocuments && (
+                  <div className="text-center py-8 bg-gray-50 rounded-lg border border-gray-200">
+                    <p className="text-gray-500">Haz clic en "Ver Documentos" para gestionar los documentos del vehículo</p>
+                  </div>
+                )}
               </div>
 
               {/* Historial del Vehículo */}
@@ -715,7 +746,7 @@ export default function Vehicles() {
                               key={entry.id}
                               className="bg-gray-50 rounded-lg p-3 border border-gray-200 hover:bg-gray-100 transition-colors cursor-pointer"
                               onClick={() => {
-                                setSelectedVehicle(null)
+                                handleCloseVehicleModal()
                                 navigate(`/entries/${entry.id}`)
                               }}
                             >
@@ -763,7 +794,7 @@ export default function Vehicles() {
                               key={order.id}
                               className="bg-gray-50 rounded-lg p-3 border border-gray-200 hover:bg-gray-100 transition-colors cursor-pointer"
                               onClick={() => {
-                                setSelectedVehicle(null)
+                                handleCloseVehicleModal()
                                 navigate(`/work-orders/${order.id}`)
                               }}
                             >
