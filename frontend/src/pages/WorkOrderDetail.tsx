@@ -152,6 +152,18 @@ export default function WorkOrderDetail() {
     return roleName === 'Administrador' || roleName === 'Recepcionista'
   }
 
+  // Función para verificar si el usuario es mecánico
+  const isMechanic = () => {
+    const roleName = (user as any)?.role?.name
+    return roleName === 'Mecánico'
+  }
+
+  // Función para verificar si el mecánico es el asignado a esta orden
+  const isAssignedMechanic = () => {
+    if (!isMechanic() || !workOrder || !workOrder.assignedTo) return false
+    return workOrder.assignedTo.id === (user as any)?.id
+  }
+
   // Función para verificar si el usuario puede solicitar repuestos
   const canRequestSpareParts = () => {
     const roleName = (user as any)?.role?.name
@@ -397,12 +409,57 @@ export default function WorkOrderDetail() {
                 <span className="mr-2">{statusConfig.icon}</span>
                 {statusConfig.label}
               </span>
-              <button
-                onClick={() => setShowStatusModal(true)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors text-sm sm:text-base whitespace-nowrap"
-              >
-                Cambiar Estado
-              </button>
+              {/* Botón para roles de gestión (Admin/Recepcionista) */}
+              {canManageOrders() && (
+                <button
+                  onClick={() => setShowStatusModal(true)}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors text-sm sm:text-base whitespace-nowrap"
+                >
+                  Cambiar Estado
+                </button>
+              )}
+              {/* Botones simplificados para mecánicos */}
+              {isMechanic() && isAssignedMechanic() && (
+                <div className="flex gap-2">
+                  {workOrder.currentStatus === 'pendiente' && (
+                    <button
+                      onClick={() => handleStatusChange('en_progreso')}
+                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium transition-colors text-sm sm:text-base whitespace-nowrap"
+                    >
+                      ▶️ Comenzar
+                    </button>
+                  )}
+                  {workOrder.currentStatus === 'en_progreso' && (
+                    <>
+                      <button
+                        onClick={() => handleStatusChange('pausado')}
+                        className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-medium transition-colors text-sm sm:text-base whitespace-nowrap"
+                      >
+                        ⏸️ Pausar
+                      </button>
+                      <button
+                        onClick={() => handleStatusChange('completado')}
+                        disabled={!checklistCompleted}
+                        className={`px-4 py-2 font-medium transition-colors text-sm sm:text-base whitespace-nowrap rounded-lg ${
+                          checklistCompleted
+                            ? 'bg-green-600 text-white hover:bg-green-700'
+                            : 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                        }`}
+                      >
+                        {checklistCompleted ? '✅ Finalizar' : '⏳ Finalizar (Faltan tareas)'}
+                      </button>
+                    </>
+                  )}
+                  {workOrder.currentStatus === 'pausado' && (
+                    <button
+                      onClick={() => handleStatusChange('en_progreso')}
+                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium transition-colors text-sm sm:text-base whitespace-nowrap"
+                    >
+                      ▶️ Reanudar
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -834,6 +891,51 @@ export default function WorkOrderDetail() {
                       <button
                         onClick={() => handleStatusChange('en_progreso')}
                         className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors"
+                      >
+                        ▶️ Reanudar
+                      </button>
+                    )}
+                  </>
+                )}
+                
+                {/* Botones simplificados para mecánicos - Solo si es el mecánico asignado */}
+                {isMechanic() && isAssignedMechanic() && (
+                  <>
+                    {workOrder.currentStatus === 'pendiente' && (
+                      <button
+                        onClick={() => handleStatusChange('en_progreso')}
+                        className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium transition-colors"
+                      >
+                        ▶️ Comenzar
+                      </button>
+                    )}
+                    
+                    {workOrder.currentStatus === 'en_progreso' && (
+                      <>
+                        <button
+                          onClick={() => handleStatusChange('pausado')}
+                          className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-medium transition-colors"
+                        >
+                          ⏸️ Pausar
+                        </button>
+                        <button
+                          onClick={() => handleStatusChange('completado')}
+                          disabled={!checklistCompleted}
+                          className={`w-full px-3 sm:px-4 py-2 text-sm sm:text-base font-medium transition-colors rounded-lg ${
+                            checklistCompleted
+                              ? 'bg-green-600 text-white hover:bg-green-700'
+                              : 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                          }`}
+                        >
+                          {checklistCompleted ? '✅ Finalizar' : '⏳ Finalizar (Faltan tareas)'}
+                        </button>
+                      </>
+                    )}
+                    
+                    {workOrder.currentStatus === 'pausado' && (
+                      <button
+                        onClick={() => handleStatusChange('en_progreso')}
+                        className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium transition-colors"
                       >
                         ▶️ Reanudar
                       </button>
