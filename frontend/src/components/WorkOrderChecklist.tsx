@@ -12,6 +12,7 @@ interface WorkOrderChecklistProps {
   initialItems?: ChecklistItem[]
   disabled?: boolean
   workOrderId?: string // ID de la orden para persistir el estado
+  workOrderStatus?: string // Estado de la orden de trabajo
 }
 
 export function WorkOrderChecklist({ 
@@ -19,7 +20,8 @@ export function WorkOrderChecklist({
   onChecklistChange, 
   initialItems = [],
   disabled = false,
-  workOrderId 
+  workOrderId,
+  workOrderStatus 
 }: WorkOrderChecklistProps) {
   const [items, setItems] = useState<ChecklistItem[]>(initialItems)
   const [hasInitialized, setHasInitialized] = useState(false)
@@ -118,6 +120,12 @@ export function WorkOrderChecklist({
 
   const toggleTask = (taskId: string) => {
     if (disabled) return
+    
+    // Validar que la OT no esté pausada
+    if (workOrderStatus === 'pausado') {
+      alert('⚠️ No se puede completar tareas mientras la orden de trabajo está en pausa. Por favor, reanuda la orden primero.')
+      return
+    }
     
     setItems(prevItems =>
       prevItems.map(item =>
