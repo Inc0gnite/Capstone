@@ -76,6 +76,15 @@ export interface WorkOrder {
       currentStock: number
     }
   }>
+  pauses?: Array<{
+    id: string
+    workOrderId: string
+    reason: string
+    pausedAt: string
+    resumedAt?: string
+    duration?: number
+    observations?: string
+  }>
 }
 
 export interface CreateWorkOrderData {

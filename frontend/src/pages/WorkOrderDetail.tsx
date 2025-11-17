@@ -7,6 +7,7 @@ import { ExchangeMechanicModal } from '../components/modals/ExchangeMechanicModa
 import { RequestSparePartsModal } from '../components/modals/RequestSparePartsModal'
 import { MechanicInfoDropdown } from '../components/mechanic/MechanicInfoDropdown'
 import { WorkOrderChecklist } from '../components/WorkOrderChecklist'
+import { WorkOrderTimer } from '../components/WorkOrderTimer'
 import { WordService } from '../services/wordService'
 import { sparePartService } from '../services/sparePartService'
 import { useAuthStore } from '../store/authStore'
@@ -415,6 +416,15 @@ export default function WorkOrderDetail() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Información de la Orden - Columna Principal */}
           <div className="lg:col-span-2 space-y-4 sm:space-y-6">
+            {/* Cronómetro de Tiempo de Trabajo */}
+            {workOrder.startedAt && (
+              <WorkOrderTimer
+                startedAt={workOrder.startedAt}
+                completedAt={workOrder.completedAt}
+                currentStatus={workOrder.currentStatus}
+                pauses={workOrder.pauses}
+              />
+            )}
             {/* Card Principal - Información General */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 mb-4 sm:mb-6 pb-4 sm:pb-6 border-b border-gray-200">
