@@ -353,19 +353,7 @@ async function main() {
     prisma.rolePermission.create({
       data: {
         roleId: roles[4].id, // Jefe de Taller
-        permissionId: permissions[12].id, // work-orders:read
-      },
-    }),
-    prisma.rolePermission.create({
-      data: {
-        roleId: roles[4].id, // Jefe de Taller
-        permissionId: permissions[13].id, // work-orders:create
-      },
-    }),
-    prisma.rolePermission.create({
-      data: {
-        roleId: roles[4].id, // Jefe de Taller
-        permissionId: permissions[14].id, // work-orders:update
+        permissionId: permissions[12].id, // work-orders:read (solo lectura - ver detalles)
       },
     }),
     prisma.rolePermission.create({
@@ -544,6 +532,18 @@ async function main() {
         password: hashedPassword,
         phone: '+56944444444',
         roleId: roles[4].id, // Jefe de Taller
+        workshopId: workshops[0].id,
+      },
+    }),
+    prisma.user.create({
+      data: {
+        rut: '78.901.234-5',
+        firstName: 'Roberto',
+        lastName: 'Fernández',
+        email: 'inventario@pepsico.cl',
+        password: hashedPassword,
+        phone: '+56955555555',
+        roleId: roles[5].id, // Encargado de Inventario
         workshopId: workshops[0].id,
       },
     }),

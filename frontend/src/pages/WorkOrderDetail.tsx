@@ -145,7 +145,8 @@ export default function WorkOrderDetail() {
   // Función para verificar si el usuario puede realizar acciones de gestión
   const canManageOrders = () => {
     const roleName = (user as any)?.role?.name
-    return roleName === 'Administrador' || roleName === 'Recepcionista' || roleName === 'Jefe de Taller'
+    // Jefe de Taller solo puede ver detalles, no gestionar
+    return roleName === 'Administrador' || roleName === 'Recepcionista'
   }
 
   // Función para verificar si el usuario puede solicitar repuestos
@@ -782,34 +783,48 @@ export default function WorkOrderDetail() {
               </div>
 
               <div className="space-y-2 sm:space-y-3">
-                {workOrder.currentStatus === 'pendiente' && (
-                  <button
-                    onClick={() => handleStatusChange('en_progreso')}
-                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors"
-                  >
-                    ▶️ Iniciar Trabajo
-                  </button>
-                )}
-                
-                {workOrder.currentStatus === 'en_progreso' && (
+                {/* Botones de cambio de estado - Solo para roles de gestión */}
+                {canManageOrders() && (
                   <>
-                    <button
-                      onClick={() => handleStatusChange('pausado')}
-                      className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-medium transition-colors"
-                    >
-                      ⏸️ Pausar
-                    </button>
-                    <button
-                      onClick={() => handleStatusChange('completado')}
-                      disabled={!checklistCompleted}
-                      className={`w-full px-3 sm:px-4 py-2 text-sm sm:text-base font-medium transition-colors ${
-                        checklistCompleted
-                          ? 'bg-green-600 text-white rounded-lg hover:bg-green-700'
-                          : 'bg-gray-400 text-gray-200 rounded-lg cursor-not-allowed'
-                      }`}
-                    >
-                      {checklistCompleted ? '✅ Completar' : '⏳ Completar (Faltan tareas)'}
-                    </button>
+                    {workOrder.currentStatus === 'pendiente' && (
+                      <button
+                        onClick={() => handleStatusChange('en_progreso')}
+                        className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors"
+                      >
+                        ▶️ Iniciar Trabajo
+                      </button>
+                    )}
+                    
+                    {workOrder.currentStatus === 'en_progreso' && (
+                      <>
+                        <button
+                          onClick={() => handleStatusChange('pausado')}
+                          className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-medium transition-colors"
+                        >
+                          ⏸️ Pausar
+                        </button>
+                        <button
+                          onClick={() => handleStatusChange('completado')}
+                          disabled={!checklistCompleted}
+                          className={`w-full px-3 sm:px-4 py-2 text-sm sm:text-base font-medium transition-colors ${
+                            checklistCompleted
+                              ? 'bg-green-600 text-white rounded-lg hover:bg-green-700'
+                              : 'bg-gray-400 text-gray-200 rounded-lg cursor-not-allowed'
+                          }`}
+                        >
+                          {checklistCompleted ? '✅ Completar' : '⏳ Completar (Faltan tareas)'}
+                        </button>
+                      </>
+                    )}
+                    
+                    {workOrder.currentStatus === 'pausado' && (
+                      <button
+                        onClick={() => handleStatusChange('en_progreso')}
+                        className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors"
+                      >
+                        ▶️ Reanudar
+                      </button>
+                    )}
                   </>
                 )}
                 
@@ -823,15 +838,6 @@ export default function WorkOrderDetail() {
                     <span>Solicitar Repuestos</span>
                   </button>
                 )}
-                
-                {workOrder.currentStatus === 'pausado' && (
-                  <button
-                    onClick={() => handleStatusChange('en_progreso')}
-                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors"
-                  >
-                    ▶️ Reanudar
-                  </button>
-              )}
             </div>
 
             {/* Documentos */}
