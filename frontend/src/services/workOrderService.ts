@@ -43,6 +43,7 @@ export interface WorkOrder {
     phone?: string
     isActive?: boolean
     hasActiveOrder?: boolean
+    specialties?: string[]
   }
   createdBy?: {
     id: string

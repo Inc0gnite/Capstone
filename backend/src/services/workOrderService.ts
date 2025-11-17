@@ -176,6 +176,9 @@ export class WorkOrderService {
       const currentOrderInProgress = workOrder.currentStatus === 'en_progreso'
       const hasActiveOrder = hasOtherActiveOrder || currentOrderInProgress
       
+      // Especialidades por defecto (hasta que se agregue al modelo de BD)
+      const specialties = ['General', 'Motor', 'Frenos']
+      
       // Remover assignedWorkOrders del objeto antes de retornar
       const { assignedWorkOrders, ...assignedToWithoutOrders } = workOrder.assignedTo
       return {
@@ -183,6 +186,7 @@ export class WorkOrderService {
         assignedTo: {
           ...assignedToWithoutOrders,
           hasActiveOrder,
+          specialties,
         },
       }
     }
