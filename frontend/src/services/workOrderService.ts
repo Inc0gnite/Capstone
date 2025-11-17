@@ -40,6 +40,9 @@ export interface WorkOrder {
     firstName: string
     lastName: string
     email: string
+    phone?: string
+    isActive?: boolean
+    hasActiveOrder?: boolean
   }
   createdBy?: {
     id: string

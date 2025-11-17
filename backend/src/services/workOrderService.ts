@@ -130,6 +130,16 @@ export class WorkOrderService {
             lastName: true,
             email: true,
             phone: true,
+            isActive: true,
+            assignedWorkOrders: {
+              where: {
+                currentStatus: 'en_progreso',
+                id: { not: id }, // Excluir la orden actual
+              },
+              select: {
+                id: true,
+              },
+            },
           },
         },
         createdBy: {
@@ -156,6 +166,25 @@ export class WorkOrderService {
 
     if (!workOrder) {
       throw new Error('Orden de trabajo no encontrada')
+    }
+
+    // Agregar información de si el mecánico tiene una orden activa
+    if (workOrder.assignedTo) {
+      // Verificar si tiene otra orden en progreso (excluyendo la actual)
+      const hasOtherActiveOrder = workOrder.assignedTo.assignedWorkOrders.length > 0
+      // O si la orden actual está en progreso
+      const currentOrderInProgress = workOrder.currentStatus === 'en_progreso'
+      const hasActiveOrder = hasOtherActiveOrder || currentOrderInProgress
+      
+      // Remover assignedWorkOrders del objeto antes de retornar
+      const { assignedWorkOrders, ...assignedToWithoutOrders } = workOrder.assignedTo
+      return {
+        ...workOrder,
+        assignedTo: {
+          ...assignedToWithoutOrders,
+          hasActiveOrder,
+        },
+      }
     }
 
     return workOrder

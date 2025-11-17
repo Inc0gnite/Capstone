@@ -7,7 +7,8 @@ interface Mechanic {
   email: string
   phone?: string
   specialties?: string[]
-  isActive: boolean
+  isActive?: boolean
+  hasActiveOrder?: boolean
 }
 
 interface MechanicInfoDropdownProps {
@@ -121,11 +122,23 @@ export function MechanicInfoDropdown({ mechanic, children }: MechanicInfoDropdow
             {/* Estado */}
             <div className="space-y-3">
               <h4 className="font-semibold text-gray-900 text-sm uppercase tracking-wide">Estado</h4>
-              <div className="flex items-center space-x-2">
-                <div className={`w-3 h-3 rounded-full ${mechanic.isActive ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                <span className={`text-sm font-medium ${mechanic.isActive ? 'text-green-700' : 'text-red-700'}`}>
-                  {mechanic.isActive ? 'Activo' : 'Inactivo'}
-                </span>
+              <div className="space-y-2">
+                {/* Estado del usuario en el sistema */}
+                <div className="flex items-center space-x-2">
+                  <div className={`w-3 h-3 rounded-full ${mechanic.isActive !== false ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                  <span className={`text-sm font-medium ${mechanic.isActive !== false ? 'text-green-700' : 'text-red-700'}`}>
+                    {mechanic.isActive !== false ? 'Usuario Activo' : 'Usuario Inactivo'}
+                  </span>
+                </div>
+                {/* Estado de trabajo */}
+                {mechanic.hasActiveOrder !== undefined && (
+                  <div className="flex items-center space-x-2">
+                    <div className={`w-3 h-3 rounded-full ${mechanic.hasActiveOrder ? 'bg-blue-500 animate-pulse' : 'bg-gray-400'}`}></div>
+                    <span className={`text-sm font-medium ${mechanic.hasActiveOrder ? 'text-blue-700' : 'text-gray-700'}`}>
+                      {mechanic.hasActiveOrder ? '🔧 En Trabajo (Tiene orden activa)' : '✅ Disponible (Sin órdenes activas)'}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
