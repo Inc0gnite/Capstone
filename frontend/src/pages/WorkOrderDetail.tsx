@@ -70,9 +70,11 @@ export default function WorkOrderDetail() {
       console.log('✅ Orden cargada:', order)
       console.log('📅 Fechas de la orden:', {
         createdAt: order.createdAt,
+        startedAt: order.startedAt,
         updatedAt: order.updatedAt,
         completedAt: order.completedAt
       })
+      console.log('⏸️ Pausas de la orden:', order.pauses)
       setWorkOrder(order)
 
       if (order.entryId) {

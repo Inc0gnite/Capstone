@@ -32,10 +32,24 @@ export function WorkOrderTimer({
     const calculateTimes = () => {
       const now = new Date()
       const startDate = new Date(startedAt)
-      const endDate = completedAt ? new Date(completedAt) : now
+      
+      // Validar que startedAt sea válido
+      if (isNaN(startDate.getTime())) {
+        console.error('❌ startedAt inválido:', startedAt)
+        return
+      }
 
-      // Calcular tiempo total transcurrido
-      const totalElapsed = endDate.getTime() - startDate.getTime()
+      // Usar completedAt si existe, sino usar now
+      const endDate = completedAt ? new Date(completedAt) : now
+      
+      // Validar que endDate sea válido
+      if (isNaN(endDate.getTime())) {
+        console.error('❌ endDate inválido:', completedAt || 'now')
+        return
+      }
+
+      // Calcular tiempo total transcurrido desde que se inició
+      const totalElapsed = Math.max(0, endDate.getTime() - startDate.getTime())
 
       // Calcular tiempo total en pausa (pausas completadas)
       let totalPauseTime = 0
@@ -44,7 +58,14 @@ export function WorkOrderTimer({
           // Pausa completada
           const pauseStart = new Date(pause.pausedAt)
           const pauseEnd = new Date(pause.resumedAt)
-          totalPauseTime += pauseEnd.getTime() - pauseStart.getTime()
+          
+          // Validar fechas de pausa
+          if (!isNaN(pauseStart.getTime()) && !isNaN(pauseEnd.getTime())) {
+            const pauseDuration = pauseEnd.getTime() - pauseStart.getTime()
+            if (pauseDuration > 0) {
+              totalPauseTime += pauseDuration
+            }
+          }
         }
       })
 
@@ -54,14 +75,16 @@ export function WorkOrderTimer({
         const activePause = pauses.find((p) => !p.resumedAt)
         if (activePause) {
           const pauseStart = new Date(activePause.pausedAt)
-          currentPause = now.getTime() - pauseStart.getTime()
+          if (!isNaN(pauseStart.getTime())) {
+            currentPause = Math.max(0, now.getTime() - pauseStart.getTime())
+          }
         }
       }
 
       // Tiempo activo = tiempo total - tiempo en pausa
-      const active = totalElapsed - totalPauseTime - currentPause
+      const active = Math.max(0, totalElapsed - totalPauseTime - currentPause)
 
-      setActiveTime(Math.max(0, active))
+      setActiveTime(active)
       setPauseTime(totalPauseTime)
       setCurrentPauseTime(currentPause)
     }
@@ -154,17 +177,19 @@ export function WorkOrderTimer({
           </div>
         </div>
 
-        {/* Tiempo en Pausa (si hay) */}
-        {(pauseTime > 0 || currentPauseTime > 0) && (
+        {/* Tiempo en Pausa (siempre mostrar si hay pausas o está pausado) */}
+        {(pauseTime > 0 || currentPauseTime > 0 || (currentStatus === 'pausado' && pauses.length > 0)) && (
           <div className="flex items-center justify-between p-3 bg-orange-50 rounded-lg border border-orange-200">
             <div className="flex items-center space-x-2">
               <span className="text-orange-600 text-lg">⏸️</span>
               <div>
                 <p className="text-xs font-medium text-orange-900">Tiempo en Pausa</p>
                 <p className="text-xs text-orange-700">
-                  {currentStatus === 'pausado' && !completedAt && currentPauseTime > 0
+                  {currentStatus === 'pausado' && !completedAt
                     ? 'Pausa actual'
-                    : 'Pausas anteriores'}
+                    : pauseTime > 0
+                    ? 'Pausas anteriores'
+                    : 'Sin tiempo en pausa'}
                 </p>
               </div>
             </div>
