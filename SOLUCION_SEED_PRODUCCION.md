@@ -45,11 +45,12 @@ Esto creará:
 Después de ejecutar el seed, podrás usar:
 
 ```
-Admin:       admin@pepsico.cl / admin123
-Guardia:     guardia@pepsico.cl / admin123
-Recepción:   recepcion@pepsico.cl / admin123
-Mecánico:    mecanico1@pepsico.cl / admin123
-Jefe Taller: jefe@pepsico.cl / admin123
+Admin:              admin@pepsico.cl / admin123
+Guardia:            guardia@pepsico.cl / admin123
+Recepción:          recepcion@pepsico.cl / admin123
+Mecánico:            mecanico1@pepsico.cl / admin123
+Jefe Taller:        jefe@pepsico.cl / admin123
+Encargado Inventario: inventario@pepsico.cl / admin123
 ```
 
 ---

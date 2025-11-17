@@ -77,7 +77,7 @@ Para verificar que todo funciona correctamente:
    - Admin: `admin@pepsico.cl` / `admin123`
    - Mecánico: `mecanico1@pepsico.cl` / `admin123`
    - Jefe de Taller: `jefe@pepsico.cl` / `admin123`
-   - Inventario: Revisar credenciales en seed
+   - Encargado de Inventario: `inventario@pepsico.cl` / `admin123`
 
 2. **Verifica en la consola:**
    - Deberías ver: `🎯 Rol detectado: [ROL]`

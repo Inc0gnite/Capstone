@@ -12,7 +12,7 @@ Tu base de datos en Neon está **completamente configurada y poblada** con todos
 
 | Tabla | Cantidad | Estado |
 |-------|----------|--------|
-| 👤 Usuarios | **6** | ✅ Activos |
+| 👤 Usuarios | **7** | ✅ Activos |
 | 🎭 Roles | **6** | ✅ Creados |
 | 🚛 Vehículos | **4** | ✅ Registrados |
 | 📝 Ingresos | **1** | ✅ Creado |
@@ -50,6 +50,10 @@ Todos los usuarios están activos y listos para usar:
 6. **👨‍💼 Luis López** - `jefe@pepsico.cl`
    - Rol: **Jefe de Taller**
    - Acceso: Supervisión del taller
+
+7. **📦 Roberto Fernández** - `inventario@pepsico.cl`
+   - Rol: **Encargado de Inventario**
+   - Acceso: Gestión de repuestos e inventario
 
 ---
 
