@@ -50,10 +50,20 @@ export function WorkOrderTimer({
 
       // Calcular tiempo total transcurrido desde que se inició
       const totalElapsed = Math.max(0, endDate.getTime() - startDate.getTime())
+      
+      // Debug: Log para verificar cálculo
+      console.log('⏱️ Cálculo de tiempo:', {
+        startedAt: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        totalElapsedMs: totalElapsed,
+        totalElapsedHours: totalElapsed / (1000 * 60 * 60),
+        pausesCount: pauses.length,
+        currentStatus
+      })
 
       // Calcular tiempo total en pausa (pausas completadas)
       let totalPauseTime = 0
-      pauses.forEach((pause) => {
+      pauses.forEach((pause, index) => {
         if (pause.resumedAt) {
           // Pausa completada
           const pauseStart = new Date(pause.pausedAt)
@@ -64,6 +74,12 @@ export function WorkOrderTimer({
             const pauseDuration = pauseEnd.getTime() - pauseStart.getTime()
             if (pauseDuration > 0) {
               totalPauseTime += pauseDuration
+              console.log(`⏸️ Pausa ${index + 1} completada:`, {
+                pausedAt: pauseStart.toISOString(),
+                resumedAt: pauseEnd.toISOString(),
+                durationMs: pauseDuration,
+                durationHours: pauseDuration / (1000 * 60 * 60)
+              })
             }
           }
         }
@@ -77,9 +93,24 @@ export function WorkOrderTimer({
           const pauseStart = new Date(activePause.pausedAt)
           if (!isNaN(pauseStart.getTime())) {
             currentPause = Math.max(0, now.getTime() - pauseStart.getTime())
+            console.log('⏸️ Pausa actual:', {
+              pausedAt: pauseStart.toISOString(),
+              now: now.toISOString(),
+              durationMs: currentPause,
+              durationHours: currentPause / (1000 * 60 * 60)
+            })
           }
+        } else {
+          console.warn('⚠️ Orden está pausada pero no se encontró pausa activa en el array')
         }
       }
+      
+      console.log('⏱️ Resumen de tiempos:', {
+        totalElapsedMs: totalElapsed,
+        totalPauseTimeMs: totalPauseTime,
+        currentPauseMs: currentPause,
+        activeTimeMs: totalElapsed - totalPauseTime - currentPause
+      })
 
       // Tiempo activo = tiempo total - tiempo en pausa
       const active = Math.max(0, totalElapsed - totalPauseTime - currentPause)
@@ -177,8 +208,8 @@ export function WorkOrderTimer({
           </div>
         </div>
 
-        {/* Tiempo en Pausa (siempre mostrar si hay pausas o está pausado) */}
-        {(pauseTime > 0 || currentPauseTime > 0 || (currentStatus === 'pausado' && pauses.length > 0)) && (
+        {/* Tiempo en Pausa (siempre mostrar si está pausado o hay pausas) */}
+        {(currentStatus === 'pausado' || pauseTime > 0 || currentPauseTime > 0 || pauses.length > 0) && (
           <div className="flex items-center justify-between p-3 bg-orange-50 rounded-lg border border-orange-200">
             <div className="flex items-center space-x-2">
               <span className="text-orange-600 text-lg">⏸️</span>
