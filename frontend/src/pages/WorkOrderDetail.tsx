@@ -450,14 +450,6 @@ export default function WorkOrderDetail() {
                       </button>
                     </>
                   )}
-                  {workOrder.currentStatus === 'pausado' && (
-                    <button
-                      onClick={() => handleStatusChange('en_progreso')}
-                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium transition-colors text-sm sm:text-base whitespace-nowrap"
-                    >
-                      ▶️ Reanudar
-                    </button>
-                  )}
                 </div>
               )}
             </div>
