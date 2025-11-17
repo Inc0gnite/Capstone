@@ -1,0 +1,28 @@
+,,,,,,,,,
+,,,,,,,,,
+,,,,,,,,,
+,Actividad / Tarea,Joaquín Marín,Benjamin Vilches,Alexis González,Docente,Usuarios Finales,,R (Responsable):,quien ejecuta la tarea.
+,Fase 1: Planificación,,,,,,,A (Aprueba): ,quien toma la decisión final / dueño del entregable.
+,Elaborar Acta de Constitución,R,C,A,I,I,,C (Consultado): ,aporta información / feedback.
+,Desarrollar EDT (Estructura de Desglose de Trabajo),R,C,A,I,I,,I (Informado): ,se mantiene al tanto de los avances.
+,Crear Carta Gantt,C,R,A,I,I,,,
+,Elaborar Matriz de Riesgos,R,R,A,I,I,,Proyecto:,Plataforma de Gestión de Ingreso de Vehículos para PepsiCo Chile
+,Fase 2: Análisis y Diseño,,,,,,,Equipo:,Joaquín Marín (J) / Benjamin Vilches (B)
+,Levantar Requisitos (ERS),R,C,A,I,C,,Patrocinador: ,Alexis González (Simulado) (AG)
+,Diseñar Modelo de Datos (Diagrama ER),C,R,A,I,I,,Stakeholders:,"Usuarios Finales (UF), Docente (D)"
+,Diseñar Arquitectura de Software (API),C,R,A,I,I,,,
+,Crear Mockups de Interfaz (UI/UX),R,C,A,I,C,,,
+,Fase 3: Construcción,,,,,,,,
+,Configurar Entorno de Desarrollo,C,R,I,I,I,,,
+,"Desarrollo Backend (API, Lógica)",C,R,I,I,I,,,
+,Desarrollo Frontend (Interfaces),R,C,I,I,I,,,
+,Implementar Base de Datos,C,R,I,I,I,,,
+,Fase 4: Pruebas,,,,,,,,
+,Elaborar Plan de Pruebas,R,R,I,I,I,,,
+,"Ejecutar Pruebas (Unitarias, Integración)",R,R,I,I,I,,,
+,Corregir Errores (Debugging),R,R,I,I,I,,,
+,Fase 5: Implementación y Cierre,,,,,,,,
+,Documentación Técnica,C,R,I,I,I,,,
+,Manual de Usuario,R,C,I,I,I,,,
+,Elaborar Informe Final,R,C,A,A,I,,,
+,Preparar Presentación Final,R,R,I,I,I,,,

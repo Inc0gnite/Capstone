@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Token Persistence</title>
+</head>
+<body>
+    <h1>Test Token Persistence</h1>
+    <div id="result"></div>
+    <button onclick="testTokenPersistence()">Probar Persistencia</button>
+    <button onclick="checkTokens()">Verificar Tokens</button>
+    <button onclick="clearAll()">Limpiar Todo</button>
+    
+    <script>
+        async function testTokenPersistence() {
+            const result = document.getElementById('result');
+            result.innerHTML = 'Probando persistencia de tokens...';
+            
+            try {
+                console.log('🔐 Paso 1: Haciendo login...');
+                
+                const response = await fetch('http://localhost:3000/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: 'guardia@pepsico.cl',
+                        password: 'admin123'
+                    })
+                });
+                
+                const data = await response.json();
+                console.log('📊 Respuesta del login:', data);
+                
+                if (data.success) {
+                    console.log('🔐 Paso 2: Guardando tokens...');
+                    
+                    // Guardar tokens
+                    sessionStorage.setItem('accessToken', data.data.accessToken);
+                    sessionStorage.setItem('refreshToken', data.data.refreshToken);
+                    
+                    console.log('💾 Tokens guardados:', {
+                        accessToken: data.data.accessToken ? 'OK' : 'ERROR',
+                        refreshToken: data.data.refreshToken ? 'OK' : 'ERROR'
+                    });
+                    
+                    // Verificar inmediatamente
+                    console.log('🔍 Paso 3: Verificando tokens inmediatamente...');
+                    const accessToken = sessionStorage.getItem('accessToken');
+                    const refreshToken = sessionStorage.getItem('refreshToken');
+                    
+                    console.log('🔍 Tokens encontrados:', {
+                        accessToken: accessToken ? `OK (${accessToken.length} chars)` : 'ERROR',
+                        refreshToken: refreshToken ? `OK (${refreshToken.length} chars)` : 'ERROR'
+                    });
+                    
+                    // Esperar un poco y verificar de nuevo
+                    setTimeout(() => {
+                        console.log('🔍 Paso 4: Verificando tokens después de 2 segundos...');
+                        const accessToken2 = sessionStorage.getItem('accessToken');
+                        const refreshToken2 = sessionStorage.getItem('refreshToken');
+                        
+                        console.log('🔍 Tokens después de 2 segundos:', {
+                            accessToken: accessToken2 ? `OK (${accessToken2.length} chars)` : 'ERROR',
+                            refreshToken: refreshToken2 ? `OK (${refreshToken2.length} chars)` : 'ERROR'
+                        });
+                        
+                        result.innerHTML = `
+                            <div style="color: green;">
+                                ✅ Login exitoso<br>
+                                Usuario: ${data.data.user.firstName} ${data.data.user.lastName}<br>
+                                Rol: ${data.data.user.role.name}<br>
+                                Token inmediato: ${accessToken ? 'OK' : 'ERROR'}<br>
+                                Token después de 2s: ${accessToken2 ? 'OK' : 'ERROR'}<br>
+                                SessionStorage keys: ${Object.keys(sessionStorage).join(', ')}
+                            </div>
+                        `;
+                    }, 2000);
+                    
+                } else {
+                    result.innerHTML = `<div style="color: red;">❌ Error: ${data.error}</div>`;
+                }
+            } catch (error) {
+                console.error('❌ Error:', error);
+                result.innerHTML = `<div style="color: red;">❌ Error: ${error.message}</div>`;
+            }
+        }
+        
+        function checkTokens() {
+            const result = document.getElementById('result');
+            const accessToken = sessionStorage.getItem('accessToken');
+            const refreshToken = sessionStorage.getItem('refreshToken');
+            
+            result.innerHTML = `
+                <div>
+                    <strong>Estado actual de tokens:</strong><br>
+                    Access Token: ${accessToken ? `OK (${accessToken.length} chars)` : 'AUSENTE'}<br>
+                    Refresh Token: ${refreshToken ? `OK (${refreshToken.length} chars)` : 'AUSENTE'}<br>
+                    SessionStorage keys: ${Object.keys(sessionStorage).join(', ')}<br>
+                    SessionStorage size: ${JSON.stringify(sessionStorage).length} chars
+                </div>
+            `;
+        }
+        
+        function clearAll() {
+            sessionStorage.clear();
+            document.getElementById('result').innerHTML = '<div style="color: orange;">🗑️ SessionStorage limpiado</div>';
+        }
+        
+        // Verificar estado al cargar
+        window.onload = function() {
+            checkTokens();
+        };
+    </script>
+</body>
+</html>
+
+
