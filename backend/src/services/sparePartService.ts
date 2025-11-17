@@ -1,5 +1,6 @@
 import prisma from '../config/database'
 import type { SparePartFilters } from '../types'
+import type { SparePart } from '@prisma/client'
 import notificationService from './notificationService'
 
 /**
