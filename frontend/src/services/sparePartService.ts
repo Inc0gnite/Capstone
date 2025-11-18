@@ -211,12 +211,18 @@ export const sparePartService = {
   },
 
   // Ajustar stock de repuesto
-  async adjustStock(id: string, quantity: number, reason: string) {
+  async adjustStock(id: string, quantity: number, reason: string, movementType: 'entrada' | 'salida' | 'ajuste' = 'ajuste', reference?: string) {
     const response = await api.post(`/spare-parts/${id}/adjust-stock`, {
       quantity,
-      movementType: 'ajuste',
-      reason
+      movementType,
+      reason,
+      reference
     })
     return response.data
+  },
+
+  // Ingresar repuestos (entrada de stock)
+  async entryStock(id: string, quantity: number, reason: string, reference?: string) {
+    return this.adjustStock(id, quantity, reason, 'entrada', reference)
   }
 }

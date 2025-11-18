@@ -26,6 +26,7 @@ import Inventory from './pages/Inventory'
 import Workshops from './pages/Workshops'
 import Notifications from './pages/Notifications'
 import SparePartRequests from './pages/SparePartRequests'
+import SparePartEntry from './pages/SparePartEntry'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -194,6 +195,14 @@ function App() {
             element={
               <RoleBasedRoute allowedRoles={['Jefe de Taller', 'Administrador']}>
                 <SparePartRequests />
+              </RoleBasedRoute>
+            }
+          />
+          <Route
+            path="/spare-part-entry"
+            element={
+              <RoleBasedRoute allowedRoles={['Administrador', 'Jefe de Taller', 'Encargado de Inventario']}>
+                <SparePartEntry />
               </RoleBasedRoute>
             }
           />
