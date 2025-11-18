@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { MainLayout } from '../components/Layout/MainLayout'
 import { sparePartService } from '../services/sparePartService'
 import type { SparePart, SparePartFilters, PaginatedResponse } from '../../../shared/types'
@@ -342,24 +341,15 @@ export default function Inventory() {
             <p className="text-sm sm:text-base text-gray-600">Listado y búsqueda de repuestos</p>
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
-            {/* Solo mostrar botones si no es mecánico */}
+            {/* Solo mostrar botón de crear si no es mecánico */}
             {((user as any)?.role?.name || '') !== 'Mecánico' && (
-              <>
-                <Link
-                  to="/spare-part-entry"
-                  className="px-3 sm:px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors text-sm sm:text-base"
-                >
-                  <span className="sm:hidden">📥</span>
-                  <span className="hidden sm:inline">📥 Ingreso de Repuestos</span>
-                </Link>
-                <button
-                  onClick={openCreate}
-                  className="px-3 sm:px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors text-sm sm:text-base"
-                >
-                  <span className="sm:hidden">+</span>
-                  <span className="hidden sm:inline">+ Agregar repuesto</span>
-                </button>
-              </>
+              <button
+                onClick={openCreate}
+                className="px-3 sm:px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors text-sm sm:text-base"
+              >
+                <span className="sm:hidden">+</span>
+                <span className="hidden sm:inline">+ Agregar repuesto</span>
+              </button>
             )}
             <div className="text-xs sm:text-sm text-gray-500">{total} repuestos</div>
           </div>
