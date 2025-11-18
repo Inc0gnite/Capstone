@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer'
+// @ts-ignore - resend es un módulo ESM
 import { Resend } from 'resend'
 import sgMail from '@sendgrid/mail'
 

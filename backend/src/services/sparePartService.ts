@@ -632,7 +632,7 @@ export class SparePartService {
 
     // Procesar todas las solicitudes agrupadas en una transacción
     const result = await prisma.$transaction(async (tx) => {
-      const createdRequests = []
+      const createdRequests: any[] = []
 
       for (const request of Array.from(groupedRequests.values())) {
         // Verificar stock nuevamente dentro de la transacción
