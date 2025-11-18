@@ -1,7 +1,14 @@
 import nodemailer from 'nodemailer'
-// @ts-ignore - resend es un módulo ESM
-import { Resend } from 'resend'
 import sgMail from '@sendgrid/mail'
+
+// Resend es un módulo ESM, lo importamos dinámicamente si es necesario
+let Resend: any = null
+try {
+  // @ts-ignore - resend es un módulo ESM
+  Resend = require('resend').Resend
+} catch (e) {
+  // Resend no disponible
+}
 
 // Configuración SendGrid (RECOMENDADO - No requiere dominio verificado)
 const sendgridApiKey = process.env.SENDGRID_API_KEY
@@ -28,7 +35,7 @@ if (useSendGrid) {
 }
 
 // Inicializar Resend si está configurado
-const resend = useResend ? new Resend(resendApiKey) : null
+const resend = useResend && Resend ? new Resend(resendApiKey) : null
 
 // Logging de configuración
 if (useSendGrid) {
