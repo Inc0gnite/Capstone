@@ -149,6 +149,38 @@ router.post(
   sparePartController.adjustStock
 )
 
+/**
+ * GET /api/spare-parts/requests/pending
+ * Obtener solicitudes pendientes de aprobación (solo para jefes de taller)
+ */
+router.get(
+  '/requests/pending',
+  authorize('spare-parts', 'read'),
+  sparePartController.getPendingRequests
+)
+
+/**
+ * POST /api/spare-parts/requests/:id/approve
+ * Aprobar solicitud de repuesto (solo para jefes de taller)
+ */
+router.post(
+  '/requests/:id/approve',
+  authorize('spare-parts', 'update'),
+  auditLog('approve-request', 'spare-parts'),
+  sparePartController.approveRequest
+)
+
+/**
+ * POST /api/spare-parts/requests/:id/reject
+ * Rechazar solicitud de repuesto (solo para jefes de taller)
+ */
+router.post(
+  '/requests/:id/reject',
+  authorize('spare-parts', 'update'),
+  auditLog('reject-request', 'spare-parts'),
+  sparePartController.rejectRequest
+)
+
 export default router
 
 

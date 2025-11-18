@@ -223,6 +223,49 @@ export class SparePartController {
       return sendError(res, error.message, 400)
     }
   }
+
+  /**
+   * GET /api/spare-parts/requests/pending
+   * Obtener solicitudes pendientes de aprobación
+   */
+  async getPendingRequests(req: Request, res: Response) {
+    try {
+      const { workshopId } = req.query
+      const requests = await sparePartService.getPendingRequests(workshopId as string)
+      return sendSuccess(res, requests)
+    } catch (error: any) {
+      return sendError(res, error.message, 500)
+    }
+  }
+
+  /**
+   * POST /api/spare-parts/requests/:id/approve
+   * Aprobar solicitud de repuesto
+   */
+  async approveRequest(req: Request, res: Response) {
+    try {
+      const { id } = req.params
+      const request = await sparePartService.approveRequest(id, req.user!.userId)
+      return sendSuccess(res, request, 'Solicitud aprobada exitosamente')
+    } catch (error: any) {
+      return sendError(res, error.message, 400)
+    }
+  }
+
+  /**
+   * POST /api/spare-parts/requests/:id/reject
+   * Rechazar solicitud de repuesto
+   */
+  async rejectRequest(req: Request, res: Response) {
+    try {
+      const { id } = req.params
+      const { reason } = req.body
+      const request = await sparePartService.rejectRequest(id, req.user!.userId, reason)
+      return sendSuccess(res, request, 'Solicitud rechazada exitosamente')
+    } catch (error: any) {
+      return sendError(res, error.message, 400)
+    }
+  }
 }
 
 export default new SparePartController()

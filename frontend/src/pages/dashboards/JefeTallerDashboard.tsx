@@ -3,9 +3,10 @@ import { MechanicCapacityList } from '../../components/MechanicCapacityIndicator
 import { mechanicCapacityService } from '../../services/mechanicCapacityService'
 import { dashboardService } from '../../services/dashboardService'
 import { workOrderService } from '../../services/workOrderService'
+import { sparePartService } from '../../services/sparePartService'
 import { useAuthStore } from '../../store/authStore'
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { sortWorkOrders } from '../../utils/workOrderSorting'
 
 export default function JefeTallerDashboard() {
@@ -19,6 +20,7 @@ export default function JefeTallerDashboard() {
   const [loadingOrders, setLoadingOrders] = useState(false)
   const [mechanicsPerformance, setMechanicsPerformance] = useState<any[]>([])
   const [loadingPerformance, setLoadingPerformance] = useState(false)
+  const [pendingRequestsCount, setPendingRequestsCount] = useState(0)
 
   useEffect(() => {
     if (user?.workshopId) {
@@ -31,8 +33,20 @@ export default function JefeTallerDashboard() {
       loadMechanicCapacity(),
       loadStats(),
       loadWorkOrders(),
-      loadMechanicsPerformance()
+      loadMechanicsPerformance(),
+      loadPendingRequests()
     ])
+  }
+
+  const loadPendingRequests = async () => {
+    if (!user?.workshopId) return
+
+    try {
+      const requests = await sparePartService.getPendingRequests(user.workshopId)
+      setPendingRequestsCount(requests?.length || 0)
+    } catch (error) {
+      console.error('Error cargando solicitudes pendientes:', error)
+    }
   }
 
   const loadMechanicCapacity = async () => {
@@ -102,9 +116,20 @@ export default function JefeTallerDashboard() {
     <MainLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Supervisión del Taller</h2>
-          <p className="text-gray-600">Monitoreo y control de operaciones</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">Supervisión del Taller</h2>
+            <p className="text-gray-600">Monitoreo y control de operaciones</p>
+          </div>
+          {pendingRequestsCount > 0 && (
+            <Link
+              to="/spare-part-requests"
+              className="px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-medium transition-colors flex items-center space-x-2 shadow-md"
+            >
+              <span>📋</span>
+              <span>Solicitudes Pendientes ({pendingRequestsCount})</span>
+            </Link>
+          )}
         </div>
 
         {/* Stats Cards */}

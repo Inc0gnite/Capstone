@@ -189,5 +189,24 @@ export const sparePartService = {
       quantityToReturn
     })
     return response.data
+  },
+
+  // Obtener solicitudes pendientes de aprobación
+  async getPendingRequests(workshopId?: string) {
+    const params = workshopId ? `?workshopId=${workshopId}` : ''
+    const response = await api.get(`/spare-parts/requests/pending${params}`)
+    return response.data.data
+  },
+
+  // Aprobar solicitud de repuesto
+  async approveRequest(requestId: string) {
+    const response = await api.post(`/spare-parts/requests/${requestId}/approve`)
+    return response.data
+  },
+
+  // Rechazar solicitud de repuesto
+  async rejectRequest(requestId: string, reason?: string) {
+    const response = await api.post(`/spare-parts/requests/${requestId}/reject`, { reason })
+    return response.data
   }
 }

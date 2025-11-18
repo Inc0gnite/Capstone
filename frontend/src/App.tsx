@@ -25,6 +25,7 @@ import ResetPassword from './pages/ResetPassword'
 import Inventory from './pages/Inventory'
 import Workshops from './pages/Workshops'
 import Notifications from './pages/Notifications'
+import SparePartRequests from './pages/SparePartRequests'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -185,6 +186,14 @@ function App() {
             element={
               <RoleBasedRoute allowedRoles={['Jefe de Taller', 'Administrador']}>
                 <TeamPerformance />
+              </RoleBasedRoute>
+            }
+          />
+          <Route
+            path="/spare-part-requests"
+            element={
+              <RoleBasedRoute allowedRoles={['Jefe de Taller', 'Administrador']}>
+                <SparePartRequests />
               </RoleBasedRoute>
             }
           />

@@ -427,74 +427,66 @@ export class SparePartService {
         throw new Error(`Stock insuficiente para ${currentSparePart.name}. Disponible: ${currentSparePart.currentStock}, Solicitado: ${quantity}`)
       }
 
-      // Crear solicitud
-      const request = await tx.workOrderSparePart.create({
-        data: {
+      // Verificar si ya existe una solicitud del mismo repuesto para esta orden
+      const existingRequest = await tx.workOrderSparePart.findFirst({
+        where: {
           workOrderId,
           sparePartId,
-          quantityRequested: quantity,
-          observations,
-          status: 'solicitado',
-        },
-        include: {
-          sparePart: true,
+          status: { in: ['solicitado', 'entregado'] }, // Solo considerar solicitudes activas
         },
       })
 
-      // Descontar stock
-      const newStock = currentSparePart.currentStock - quantity
-      const updatedPart = await tx.sparePart.update({
-        where: { id: sparePartId },
-        data: { currentStock: newStock },
-        select: {
-          id: true,
-          currentStock: true,
-          minStock: true,
-        },
-      })
+      let request
+      const now = new Date()
 
-      // Registrar movimiento
-      await tx.sparePartMovement.create({
-        data: {
-          sparePartId,
-          movementType: 'salida',
-          quantity,
-          previousStock: currentSparePart.currentStock,
-          newStock,
-          reason: 'Solicitud para orden de trabajo',
-          reference: workOrder.orderNumber,
-        },
-      })
+      if (existingRequest) {
+        // Si existe y está en estado 'solicitado', actualizar la cantidad solicitada
+        // Si está en estado 'entregado', 'usado' o 'sobrante', no se puede modificar
+        if (existingRequest.status !== 'solicitado') {
+          throw new Error(`No se puede modificar una solicitud que ya está ${existingRequest.status}`)
+        }
 
-      return { request, updatedPart }
+        const newQuantityRequested = existingRequest.quantityRequested + quantity
+
+        // Actualizar solicitud existente (sin descontar stock aún, espera aprobación)
+        request = await tx.workOrderSparePart.update({
+          where: { id: existingRequest.id },
+          data: {
+            quantityRequested: newQuantityRequested,
+            observations: observations 
+              ? (existingRequest.observations ? `${existingRequest.observations}\n${observations}` : observations)
+              : existingRequest.observations,
+            // Mantener estado 'solicitado' hasta aprobación del jefe de taller
+          },
+          include: {
+            sparePart: true,
+          },
+        })
+
+        return { request, updatedPart: currentSparePart }
+      } else {
+        // Si no existe, crear nueva solicitud en estado 'solicitado' (sin descontar stock)
+        request = await tx.workOrderSparePart.create({
+          data: {
+            workOrderId,
+            sparePartId,
+            quantityRequested: quantity,
+            observations,
+            status: 'solicitado', // Estado 'solicitado' pendiente de aprobación del jefe de taller
+          },
+          include: {
+            sparePart: true,
+          },
+        })
+
+        return { request, updatedPart: currentSparePart }
+      }
     })
 
-    // Notificar solicitud de repuesto
+    // Notificar a jefes de taller sobre nueva solicitud pendiente de aprobación
     notificationService
       .notifySparePartRequested(result.request.id)
       .catch((error) => console.error('❌ Error notificando solicitud de repuesto:', error))
-
-    // Verificar stock crítico después de descontar
-    const criticalThreshold = result.updatedPart.minStock ? result.updatedPart.minStock / 2 : 0
-    if (result.updatedPart.currentStock <= criticalThreshold || result.updatedPart.currentStock <= 0) {
-      notificationService
-        .notifyCriticalStock(result.updatedPart.id)
-        .catch((error) => console.error('❌ Error notificando stock crítico:', error))
-    } else if (result.updatedPart.currentStock <= result.updatedPart.minStock) {
-      notificationService
-        .notifyLowStock(result.updatedPart.id)
-        .catch((error) => console.error('❌ Error notificando stock bajo:', error))
-    }
-
-    // Notificar a jefes de taller si el stock queda por debajo de 10
-    if (result.updatedPart.currentStock < 10 && result.request.sparePart) {
-      this.notifyWorkshopManagersLowStock(
-        workOrder.workshopId,
-        result.request.sparePart,
-        result.updatedPart.currentStock,
-        workOrder.orderNumber
-      ).catch((error) => console.error('❌ Error notificando a jefes de taller:', error))
-    }
 
     return result.request
   }
@@ -520,19 +512,33 @@ export class SparePartService {
       throw new Error('Debe solicitar al menos un repuesto')
     }
 
-    // Verificar todos los repuestos y stock antes de procesar
+    // Agrupar repuestos duplicados sumando sus cantidades primero
+    const groupedRequests = new Map<string, { sparePartId: string; quantity: number }>()
+    for (const request of requests) {
+      const existing = groupedRequests.get(request.sparePartId)
+      if (existing) {
+        existing.quantity += request.quantity
+      } else {
+        groupedRequests.set(request.sparePartId, { sparePartId: request.sparePartId, quantity: request.quantity })
+      }
+    }
+
+    // Obtener IDs únicos de repuestos para verificar existencia
+    const uniqueSparePartIds = Array.from(new Set(requests.map((r) => r.sparePartId)))
+    
+    // Verificar todos los repuestos y stock después de agrupar
     const spareParts = await prisma.sparePart.findMany({
       where: {
-        id: { in: requests.map((r) => r.sparePartId) },
+        id: { in: uniqueSparePartIds },
       },
     })
 
-    if (spareParts.length !== requests.length) {
+    if (spareParts.length !== uniqueSparePartIds.length) {
       throw new Error('Uno o más repuestos no fueron encontrados')
     }
 
-    // Validar stock para cada repuesto
-    for (const request of requests) {
+    // Validar stock para cada repuesto agrupado (considerando cantidad total)
+    for (const request of Array.from(groupedRequests.values())) {
       const sparePart = spareParts.find((p) => p.id === request.sparePartId)
       if (!sparePart) {
         throw new Error(`Repuesto ${request.sparePartId} no encontrado`)
@@ -549,11 +555,12 @@ export class SparePartService {
       }
     }
 
-    // Procesar todas las solicitudes en una transacción
+    // Procesar todas las solicitudes agrupadas en una transacción
     const result = await prisma.$transaction(async (tx) => {
       const createdRequests = []
+      const now = new Date()
 
-      for (const request of requests) {
+      for (const request of Array.from(groupedRequests.values())) {
         // Verificar stock nuevamente dentro de la transacción
         const currentSparePart = await tx.sparePart.findUnique({
           where: { id: request.sparePartId },
@@ -575,60 +582,53 @@ export class SparePartService {
           )
         }
 
-        // Crear solicitud
-        const createdRequest = await tx.workOrderSparePart.create({
-          data: {
+        // Verificar si ya existe una solicitud del mismo repuesto para esta orden
+        const existingRequest = await tx.workOrderSparePart.findFirst({
+          where: {
             workOrderId,
             sparePartId: request.sparePartId,
-            quantityRequested: request.quantity,
-            observations,
-            status: 'solicitado',
-          },
-          include: {
-            sparePart: true,
+            status: { in: ['solicitado', 'entregado'] }, // Solo considerar solicitudes activas
           },
         })
 
-        // Descontar stock
-        const newStock = currentSparePart.currentStock - request.quantity
-        const updatedPart = await tx.sparePart.update({
-          where: { id: request.sparePartId },
-          data: { currentStock: newStock },
-          select: {
-            id: true,
-            currentStock: true,
-            minStock: true,
-          },
-        })
+        let createdRequest
 
-        // Registrar movimiento
-        await tx.sparePartMovement.create({
-          data: {
-            sparePartId: request.sparePartId,
-            movementType: 'salida',
-            quantity: request.quantity,
-            previousStock: currentSparePart.currentStock,
-            newStock,
-            reason: 'Solicitud para orden de trabajo',
-            reference: workOrder.orderNumber,
-          },
-        })
-
-        // Notificar a jefes de taller si el stock queda por debajo de 10
-        if (updatedPart.currentStock < 10) {
-          // Obtener el repuesto completo para la notificación
-          const sparePartFull = await tx.sparePart.findUnique({
-            where: { id: request.sparePartId },
-          })
-          
-          if (sparePartFull) {
-            this.notifyWorkshopManagersLowStock(
-              workOrder.workshopId,
-              sparePartFull,
-              updatedPart.currentStock,
-              workOrder.orderNumber
-            ).catch((error) => console.error('❌ Error notificando a jefes de taller:', error))
+        if (existingRequest) {
+          // Si existe y está en estado 'solicitado', actualizar la cantidad solicitada
+          if (existingRequest.status !== 'solicitado') {
+            throw new Error(`No se puede modificar una solicitud que ya está ${existingRequest.status}`)
           }
+
+          const newQuantityRequested = existingRequest.quantityRequested + request.quantity
+
+          // Actualizar solicitud existente (sin descontar stock aún, espera aprobación)
+          createdRequest = await tx.workOrderSparePart.update({
+            where: { id: existingRequest.id },
+            data: {
+              quantityRequested: newQuantityRequested,
+              observations: observations 
+                ? (existingRequest.observations ? `${existingRequest.observations}\n${observations}` : observations)
+                : existingRequest.observations,
+              // Mantener estado 'solicitado' hasta aprobación del jefe de taller
+            },
+            include: {
+              sparePart: true,
+            },
+          })
+        } else {
+          // Si no existe, crear nueva solicitud en estado 'solicitado' (sin descontar stock)
+          createdRequest = await tx.workOrderSparePart.create({
+            data: {
+              workOrderId,
+              sparePartId: request.sparePartId,
+              quantityRequested: request.quantity,
+              observations,
+              status: 'solicitado', // Estado 'solicitado' pendiente de aprobación del jefe de taller
+            },
+            include: {
+              sparePart: true,
+            },
+          })
         }
 
         createdRequests.push(createdRequest)
@@ -637,7 +637,259 @@ export class SparePartService {
       return createdRequests
     })
 
+    // Notificar a jefes de taller sobre nuevas solicitudes pendientes de aprobación
+    for (const request of result) {
+      notificationService
+        .notifySparePartRequested(request.id)
+        .catch((error) => console.error('❌ Error notificando solicitud de repuesto:', error))
+    }
+
     return result
+  }
+
+  /**
+   * Obtener solicitudes pendientes de aprobación
+   */
+  async getPendingRequests(workshopId?: string) {
+    const where: any = {
+      status: 'solicitado',
+    }
+
+    if (workshopId) {
+      where.workOrder = {
+        workshopId,
+      }
+    }
+
+    const requests = await prisma.workOrderSparePart.findMany({
+      where,
+      include: {
+        sparePart: true,
+        workOrder: {
+          include: {
+            vehicle: {
+              select: {
+                licensePlate: true,
+              },
+            },
+            assignedTo: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        requestedAt: 'desc',
+      },
+    })
+
+    return requests
+  }
+
+  /**
+   * Aprobar solicitud de repuesto (descontar stock y marcar como entregado)
+   */
+  async approveRequest(id: string, approvedById: string) {
+    const request = await prisma.workOrderSparePart.findUnique({
+      where: { id },
+      include: {
+        sparePart: true,
+        workOrder: true,
+      },
+    })
+
+    if (!request) {
+      throw new Error('Solicitud no encontrada')
+    }
+
+    if (request.status !== 'solicitado') {
+      throw new Error(`No se puede aprobar una solicitud que está en estado ${request.status}`)
+    }
+
+    // Verificar stock disponible
+    if (request.sparePart.currentStock < request.quantityRequested) {
+      throw new Error(
+        `Stock insuficiente para ${request.sparePart.name}. Disponible: ${request.sparePart.currentStock}, Solicitado: ${request.quantityRequested}`
+      )
+    }
+
+    const result = await prisma.$transaction(async (tx) => {
+      // Verificar stock nuevamente dentro de la transacción
+      const currentSparePart = await tx.sparePart.findUnique({
+        where: { id: request.sparePartId },
+      })
+
+      if (!currentSparePart) {
+        throw new Error('Repuesto no encontrado')
+      }
+
+      if (currentSparePart.currentStock < request.quantityRequested) {
+        throw new Error(
+          `Stock insuficiente para ${currentSparePart.name}. Disponible: ${currentSparePart.currentStock}, Solicitado: ${request.quantityRequested}`
+        )
+      }
+
+      // Descontar stock
+      const newStock = currentSparePart.currentStock - request.quantityRequested
+      const now = new Date()
+
+      // Actualizar stock
+      const updatedPart = await tx.sparePart.update({
+        where: { id: request.sparePartId },
+        data: { currentStock: newStock },
+        select: {
+          id: true,
+          currentStock: true,
+          minStock: true,
+        },
+      })
+
+      // Registrar movimiento
+      await tx.sparePartMovement.create({
+        data: {
+          sparePartId: request.sparePartId,
+          movementType: 'salida',
+          quantity: request.quantityRequested,
+          previousStock: currentSparePart.currentStock,
+          newStock,
+          reason: 'Solicitud aprobada por jefe de taller',
+          reference: request.workOrder.orderNumber,
+        },
+      })
+
+      // Actualizar solicitud a estado 'entregado'
+      const updatedRequest = await tx.workOrderSparePart.update({
+        where: { id },
+        data: {
+          status: 'entregado',
+          quantityDelivered: request.quantityRequested,
+          deliveredAt: now,
+        },
+        include: {
+          sparePart: true,
+          workOrder: {
+            include: {
+              vehicle: true,
+              assignedTo: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                },
+              },
+            },
+          },
+        },
+      })
+
+      return { request: updatedRequest, updatedPart }
+    })
+
+    // Notificar al mecánico que el repuesto fue aprobado y entregado
+    notificationService
+      .notifySparePartDelivered(id)
+      .catch((error) => console.error('❌ Error notificando repuesto entregado:', error))
+
+    // Verificar stock crítico después de descontar
+    const criticalThreshold = result.updatedPart.minStock ? result.updatedPart.minStock / 2 : 0
+    if (result.updatedPart.currentStock <= criticalThreshold || result.updatedPart.currentStock <= 0) {
+      notificationService
+        .notifyCriticalStock(result.updatedPart.id)
+        .catch((error) => console.error('❌ Error notificando stock crítico:', error))
+    } else if (result.updatedPart.currentStock <= result.updatedPart.minStock) {
+      notificationService
+        .notifyLowStock(result.updatedPart.id)
+        .catch((error) => console.error('❌ Error notificando stock bajo:', error))
+    }
+
+    // Notificar a jefes de taller si el stock queda por debajo de 10
+    if (result.updatedPart.currentStock < 10 && result.request.sparePart) {
+      this.notifyWorkshopManagersLowStock(
+        request.workOrder.workshopId,
+        result.request.sparePart,
+        result.updatedPart.currentStock,
+        request.workOrder.orderNumber
+      ).catch((error) => console.error('❌ Error notificando a jefes de taller:', error))
+    }
+
+    return result.request
+  }
+
+  /**
+   * Rechazar solicitud de repuesto
+   */
+  async rejectRequest(id: string, rejectedById: string, reason?: string) {
+    const request = await prisma.workOrderSparePart.findUnique({
+      where: { id },
+      include: {
+        sparePart: true,
+        workOrder: {
+          include: {
+            assignedTo: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+              },
+            },
+          },
+        },
+      },
+    })
+
+    if (!request) {
+      throw new Error('Solicitud no encontrada')
+    }
+
+    if (request.status !== 'solicitado') {
+      throw new Error(`No se puede rechazar una solicitud que está en estado ${request.status}`)
+    }
+
+    // Actualizar estado a 'rechazado'
+    const updatedRequest = await prisma.workOrderSparePart.update({
+      where: { id },
+      data: {
+        status: 'rechazado',
+        observations: reason
+          ? (request.observations ? `${request.observations}\n[Rechazado: ${reason}]` : `[Rechazado: ${reason}]`)
+          : request.observations,
+      },
+      include: {
+        sparePart: true,
+        workOrder: {
+          include: {
+            vehicle: true,
+            assignedTo: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+              },
+            },
+          },
+        },
+      },
+    })
+
+    // Notificar al mecánico que la solicitud fue rechazada
+    if (request.workOrder.assignedToId) {
+      notificationService
+        .create({
+          userId: request.workOrder.assignedToId,
+          title: 'Solicitud de repuesto rechazada',
+          message: `Tu solicitud de ${request.quantityRequested} unidad(es) de ${request.sparePart.name} para la orden ${request.workOrder.orderNumber} fue rechazada.${reason ? ` Motivo: ${reason}` : ''}`,
+          type: 'spare_part_rejected',
+          relatedTo: 'work-orders',
+          relatedId: request.workOrderId,
+        })
+        .catch((error) => console.error('❌ Error notificando rechazo de solicitud:', error))
+    }
+
+    return updatedRequest
   }
 
   /**
@@ -656,7 +908,13 @@ export class SparePartService {
       throw new Error('Solicitud no encontrada')
     }
 
-    if (request.status === 'entregado' || request.status === 'usado' || request.status === 'sobrante') {
+    // Si el estado ya es 'entregado', significa que fue entregado automáticamente al solicitar
+    // (el stock se descontó al crear la solicitud)
+    if (request.status === 'entregado') {
+      throw new Error('El repuesto ya fue entregado automáticamente al solicitar (el stock fue descontado)')
+    }
+
+    if (request.status === 'usado' || request.status === 'sobrante') {
       throw new Error('La solicitud ya fue procesada')
     }
 
@@ -665,13 +923,14 @@ export class SparePartService {
       throw new Error(`La cantidad entregada (${quantityDelivered}) no puede ser mayor a la solicitada (${request.quantityRequested})`)
     }
 
-    // NO descontar stock aquí porque ya se descontó al solicitar
-    // Solo actualizar el estado de la solicitud
+    // NOTA: Este método ya no debería usarse normalmente, ya que las solicitudes
+    // se crean directamente con estado 'entregado' cuando se descuenta el stock.
+    // Este método se mantiene por compatibilidad con solicitudes antiguas que aún estén en estado 'solicitado'
     await prisma.workOrderSparePart.update({
       where: { id },
       data: {
         quantityDelivered,
-        status: 'solicitado', // Mantener como solicitado hasta que se marque como usado o sobrante
+        status: 'entregado', // Cambiar a entregado
         deliveredAt: new Date(),
       },
     })
