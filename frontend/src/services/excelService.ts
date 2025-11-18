@@ -95,6 +95,18 @@ export class ExcelService {
       workshop?: { name: string }
       createdAt: string
     }>
+    allMechanics?: Array<{
+      id: string
+      rut: string
+      firstName: string
+      lastName: string
+      email: string
+      phone?: string
+      isActive: boolean
+      role?: { name: string }
+      workshop?: { name: string }
+      createdAt: string
+    }>
   }): void {
     const workbook = XLSX.utils.book_new()
 
@@ -248,7 +260,32 @@ export class ExcelService {
       XLSX.utils.book_append_sheet(workbook, entriesSheet, 'Ingresos de Vehículos')
     }
 
-    // Hoja 7: TODOS los Usuarios (ordenados por nombre)
+    // Hoja 7: MECÁNICOS (ordenados por nombre)
+    if (data.allMechanics && data.allMechanics.length > 0) {
+      const sortedMechanics = [...data.allMechanics].sort((a, b) => {
+        const nameA = `${a.firstName} ${a.lastName}`.toLowerCase()
+        const nameB = `${b.firstName} ${b.lastName}`.toLowerCase()
+        return nameA.localeCompare(nameB)
+      })
+      
+      const mechanicsData = [
+        ['RUT', 'Nombre', 'Apellido', 'Email', 'Teléfono', 'Taller', 'Estado', 'Fecha Creación'],
+        ...sortedMechanics.map((m) => [
+          m.rut,
+          m.firstName,
+          m.lastName,
+          m.email,
+          m.phone || '',
+          m.workshop?.name || 'Sin taller',
+          m.isActive ? 'Activo' : 'Inactivo',
+          m.createdAt ? new Date(m.createdAt).toLocaleDateString('es-CL') : '',
+        ]),
+      ]
+      const mechanicsSheet = XLSX.utils.aoa_to_sheet(mechanicsData)
+      XLSX.utils.book_append_sheet(workbook, mechanicsSheet, 'Mecánicos')
+    }
+
+    // Hoja 8: TODOS los Usuarios (ordenados por nombre)
     if (data.allUsers && data.allUsers.length > 0) {
       const sortedUsers = [...data.allUsers].sort((a, b) => {
         const nameA = `${a.firstName} ${a.lastName}`.toLowerCase()

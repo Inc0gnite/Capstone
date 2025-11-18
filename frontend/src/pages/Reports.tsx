@@ -207,6 +207,9 @@ export default function Reports() {
                 const entries = allEntriesData.status === 'fulfilled' ? allEntriesData.value : []
                 const users = allUsersData.status === 'fulfilled' ? allUsersData.value : []
 
+                // Filtrar solo mecánicos de los usuarios
+                const mechanics = users.filter((u: any) => u.role?.name === 'Mecánico')
+
                 ExcelService.exportReportsToExcel({
                   kpis,
                   mechanicsPerformance,
@@ -215,6 +218,7 @@ export default function Reports() {
                   allVehicles: vehicles as any,
                   allEntries: entries as any,
                   allUsers: users as any,
+                  allMechanics: mechanics as any,
                 })
               } catch (err: any) {
                 console.error('Error cargando datos para exportar:', err)
