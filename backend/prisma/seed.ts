@@ -183,6 +183,11 @@ async function main() {
     prisma.permission.create({
       data: { resource: 'regions', action: 'read', description: 'Ver regiones' },
     }),
+
+    // Reportes
+    prisma.permission.create({
+      data: { resource: 'reports', action: 'read', description: 'Ver y generar reportes' },
+    }),
   ])
 
   // Asignar todos los permisos al rol Admin
@@ -390,6 +395,12 @@ async function main() {
       data: {
         roleId: roles[4].id, // Jefe de Taller
         permissionId: permissions[19].id, // regions:read
+      },
+    }),
+    prisma.rolePermission.create({
+      data: {
+        roleId: roles[4].id, // Jefe de Taller
+        permissionId: permissions[20].id, // reports:read
       },
     }),
   ])
