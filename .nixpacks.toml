@@ -1,0 +1,16 @@
+[phases.setup]
+nixPkgs = ["nodejs-20_x", "npm"]
+
+[phases.install]
+cmds = [
+  "npm install || npm install --legacy-peer-deps"
+]
+
+[phases.build]
+cmds = [
+  "npm run build --workspace=backend"
+]
+
+[phases.start]
+cmd = "npm run start --workspace=backend"
+

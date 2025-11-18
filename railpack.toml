@@ -1,0 +1,7 @@
+[build]
+install = "npm install"
+build = "npm run build --workspace=backend"
+
+[start]
+cmd = "npm run start --workspace=backend"
+
