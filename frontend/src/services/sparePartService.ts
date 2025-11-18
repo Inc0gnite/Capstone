@@ -208,5 +208,15 @@ export const sparePartService = {
   async rejectRequest(requestId: string, reason?: string) {
     const response = await api.post(`/spare-parts/requests/${requestId}/reject`, { reason })
     return response.data
+  },
+
+  // Ajustar stock de repuesto
+  async adjustStock(id: string, quantity: number, reason: string) {
+    const response = await api.post(`/spare-parts/${id}/adjust-stock`, {
+      quantity,
+      movementType: 'ajuste',
+      reason
+    })
+    return response.data
   }
 }

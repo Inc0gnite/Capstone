@@ -30,8 +30,11 @@ export default function Inventory() {
   // Modales
   const [showCreate, setShowCreate] = useState(false)
   const [showEdit, setShowEdit] = useState(false)
+  const [showAdjustStock, setShowAdjustStock] = useState(false)
   const [editingPart, setEditingPart] = useState<SparePart | null>(null)
+  const [adjustingPart, setAdjustingPart] = useState<SparePart | null>(null)
   const [isCreating, setIsCreating] = useState(false)
+  const [isAdjusting, setIsAdjusting] = useState(false)
 
   const totalPages = useMemo(() => Math.max(1, Math.ceil(total / limit)), [total, limit])
 
@@ -130,7 +133,14 @@ export default function Inventory() {
 
   const openCreate = () => setShowCreate(true)
   const openEdit = (part: SparePart) => { setEditingPart(part); setShowEdit(true) }
-  const closeModals = () => { setShowCreate(false); setShowEdit(false); setEditingPart(null) }
+  const openAdjustStock = (part: SparePart) => { setAdjustingPart(part); setShowAdjustStock(true) }
+  const closeModals = () => { 
+    setShowCreate(false); 
+    setShowEdit(false); 
+    setShowAdjustStock(false)
+    setEditingPart(null)
+    setAdjustingPart(null)
+  }
 
   const handleCreate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -255,6 +265,43 @@ export default function Inventory() {
       await loadParts()
     } catch (err) {
       alert('No se pudo actualizar el repuesto')
+    }
+  }
+
+  const handleAdjustStock = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    if (!adjustingPart) return
+    
+    if (isAdjusting) return
+    
+    setIsAdjusting(true)
+    const form = e.currentTarget as any
+    
+    try {
+      const newStock = Number(form.newStock.value)
+      const reason = form.reason.value.trim()
+      
+      if (isNaN(newStock) || newStock < 0) {
+        alert('Por favor ingresa un stock válido (mayor o igual a 0)')
+        setIsAdjusting(false)
+        return
+      }
+      
+      if (!reason) {
+        alert('Por favor selecciona un motivo para el ajuste')
+        setIsAdjusting(false)
+        return
+      }
+      
+      await sparePartService.adjustStock(adjustingPart.id, newStock, reason)
+      closeModals()
+      await loadParts()
+      alert('Stock ajustado exitosamente')
+    } catch (err: any) {
+      console.error('Error ajustando stock:', err)
+      alert(err.response?.data?.error || err.message || 'No se pudo ajustar el stock')
+    } finally {
+      setIsAdjusting(false)
     }
   }
 
@@ -403,14 +450,23 @@ export default function Inventory() {
                       )}
                       <td className="px-4 py-3 text-sm text-gray-700 break-words">{p.location || '—'}</td>
                       <td className="px-4 py-3 text-sm text-right">
-                        {/* Solo mostrar botón de editar si no es mecánico */}
+                        {/* Solo mostrar botones si no es mecánico */}
                         {((user as any)?.role?.name || '') !== 'Mecánico' && (
-                          <button
-                            onClick={() => openEdit(p)}
-                            className="px-3 py-1 rounded bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
-                          >
-                            Editar
-                          </button>
+                          <div className="flex gap-2 justify-end">
+                            <button
+                              onClick={() => openAdjustStock(p)}
+                              className="px-3 py-1 rounded bg-orange-100 text-orange-700 hover:bg-orange-200 transition-colors text-xs sm:text-sm"
+                              title="Ajustar Stock"
+                            >
+                              📊 Ajustar Stock
+                            </button>
+                            <button
+                              onClick={() => openEdit(p)}
+                              className="px-3 py-1 rounded bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors text-xs sm:text-sm"
+                            >
+                              Editar
+                            </button>
+                          </div>
                         )}
                         {((user as any)?.role?.name || '') === 'Mecánico' && (
                           <span className="text-gray-400 text-sm">Solo lectura</span>
@@ -549,6 +605,82 @@ export default function Inventory() {
                     disabled={isCreating}
                   >
                     {isCreating ? 'Creando...' : 'Crear'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Modal Ajustar Stock */}
+        {showAdjustStock && adjustingPart && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+            <div className="bg-white rounded-lg shadow-lg w-full max-w-md">
+              <div className="px-4 sm:px-6 py-4 border-b flex items-center justify-between">
+                <h3 className="text-base sm:text-lg font-semibold">Ajustar Stock</h3>
+                <button onClick={closeModals} className="text-gray-500 hover:text-gray-700 text-xl">✕</button>
+              </div>
+              <form onSubmit={handleAdjustStock} className="p-4 sm:p-6 space-y-4">
+                <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                  <div className="text-sm text-gray-600 mb-1">Repuesto</div>
+                  <div className="font-semibold text-gray-900">{adjustingPart.name}</div>
+                  <div className="text-sm text-gray-500">{adjustingPart.code}</div>
+                  <div className="mt-2 text-sm">
+                    <span className="text-gray-600">Stock actual: </span>
+                    <span className="font-medium text-gray-900">{adjustingPart.currentStock}</span>
+                  </div>
+                </div>
+                
+                <div>
+                  <label htmlFor="newStock" className="block text-sm font-medium text-gray-700 mb-1">
+                    Nuevo Stock <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    id="newStock"
+                    name="newStock"
+                    type="number"
+                    min="0"
+                    step="1"
+                    defaultValue={adjustingPart.currentStock}
+                    placeholder="Ingresa el nuevo stock"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <label htmlFor="reason" className="block text-sm font-medium text-gray-700 mb-1">
+                    Motivo del ajuste <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    id="reason"
+                    name="reason"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                    required
+                    defaultValue=""
+                  >
+                    <option value="">Seleccionar motivo</option>
+                    <option value="conteo físico">Conteo físico</option>
+                    <option value="corrección">Corrección</option>
+                    <option value="otro">Otro</option>
+                  </select>
+                </div>
+                
+                <div className="flex justify-end gap-2 pt-4 border-t">
+                  <button
+                    type="button"
+                    onClick={closeModals}
+                    className="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
+                    disabled={isAdjusting}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 rounded-lg bg-orange-600 text-white hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={isAdjusting}
+                  >
+                    {isAdjusting ? 'Guardando...' : 'Guardar'}
                   </button>
                 </div>
               </form>
