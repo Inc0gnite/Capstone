@@ -135,34 +135,86 @@ export default function Reports() {
           <button
             onClick={async () => {
               try {
-                // Cargar TODOS los datos del sistema para el reporte
-                const [allOrders, allParts, allVehicles, allEntries, allUsers] = await Promise.all([
-                  workOrderService.getAll({
-                    workshopId: canSeeAllWorkshops ? undefined : workshopId,
-                    limit: 10000, // Límite alto para obtener todos
-                  }),
-                  sparePartService.getAll({
-                    page: 1,
-                    limit: 10000,
-                    workshopId: canSeeAllWorkshops ? undefined : workshopId,
-                  }),
-                  vehicleService.getAll(),
-                  vehicleEntryService.getAll({
-                    page: 1,
-                    limit: 10000,
-                    workshopId: canSeeAllWorkshops ? undefined : workshopId,
-                  }),
-                  userService.getAll({ page: 1, limit: 10000 }),
+                // Función helper para cargar todos los datos paginados
+                const loadAllPaginated = async <T,>(
+                  loadFn: (params: any) => Promise<any>,
+                  params: any,
+                  dataKey: string = 'data'
+                ): Promise<T[]> => {
+                  const allData: T[] = []
+                  let page = 1
+                  let hasMore = true
+                  
+                  while (hasMore) {
+                    try {
+                      const response = await loadFn({ ...params, page, limit: 100 })
+                      const responseData = response.data || response
+                      const pageData = responseData[dataKey as keyof typeof responseData] as T[]
+                      
+                      if (pageData && Array.isArray(pageData) && pageData.length > 0) {
+                        allData.push(...pageData)
+                        const totalPages = responseData.totalPages || Math.ceil((responseData.total || 0) / 100)
+                        hasMore = page < totalPages
+                        page++
+                      } else {
+                        hasMore = false
+                      }
+                    } catch (error) {
+                      console.error(`Error cargando página ${page}:`, error)
+                      hasMore = false
+                    }
+                  }
+                  
+                  return allData
+                }
+
+                // Cargar todos los datos con paginación
+                const [allOrdersData, allPartsData, allVehiclesData, allEntriesData, allUsersData] = await Promise.allSettled([
+                  loadAllPaginated(
+                    (params) => workOrderService.getAll({ ...params, workshopId: canSeeAllWorkshops ? undefined : workshopId }),
+                    {},
+                    'workOrders'
+                  ),
+                  loadAllPaginated(
+                    (params) => sparePartService.getAll({ ...params, workshopId: canSeeAllWorkshops ? undefined : workshopId }),
+                    {},
+                    'data'
+                  ),
+                  loadAllPaginated(
+                    (params) => vehicleService.getAll(params),
+                    {},
+                    'vehicles'
+                  ),
+                  loadAllPaginated(
+                    (params) => vehicleEntryService.getAll({ ...params, workshopId: canSeeAllWorkshops ? undefined : workshopId }),
+                    {},
+                    'entries'
+                  ),
+                  // Solo intentar cargar usuarios si es Administrador
+                  canSeeAllWorkshops 
+                    ? loadAllPaginated(
+                        (params) => userService.getAll(params),
+                        {},
+                        'data'
+                      )
+                    : Promise.resolve([]),
                 ])
+
+                // Extraer datos de las promesas resueltas
+                const orders = allOrdersData.status === 'fulfilled' ? allOrdersData.value : []
+                const parts = allPartsData.status === 'fulfilled' ? allPartsData.value : []
+                const vehicles = allVehiclesData.status === 'fulfilled' ? allVehiclesData.value : []
+                const entries = allEntriesData.status === 'fulfilled' ? allEntriesData.value : []
+                const users = allUsersData.status === 'fulfilled' ? allUsersData.value : []
 
                 ExcelService.exportReportsToExcel({
                   kpis,
                   mechanicsPerformance,
-                  allOrders: allOrders.data || [],
-                  allParts: allParts.data || [],
-                  allVehicles: allVehicles.data || [],
-                  allEntries: allEntries.data || [],
-                  allUsers: allUsers.data || [],
+                  allOrders: orders as any,
+                  allParts: parts as any,
+                  allVehicles: vehicles as any,
+                  allEntries: entries as any,
+                  allUsers: users as any,
                 })
               } catch (err: any) {
                 console.error('Error cargando datos para exportar:', err)
