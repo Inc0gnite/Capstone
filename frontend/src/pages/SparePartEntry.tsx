@@ -320,18 +320,22 @@ export default function SparePartEntry() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Categoría <span className="text-red-500">*</span>
+                      <span className="text-xs text-gray-500 font-normal ml-2">(Seleccionar o escribir nueva)</span>
                     </label>
-                    <select
+                    <input
+                      type="text"
                       value={newSparePart.category}
                       onChange={(e) => setNewSparePart({ ...newSparePart, category: e.target.value })}
+                      list="new-category-list"
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                       required
-                    >
-                      <option value="">Seleccionar categoría</option>
+                      placeholder="Seleccionar o escribir categoría"
+                    />
+                    <datalist id="new-category-list">
                       {categories.map((cat) => (
-                        <option key={cat} value={cat}>{cat}</option>
+                        <option key={cat} value={cat} />
                       ))}
-                    </select>
+                    </datalist>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">

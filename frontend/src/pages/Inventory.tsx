@@ -522,36 +522,39 @@ export default function Inventory() {
                     <input id="create-name" name="name" placeholder="Ej: Filtro de Aceite" className="w-full px-3 py-2 border rounded" required />
                   </div>
                   <div>
-                    <label htmlFor="create-category" className="block text-sm font-medium text-gray-700 mb-1">Categoría <span className="text-red-500">*</span></label>
-                    <select 
-                      id="create-category" 
-                      name="category" 
-                      className="w-full px-3 py-2 border rounded bg-white" 
+                    <label htmlFor="create-category" className="block text-sm font-medium text-gray-700 mb-1">
+                      Categoría <span className="text-red-500">*</span>
+                      <span className="text-xs text-gray-500 font-normal ml-2">(Seleccionar o escribir nueva)</span>
+                    </label>
+                    <input
+                      id="create-category"
+                      name="category"
+                      list="create-category-list"
+                      className="w-full px-3 py-2 border rounded bg-white"
                       required
-                      defaultValue=""
-                    >
-                      <option value="">{loadingCategories ? 'Cargando categorías...' : 'Seleccionar categoría'}</option>
+                      placeholder="Seleccionar o escribir categoría"
+                    />
+                    <datalist id="create-category-list">
                       {categories.length > 0 ? (
                         categories.map((cat) => (
-                          <option key={cat} value={cat}>{cat}</option>
+                          <option key={cat} value={cat} />
                         ))
                       ) : (
-                        // Categorías por defecto si no hay categorías cargadas
                         <>
-                          <option value="Motor">Motor</option>
-                          <option value="Frenos">Frenos</option>
-                          <option value="Suspensión">Suspensión</option>
-                          <option value="Transmisión">Transmisión</option>
-                          <option value="Eléctrico">Eléctrico</option>
-                          <option value="Carrocería">Carrocería</option>
-                          <option value="Neumáticos">Neumáticos</option>
-                          <option value="Aceites y Lubricantes">Aceites y Lubricantes</option>
-                          <option value="Filtros">Filtros</option>
-                          <option value="Batería">Batería</option>
-                          <option value="Otros">Otros</option>
+                          <option value="Motor" />
+                          <option value="Frenos" />
+                          <option value="Suspensión" />
+                          <option value="Transmisión" />
+                          <option value="Eléctrico" />
+                          <option value="Carrocería" />
+                          <option value="Neumáticos" />
+                          <option value="Aceites y Lubricantes" />
+                          <option value="Filtros" />
+                          <option value="Batería" />
+                          <option value="Otros" />
                         </>
                       )}
-                    </select>
+                    </datalist>
                   </div>
                   <div>
                     <label htmlFor="create-unitOfMeasure" className="block text-sm font-medium text-gray-700 mb-1">Unidad de Medida <span className="text-red-500">*</span></label>
@@ -707,36 +710,40 @@ export default function Inventory() {
                     <input id="edit-name" name="name" defaultValue={editingPart.name} placeholder="Nombre" className="w-full px-3 py-2 border rounded" required />
                   </div>
                   <div>
-                    <label htmlFor="edit-category" className="block text-sm font-medium text-gray-700 mb-1">Categoría</label>
-                    <select 
-                      id="edit-category" 
-                      name="category" 
-                      className="w-full px-3 py-2 border rounded bg-white" 
+                    <label htmlFor="edit-category" className="block text-sm font-medium text-gray-700 mb-1">
+                      Categoría
+                      <span className="text-xs text-gray-500 font-normal ml-2">(Seleccionar o escribir nueva)</span>
+                    </label>
+                    <input
+                      id="edit-category"
+                      name="category"
+                      list="edit-category-list"
+                      className="w-full px-3 py-2 border rounded bg-white"
                       required
                       defaultValue={editingPart.category}
-                    >
-                      <option value="">Seleccionar categoría</option>
+                      placeholder="Seleccionar o escribir categoría"
+                    />
+                    <datalist id="edit-category-list">
                       {categories.length > 0 ? (
                         categories.map((cat) => (
-                          <option key={cat} value={cat}>{cat}</option>
+                          <option key={cat} value={cat} />
                         ))
                       ) : (
-                        // Categorías por defecto si no hay categorías cargadas
                         <>
-                          <option value="Motor">Motor</option>
-                          <option value="Frenos">Frenos</option>
-                          <option value="Suspensión">Suspensión</option>
-                          <option value="Transmisión">Transmisión</option>
-                          <option value="Eléctrico">Eléctrico</option>
-                          <option value="Carrocería">Carrocería</option>
-                          <option value="Neumáticos">Neumáticos</option>
-                          <option value="Aceites y Lubricantes">Aceites y Lubricantes</option>
-                          <option value="Filtros">Filtros</option>
-                          <option value="Batería">Batería</option>
-                          <option value="Otros">Otros</option>
+                          <option value="Motor" />
+                          <option value="Frenos" />
+                          <option value="Suspensión" />
+                          <option value="Transmisión" />
+                          <option value="Eléctrico" />
+                          <option value="Carrocería" />
+                          <option value="Neumáticos" />
+                          <option value="Aceites y Lubricantes" />
+                          <option value="Filtros" />
+                          <option value="Batería" />
+                          <option value="Otros" />
                         </>
                       )}
-                    </select>
+                    </datalist>
                   </div>
                   <div>
                     <label htmlFor="edit-unitOfMeasure" className="block text-sm font-medium text-gray-700 mb-1">Unidad de Medida</label>
