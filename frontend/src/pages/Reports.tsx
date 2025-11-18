@@ -8,6 +8,9 @@ import { vehicleService } from '../services/vehicleService'
 import { vehicleEntryService } from '../services/vehicleEntryService'
 import { userService } from '../services/userService'
 import { ExcelService } from '../services/excelService'
+import { reportService, type FleetReport } from '../services/reportService'
+import { regionService } from '../services/regionService'
+import { PDFService } from '../services/pdfService'
 
 type KPIs = {
   total: number
@@ -31,6 +34,15 @@ export default function Reports() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  // Estados para Reporte de Flota
+  const [showFleetReport, setShowFleetReport] = useState(false)
+  const [fleetReport, setFleetReport] = useState<FleetReport | null>(null)
+  const [loadingFleetReport, setLoadingFleetReport] = useState(false)
+  const [regions, setRegions] = useState<any[]>([])
+  const [selectedRegionId, setSelectedRegionId] = useState<string>('')
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
+
   const canSeeAllWorkshops = useMemo(() => roleName === 'Administrador', [roleName])
 
   useEffect(() => {
@@ -53,12 +65,14 @@ export default function Reports() {
           lowStock: true,
           workshopId: canSeeAllWorkshops ? undefined : workshopId,
         })
+        const regionsPromise = regionService.getAll()
 
-        const [k, perf, orders, parts] = await Promise.all([
+        const [k, perf, orders, parts, regionsData] = await Promise.all([
           kpisPromise,
           perfPromise,
           ordersPromise,
           lowStockPromise,
+          regionsPromise,
         ])
 
         // Mapear kpis de backend → frontend
@@ -76,6 +90,7 @@ export default function Reports() {
         setMechanicsPerformance(perf || [])
         setRecentOrders(orders.data || [])
         setLowStockParts(parts.data || [])
+        setRegions(regionsData.data || [])
       } catch (err: any) {
         console.error('❌ Error cargando reportes:', err)
         setError(err?.response?.data?.message || 'Error cargando reportes')
@@ -86,6 +101,54 @@ export default function Reports() {
 
     loadData()
   }, [workshopId, canSeeAllWorkshops])
+
+  const handleGenerateFleetReport = async () => {
+    try {
+      setLoadingFleetReport(true)
+      setError(null)
+
+      const params: any = {}
+      if (selectedRegionId) params.regionId = selectedRegionId
+      if (dateFrom) params.dateFrom = dateFrom
+      if (dateTo) params.dateTo = dateTo
+
+      const report = await reportService.generateFleetReport(params)
+      setFleetReport(report)
+      setShowFleetReport(true)
+    } catch (err: any) {
+      console.error('Error generando reporte de flota:', err)
+      setError(err?.response?.data?.error || 'Error al generar el reporte de flota')
+    } finally {
+      setLoadingFleetReport(false)
+    }
+  }
+
+  const handleExportFleetReportPDF = () => {
+    if (!fleetReport) return
+    
+    // Convertir el reporte a formato de órdenes para el PDF
+    const allWorkOrders: WorkOrder[] = fleetReport.vehicles.flatMap((v) =>
+      v.entries.flatMap((e) =>
+        e.workOrders.map((wo) => ({
+          id: wo.id,
+          orderNumber: wo.orderNumber,
+          workType: wo.workType,
+          priority: wo.priority,
+          currentStatus: wo.currentStatus,
+          description: '',
+          vehicle: {
+            id: v.id,
+            licensePlate: v.licensePlate,
+          } as any,
+        } as WorkOrder))
+      )
+    )
+
+    PDFService.generateMultipleOrdersPDF(
+      allWorkOrders,
+      `Reporte de Flota${selectedRegionId ? ` - ${regions.find(r => r.id === selectedRegionId)?.name || ''}` : ''}${dateFrom && dateTo ? ` (${dateFrom} a ${dateTo})` : ''}`
+    )
+  }
 
   if (loading) {
     return (
@@ -230,6 +293,194 @@ export default function Reports() {
             <span>📊</span>
             <span>Exportar Excel</span>
           </button>
+        </div>
+
+        {/* Reporte de Flota */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Reporte de Flota</h3>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Región
+              </label>
+              <select
+                value={selectedRegionId}
+                onChange={(e) => setSelectedRegionId(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+              >
+                <option value="">Todas las regiones</option>
+                {regions.map((region) => (
+                  <option key={region.id} value={region.id}>
+                    {region.name} ({region.code})
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Fecha Desde
+              </label>
+              <input
+                type="date"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Fecha Hasta
+              </label>
+              <input
+                type="date"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div className="flex items-end">
+              <button
+                onClick={handleGenerateFleetReport}
+                disabled={loadingFleetReport}
+                className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {loadingFleetReport ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    <span>Generando...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>📊</span>
+                    <span>Generar</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Resultados del Reporte de Flota */}
+          {showFleetReport && fleetReport && (
+            <div className="mt-6 border-t pt-6">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-md font-semibold text-gray-900">Resultados del Reporte</h4>
+                <button
+                  onClick={handleExportFleetReportPDF}
+                  className="px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium transition-colors flex items-center gap-2"
+                >
+                  <span>📄</span>
+                  <span>Exportar PDF</span>
+                </button>
+              </div>
+
+              {/* Resumen */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div className="bg-blue-50 rounded-lg p-4">
+                  <div className="text-sm text-blue-600 font-medium">Total Vehículos</div>
+                  <div className="text-2xl font-bold text-blue-900">{fleetReport.summary.totalVehicles}</div>
+                </div>
+                <div className="bg-green-50 rounded-lg p-4">
+                  <div className="text-sm text-green-600 font-medium">Total Ingresos</div>
+                  <div className="text-2xl font-bold text-green-900">{fleetReport.summary.totalEntries}</div>
+                </div>
+                <div className="bg-purple-50 rounded-lg p-4">
+                  <div className="text-sm text-purple-600 font-medium">Total Órdenes</div>
+                  <div className="text-2xl font-bold text-purple-900">{fleetReport.summary.totalWorkOrders}</div>
+                </div>
+                <div className="bg-orange-50 rounded-lg p-4">
+                  <div className="text-sm text-orange-600 font-medium">Tiempo Promedio (h)</div>
+                  <div className="text-2xl font-bold text-orange-900">{fleetReport.summary.averageCompletionTime.toFixed(2)}</div>
+                </div>
+              </div>
+
+              {/* Por Región */}
+              {fleetReport.byRegion.length > 0 && (
+                <div className="mb-6">
+                  <h5 className="text-sm font-semibold text-gray-700 mb-3">Por Región</h5>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Región</th>
+                          <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Vehículos</th>
+                          <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Ingresos</th>
+                          <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Órdenes</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {fleetReport.byRegion.map((region, idx) => (
+                          <tr key={idx}>
+                            <td className="px-4 py-2 text-sm text-gray-900">{region.regionName}</td>
+                            <td className="px-4 py-2 text-sm text-right text-gray-700">{region.vehicleCount}</td>
+                            <td className="px-4 py-2 text-sm text-right text-gray-700">{region.entryCount}</td>
+                            <td className="px-4 py-2 text-sm text-right text-gray-700">{region.workOrderCount}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Por Tipo de Vehículo */}
+              {fleetReport.byVehicleType.length > 0 && (
+                <div className="mb-6">
+                  <h5 className="text-sm font-semibold text-gray-700 mb-3">Por Tipo de Vehículo</h5>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {fleetReport.byVehicleType.map((type, idx) => (
+                      <div key={idx} className="bg-gray-50 rounded-lg p-3">
+                        <div className="text-sm text-gray-600">{type.vehicleType}</div>
+                        <div className="text-xl font-bold text-gray-900">{type.count}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Tabla de Vehículos (limitada a primeros 20) */}
+              {fleetReport.vehicles.length > 0 && (
+                <div>
+                  <h5 className="text-sm font-semibold text-gray-700 mb-3">
+                    Vehículos ({fleetReport.vehicles.length} total)
+                  </h5>
+                  <div className="overflow-x-auto max-h-96 overflow-y-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50 sticky top-0">
+                        <tr>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Patente</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Tipo</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Marca/Modelo</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Región</th>
+                          <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Ingresos</th>
+                          <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Órdenes</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {fleetReport.vehicles.slice(0, 20).map((vehicle) => (
+                          <tr key={vehicle.id} className="hover:bg-gray-50">
+                            <td className="px-4 py-2 text-sm font-medium text-gray-900">{vehicle.licensePlate}</td>
+                            <td className="px-4 py-2 text-sm text-gray-700">{vehicle.vehicleType}</td>
+                            <td className="px-4 py-2 text-sm text-gray-700">{vehicle.brand} {vehicle.model}</td>
+                            <td className="px-4 py-2 text-sm text-gray-700">{vehicle.region?.name || '—'}</td>
+                            <td className="px-4 py-2 text-sm text-right text-gray-700">{vehicle.totalEntries}</td>
+                            <td className="px-4 py-2 text-sm text-right text-gray-700">{vehicle.totalWorkOrders}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    {fleetReport.vehicles.length > 20 && (
+                      <div className="text-center py-2 text-sm text-gray-500">
+                        Mostrando 20 de {fleetReport.vehicles.length} vehículos
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* KPIs */}

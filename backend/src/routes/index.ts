@@ -14,6 +14,7 @@ import photoRoutes from './photoRoutes'
 import documentRoutes from './documentRoutes'
 import mechanicRoutes from './mechanicRoutes'
 import testRoutes from './testRoutes'
+import reportRoutes from './reportRoutes'
 
 const router = Router()
 
@@ -35,6 +36,7 @@ router.use('/photos', photoRoutes)
 router.use('/documents', documentRoutes)
 router.use('/mechanics', mechanicRoutes)
 router.use('/test', testRoutes)
+router.use('/reports', reportRoutes)
 
 export default router
 
