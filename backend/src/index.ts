@@ -6,6 +6,7 @@ import dotenv from 'dotenv'
 import logger from './config/logger.js'
 import { errorHandler, notFoundHandler } from './middlewares/errorHandler'
 import routes from './routes'
+import { migrateReportsPermission } from './utils/migratePermissions'
 
 // Cargar variables de entorno
 dotenv.config()
@@ -134,12 +135,26 @@ app.use(errorHandler)
 
 // Iniciar servidor (solo en desarrollo o producción tradicional)
 if (process.env.NODE_ENV !== 'vercel') {
-  app.listen(PORT, () => {
-    logger.info(`🚀 Servidor corriendo en http://localhost:${PORT}`)
-    logger.info(`📝 API disponible en http://localhost:${PORT}/api`)
-    logger.info(`❤️  Health check en http://localhost:${PORT}/health`)
-    logger.info(`🌍 Entorno: ${process.env.NODE_ENV || 'development'}`)
-  })
+  // Ejecutar migraciones de permisos antes de iniciar el servidor
+  migrateReportsPermission()
+    .then(() => {
+      app.listen(PORT, () => {
+        logger.info(`🚀 Servidor corriendo en http://localhost:${PORT}`)
+        logger.info(`📝 API disponible en http://localhost:${PORT}/api`)
+        logger.info(`❤️  Health check en http://localhost:${PORT}/health`)
+        logger.info(`🌍 Entorno: ${process.env.NODE_ENV || 'development'}`)
+      })
+    })
+    .catch((error) => {
+      logger.error('❌ Error al ejecutar migraciones:', error)
+      // Iniciar servidor de todas formas
+      app.listen(PORT, () => {
+        logger.info(`🚀 Servidor corriendo en http://localhost:${PORT}`)
+        logger.info(`📝 API disponible en http://localhost:${PORT}/api`)
+        logger.info(`❤️  Health check en http://localhost:${PORT}/health`)
+        logger.info(`🌍 Entorno: ${process.env.NODE_ENV || 'development'}`)
+      })
+    })
 }
 
 export default app

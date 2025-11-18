@@ -15,6 +15,7 @@ import documentRoutes from './documentRoutes'
 import mechanicRoutes from './mechanicRoutes'
 import testRoutes from './testRoutes'
 import reportRoutes from './reportRoutes'
+import adminRoutes from './adminRoutes'
 
 const router = Router()
 
@@ -37,6 +38,7 @@ router.use('/documents', documentRoutes)
 router.use('/mechanics', mechanicRoutes)
 router.use('/test', testRoutes)
 router.use('/reports', reportRoutes)
+router.use('/admin', adminRoutes)
 
 export default router
 
