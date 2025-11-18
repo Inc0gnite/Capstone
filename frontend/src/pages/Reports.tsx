@@ -4,6 +4,7 @@ import { useAuthStore } from '../store/authStore'
 import { dashboardService } from '../services/dashboardService'
 import { workOrderService, type WorkOrder } from '../services/workOrderService'
 import { sparePartService } from '../services/sparePartService'
+import { ExcelService } from '../services/excelService'
 
 type KPIs = {
   total: number
@@ -128,6 +129,20 @@ export default function Reports() {
             <h2 className="text-2xl font-bold text-gray-900">Reportes</h2>
             <p className="text-gray-600">Indicadores y rendimiento del taller</p>
           </div>
+          <button
+            onClick={() => {
+              ExcelService.exportReportsToExcel({
+                kpis,
+                mechanicsPerformance,
+                recentOrders,
+                lowStockParts,
+              })
+            }}
+            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium transition-colors flex items-center gap-2"
+          >
+            <span>📊</span>
+            <span>Exportar Excel</span>
+          </button>
         </div>
 
         {/* KPIs */}
