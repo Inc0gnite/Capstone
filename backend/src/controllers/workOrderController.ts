@@ -142,7 +142,8 @@ export class WorkOrderController {
   async resume(req: Request, res: Response) {
     try {
       const { id } = req.params
-      const workOrder = await workOrderService.resume(id)
+      const { observations } = req.body
+      const workOrder = await workOrderService.resume(id, req.user!.userId, observations)
       return sendSuccess(res, workOrder, 'Orden reanudada exitosamente')
     } catch (error: any) {
       return sendError(res, error.message, 400)

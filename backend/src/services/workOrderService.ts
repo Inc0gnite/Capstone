@@ -477,7 +477,7 @@ export class WorkOrderService {
   /**
    * Reanudar orden de trabajo
    */
-  async resume(id: string) {
+  async resume(id: string, changedById: string, observations?: string) {
     const workOrder = await prisma.workOrder.findUnique({
       where: { id },
       include: {
@@ -501,19 +501,44 @@ export class WorkOrderService {
     const now = new Date()
     const duration = Math.floor((now.getTime() - pause.pausedAt.getTime()) / 1000 / 60)
 
-    await prisma.$transaction([
-      prisma.workPause.update({
+    // Formatear duración para mostrar en observaciones
+    const hours = Math.floor(duration / 60)
+    const minutes = duration % 60
+    const durationText = hours > 0 
+      ? `${hours}h ${minutes}min` 
+      : `${minutes}min`
+
+    await prisma.$transaction(async (tx) => {
+      // Actualizar pausa con timestamp de reanudación y duración calculada
+      await tx.workPause.update({
         where: { id: pause.id },
         data: {
           resumedAt: now,
           duration,
         },
-      }),
-      prisma.workOrder.update({
+      })
+
+      // Cambiar estado a 'en_progreso'
+      await tx.workOrder.update({
         where: { id },
         data: { currentStatus: 'en_progreso' },
-      }),
-    ])
+      })
+
+      // Crear registro en historial de estados
+      await tx.workOrderStatus.create({
+        data: {
+          workOrderId: id,
+          status: 'en_progreso',
+          observations: observations || `Orden reanudada. Pausa duró ${durationText}`,
+          changedById,
+        },
+      })
+    })
+
+    // Notificar reanudación
+    notificationService
+      .notifyWorkOrderStarted(id)
+      .catch((error) => console.error('❌ Error notificando orden reanudada:', error))
 
     return this.getById(id)
   }
