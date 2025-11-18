@@ -4,6 +4,9 @@ import { useAuthStore } from '../store/authStore'
 import { dashboardService } from '../services/dashboardService'
 import { workOrderService, type WorkOrder } from '../services/workOrderService'
 import { sparePartService } from '../services/sparePartService'
+import { vehicleService } from '../services/vehicleService'
+import { vehicleEntryService } from '../services/vehicleEntryService'
+import { userService } from '../services/userService'
 import { ExcelService } from '../services/excelService'
 
 type KPIs = {
@@ -130,13 +133,41 @@ export default function Reports() {
             <p className="text-gray-600">Indicadores y rendimiento del taller</p>
           </div>
           <button
-            onClick={() => {
-              ExcelService.exportReportsToExcel({
-                kpis,
-                mechanicsPerformance,
-                recentOrders,
-                lowStockParts,
-              })
+            onClick={async () => {
+              try {
+                // Cargar TODOS los datos del sistema para el reporte
+                const [allOrders, allParts, allVehicles, allEntries, allUsers] = await Promise.all([
+                  workOrderService.getAll({
+                    workshopId: canSeeAllWorkshops ? undefined : workshopId,
+                    limit: 10000, // Límite alto para obtener todos
+                  }),
+                  sparePartService.getAll({
+                    page: 1,
+                    limit: 10000,
+                    workshopId: canSeeAllWorkshops ? undefined : workshopId,
+                  }),
+                  vehicleService.getAll(),
+                  vehicleEntryService.getAll({
+                    page: 1,
+                    limit: 10000,
+                    workshopId: canSeeAllWorkshops ? undefined : workshopId,
+                  }),
+                  userService.getAll({ page: 1, limit: 10000 }),
+                ])
+
+                ExcelService.exportReportsToExcel({
+                  kpis,
+                  mechanicsPerformance,
+                  allOrders: allOrders.data || [],
+                  allParts: allParts.data || [],
+                  allVehicles: allVehicles.data || [],
+                  allEntries: allEntries.data || [],
+                  allUsers: allUsers.data || [],
+                })
+              } catch (err: any) {
+                console.error('Error cargando datos para exportar:', err)
+                alert('Error al cargar los datos para exportar. Por favor, intenta nuevamente.')
+              }
             }}
             className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium transition-colors flex items-center gap-2"
           >
