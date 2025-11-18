@@ -408,7 +408,7 @@ export class SparePartService {
       throw new Error(`Stock insuficiente para ${sparePart.name}. Disponible: ${sparePart.currentStock}, Solicitado: ${quantity}`)
     }
 
-    // Crear solicitud y descontar stock en transacción
+    // Crear solicitud en estado 'solicitado' (sin descontar stock aún, espera aprobación del jefe de taller)
     const result = await prisma.$transaction(async (tx) => {
       // Verificar stock nuevamente dentro de la transacción
       const currentSparePart = await tx.sparePart.findUnique({
