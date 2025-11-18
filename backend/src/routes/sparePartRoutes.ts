@@ -104,6 +104,16 @@ router.get(
 )
 
 /**
+ * GET /api/spare-parts/:id/movements
+ * Obtener movimientos de un repuesto con filtros
+ */
+router.get(
+  '/:id/movements',
+  authorize('spare-parts', 'read'),
+  sparePartController.getMovements
+)
+
+/**
  * GET /api/spare-parts/:id
  */
 router.get('/:id', authorize('spare-parts', 'read'), sparePartController.getById)

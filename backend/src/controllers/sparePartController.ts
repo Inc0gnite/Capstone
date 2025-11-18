@@ -266,6 +266,29 @@ export class SparePartController {
       return sendError(res, error.message, 400)
     }
   }
+
+  /**
+   * GET /api/spare-parts/:id/movements
+   * Obtener movimientos de un repuesto con filtros
+   */
+  async getMovements(req: Request, res: Response) {
+    try {
+      const { id } = req.params
+      const { dateFrom, dateTo, movementType, page, limit } = req.query
+
+      const filters: any = {}
+      if (dateFrom) filters.dateFrom = dateFrom as string
+      if (dateTo) filters.dateTo = dateTo as string
+      if (movementType) filters.movementType = movementType as 'entrada' | 'salida' | 'ajuste'
+      if (page) filters.page = parseInt(page as string, 10)
+      if (limit) filters.limit = parseInt(limit as string, 10)
+
+      const result = await sparePartService.getMovements(id, filters)
+      return sendPaginated(res, result.movements, result.page, result.limit, result.total)
+    } catch (error: any) {
+      return sendError(res, error.message, 400)
+    }
+  }
 }
 
 export default new SparePartController()

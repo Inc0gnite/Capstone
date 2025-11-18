@@ -3,6 +3,7 @@ import { MainLayout } from '../components/Layout/MainLayout'
 import { sparePartService } from '../services/sparePartService'
 import type { SparePart, SparePartFilters, PaginatedResponse } from '../../../shared/types'
 import { useAuthStore } from '../store/authStore'
+import { ViewMovementsModal } from '../components/modals/ViewMovementsModal'
 
 export default function Inventory() {
   // Log para verificar que se está ejecutando el código nuevo
@@ -31,8 +32,10 @@ export default function Inventory() {
   const [showCreate, setShowCreate] = useState(false)
   const [showEdit, setShowEdit] = useState(false)
   const [showAdjustStock, setShowAdjustStock] = useState(false)
+  const [showMovements, setShowMovements] = useState(false)
   const [editingPart, setEditingPart] = useState<SparePart | null>(null)
   const [adjustingPart, setAdjustingPart] = useState<SparePart | null>(null)
+  const [viewingMovementsPart, setViewingMovementsPart] = useState<SparePart | null>(null)
   const [isCreating, setIsCreating] = useState(false)
   const [isAdjusting, setIsAdjusting] = useState(false)
 
@@ -134,12 +137,15 @@ export default function Inventory() {
   const openCreate = () => setShowCreate(true)
   const openEdit = (part: SparePart) => { setEditingPart(part); setShowEdit(true) }
   const openAdjustStock = (part: SparePart) => { setAdjustingPart(part); setShowAdjustStock(true) }
+  const openMovements = (part: SparePart) => { setViewingMovementsPart(part); setShowMovements(true) }
   const closeModals = () => { 
     setShowCreate(false); 
     setShowEdit(false); 
     setShowAdjustStock(false)
+    setShowMovements(false)
     setEditingPart(null)
     setAdjustingPart(null)
+    setViewingMovementsPart(null)
   }
 
   const handleCreate = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -450,26 +456,36 @@ export default function Inventory() {
                       )}
                       <td className="px-4 py-3 text-sm text-gray-700 break-words">{p.location || '—'}</td>
                       <td className="px-4 py-3 text-sm text-right">
-                        {/* Solo mostrar botones si no es mecánico */}
-                        {((user as any)?.role?.name || '') !== 'Mecánico' && (
-                          <div className="flex gap-2 justify-end">
-                            <button
-                              onClick={() => openAdjustStock(p)}
-                              className="px-3 py-1 rounded bg-orange-100 text-orange-700 hover:bg-orange-200 transition-colors text-xs sm:text-sm"
-                              title="Ajustar Stock"
-                            >
-                              📊 Ajustar Stock
-                            </button>
-                            <button
-                              onClick={() => openEdit(p)}
-                              className="px-3 py-1 rounded bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors text-xs sm:text-sm"
-                            >
-                              Editar
-                            </button>
-                          </div>
-                        )}
+                        <div className="flex gap-2 justify-end">
+                          {/* Botón Ver Movimientos - visible para todos */}
+                          <button
+                            onClick={() => openMovements(p)}
+                            className="px-3 py-1 rounded bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors text-xs sm:text-sm"
+                            title="Ver Movimientos"
+                          >
+                            📋 Ver Movimientos
+                          </button>
+                          {/* Solo mostrar botones de edición si no es mecánico */}
+                          {((user as any)?.role?.name || '') !== 'Mecánico' && (
+                            <>
+                              <button
+                                onClick={() => openAdjustStock(p)}
+                                className="px-3 py-1 rounded bg-orange-100 text-orange-700 hover:bg-orange-200 transition-colors text-xs sm:text-sm"
+                                title="Ajustar Stock"
+                              >
+                                📊 Ajustar Stock
+                              </button>
+                              <button
+                                onClick={() => openEdit(p)}
+                                className="px-3 py-1 rounded bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors text-xs sm:text-sm"
+                              >
+                                Editar
+                              </button>
+                            </>
+                          )}
+                        </div>
                         {((user as any)?.role?.name || '') === 'Mecánico' && (
-                          <span className="text-gray-400 text-sm">Solo lectura</span>
+                          <span className="text-gray-400 text-sm hidden">Solo lectura</span>
                         )}
                       </td>
                     </tr>
@@ -794,6 +810,19 @@ export default function Inventory() {
               </form>
             </div>
           </div>
+        )}
+
+        {/* Modal Ver Movimientos */}
+        {showMovements && viewingMovementsPart && (
+          <ViewMovementsModal
+            isOpen={showMovements}
+            onClose={closeModals}
+            sparePart={{
+              id: viewingMovementsPart.id,
+              name: viewingMovementsPart.name,
+              code: viewingMovementsPart.code
+            }}
+          />
         )}
       </div>
     </MainLayout>

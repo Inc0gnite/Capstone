@@ -224,5 +224,29 @@ export const sparePartService = {
   // Ingresar repuestos (entrada de stock)
   async entryStock(id: string, quantity: number, reason: string, reference?: string) {
     return this.adjustStock(id, quantity, reason, 'entrada', reference)
+  },
+
+  // Obtener movimientos de un repuesto con filtros
+  async getMovements(
+    id: string,
+    params?: {
+      dateFrom?: string
+      dateTo?: string
+      movementType?: 'entrada' | 'salida' | 'ajuste'
+      page?: number
+      limit?: number
+    }
+  ) {
+    const searchParams = new URLSearchParams()
+    if (params?.dateFrom) searchParams.append('dateFrom', params.dateFrom)
+    if (params?.dateTo) searchParams.append('dateTo', params.dateTo)
+    if (params?.movementType) searchParams.append('movementType', params.movementType)
+    if (params?.page) searchParams.append('page', params.page.toString())
+    if (params?.limit) searchParams.append('limit', params.limit.toString())
+
+    const queryString = searchParams.toString()
+    const url = `/spare-parts/${id}/movements${queryString ? `?${queryString}` : ''}`
+    const response = await api.get(url)
+    return response.data
   }
 }

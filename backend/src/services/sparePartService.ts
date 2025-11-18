@@ -140,6 +140,82 @@ export class SparePartService {
   }
 
   /**
+   * Obtener movimientos de un repuesto con filtros
+   */
+  async getMovements(
+    sparePartId: string,
+    filters?: {
+      dateFrom?: string
+      dateTo?: string
+      movementType?: 'entrada' | 'salida' | 'ajuste'
+      page?: number
+      limit?: number
+    }
+  ) {
+    // Verificar que el repuesto existe
+    const sparePart = await prisma.sparePart.findUnique({
+      where: { id: sparePartId },
+    })
+
+    if (!sparePart) {
+      throw new Error('Repuesto no encontrado')
+    }
+
+    const {
+      dateFrom,
+      dateTo,
+      movementType,
+      page = 1,
+      limit = 50,
+    } = filters || {}
+
+    const pageNum = typeof page === 'string' ? parseInt(page, 10) : page
+    const limitNum = typeof limit === 'string' ? parseInt(limit, 10) : limit
+    const skip = (pageNum - 1) * limitNum
+
+    const where: any = {
+      sparePartId,
+    }
+
+    // Filtro por tipo de movimiento
+    if (movementType) {
+      where.movementType = movementType
+    }
+
+    // Filtro por fecha
+    if (dateFrom || dateTo) {
+      where.createdAt = {}
+      if (dateFrom) {
+        where.createdAt.gte = new Date(dateFrom)
+      }
+      if (dateTo) {
+        // Incluir todo el día hasta las 23:59:59
+        const endDate = new Date(dateTo)
+        endDate.setHours(23, 59, 59, 999)
+        where.createdAt.lte = endDate
+      }
+    }
+
+    const [movements, total] = await Promise.all([
+      prisma.sparePartMovement.findMany({
+        where,
+        skip,
+        take: limitNum,
+        orderBy: { createdAt: 'desc' },
+      }),
+      prisma.sparePartMovement.count({ where }),
+    ])
+
+    return {
+      movements,
+      total,
+      page: pageNum,
+      limit: limitNum,
+      totalPages: Math.ceil(total / limitNum),
+    }
+  }
+
+  /**
    * Crear repuesto
    */
   async create(data: {
