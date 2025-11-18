@@ -437,7 +437,6 @@ export class SparePartService {
       })
 
       let request
-      const now = new Date()
 
       if (existingRequest) {
         // Si existe y está en estado 'solicitado', actualizar la cantidad solicitada
@@ -558,7 +557,6 @@ export class SparePartService {
     // Procesar todas las solicitudes agrupadas en una transacción
     const result = await prisma.$transaction(async (tx) => {
       const createdRequests = []
-      const now = new Date()
 
       for (const request of Array.from(groupedRequests.values())) {
         // Verificar stock nuevamente dentro de la transacción
@@ -693,7 +691,7 @@ export class SparePartService {
   /**
    * Aprobar solicitud de repuesto (descontar stock y marcar como entregado)
    */
-  async approveRequest(id: string, approvedById: string) {
+  async approveRequest(id: string, _approvedById: string) {
     const request = await prisma.workOrderSparePart.findUnique({
       where: { id },
       include: {
@@ -822,7 +820,7 @@ export class SparePartService {
   /**
    * Rechazar solicitud de repuesto
    */
-  async rejectRequest(id: string, rejectedById: string, reason?: string) {
+  async rejectRequest(id: string, _rejectedById: string, reason?: string) {
     const request = await prisma.workOrderSparePart.findUnique({
       where: { id },
       include: {
