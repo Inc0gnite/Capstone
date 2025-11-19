@@ -319,5 +319,475 @@ export class ExcelService {
     // Descargar el archivo
     XLSX.writeFile(workbook, fileName)
   }
+
+  /**
+   * Exporta el reporte de flota a Excel
+   */
+  static exportFleetReportToExcel(report: {
+    summary: {
+      totalVehicles: number
+      totalEntries: number
+      totalWorkOrders: number
+      averageCompletionTime: number
+      dateFrom: string | null
+      dateTo: string | null
+      regionId: string | null
+    }
+    byRegion: Array<{
+      regionName: string
+      regionCode: string
+      vehicleCount: number
+      entryCount: number
+      workOrderCount: number
+    }>
+    byVehicleType: Array<{
+      vehicleType: string
+      count: number
+    }>
+    vehicles: Array<any>
+  }, regionName?: string): void {
+    const workbook = XLSX.utils.book_new()
+
+    // Hoja 1: Resumen
+    const summaryData = [
+      ['Métrica', 'Valor'],
+      ['Total Vehículos', report.summary.totalVehicles],
+      ['Total Ingresos', report.summary.totalEntries],
+      ['Total Órdenes', report.summary.totalWorkOrders],
+      ['Tiempo Promedio (h)', report.summary.averageCompletionTime.toFixed(2)],
+      ['Fecha Desde', report.summary.dateFrom || 'N/A'],
+      ['Fecha Hasta', report.summary.dateTo || 'N/A'],
+      ['Región', regionName || 'Todas'],
+    ]
+    const summarySheet = XLSX.utils.aoa_to_sheet(summaryData)
+    XLSX.utils.book_append_sheet(workbook, summarySheet, 'Resumen')
+
+    // Hoja 2: Por Región
+    if (report.byRegion.length > 0) {
+      const regionData = [
+        ['Región', 'Código', 'Vehículos', 'Ingresos', 'Órdenes'],
+        ...report.byRegion.map((r) => [
+          r.regionName,
+          r.regionCode,
+          r.vehicleCount,
+          r.entryCount,
+          r.workOrderCount,
+        ]),
+      ]
+      const regionSheet = XLSX.utils.aoa_to_sheet(regionData)
+      XLSX.utils.book_append_sheet(workbook, regionSheet, 'Por Región')
+    }
+
+    // Hoja 3: Por Tipo de Vehículo
+    if (report.byVehicleType.length > 0) {
+      const vehicleTypeData = [
+        ['Tipo de Vehículo', 'Cantidad'],
+        ...report.byVehicleType.map((v) => [v.vehicleType, v.count]),
+      ]
+      const vehicleTypeSheet = XLSX.utils.aoa_to_sheet(vehicleTypeData)
+      XLSX.utils.book_append_sheet(workbook, vehicleTypeSheet, 'Por Tipo')
+    }
+
+    // Hoja 4: Vehículos
+    if (report.vehicles.length > 0) {
+      const vehiclesData = [
+        ['Patente', 'Tipo', 'Marca', 'Modelo', 'Año', 'Número Flota', 'Región', 'Total Ingresos', 'Total Órdenes'],
+        ...report.vehicles.map((v) => [
+          v.licensePlate,
+          v.vehicleType,
+          v.brand,
+          v.model,
+          v.year,
+          v.fleetNumber || '',
+          v.region?.name || '',
+          v.totalEntries,
+          v.totalWorkOrders,
+        ]),
+      ]
+      const vehiclesSheet = XLSX.utils.aoa_to_sheet(vehiclesData)
+      XLSX.utils.book_append_sheet(workbook, vehiclesSheet, 'Vehículos')
+    }
+
+    const date = new Date().toISOString().split('T')[0]
+    const fileName = `Reporte_Flota_${date}.xlsx`
+    XLSX.writeFile(workbook, fileName)
+  }
+
+  /**
+   * Exporta el reporte de desempeño de mecánicos a Excel
+   */
+  static exportMechanicsPerformanceReportToExcel(report: {
+    summary: {
+      totalMechanics: number
+      totalOrders: number
+      totalCompleted: number
+      totalHours: number
+      averageEfficiency: number
+      dateFrom: string | null
+      dateTo: string | null
+    }
+    mechanics: Array<{
+      name: string
+      email: string
+      workshop: { name: string } | null
+      totalOrders: number
+      completedOrders: number
+      inProgressOrders: number
+      pendingOrders: number
+      pausedOrders: number
+      cancelledOrders: number
+      totalHours: number
+      estimatedHours: number
+      averageHours: number
+      efficiency: number
+      averageCompletionDays: number
+    }>
+  }): void {
+    const workbook = XLSX.utils.book_new()
+
+    // Hoja 1: Resumen
+    const summaryData = [
+      ['Métrica', 'Valor'],
+      ['Total Mecánicos', report.summary.totalMechanics],
+      ['Total Órdenes', report.summary.totalOrders],
+      ['Órdenes Completadas', report.summary.totalCompleted],
+      ['Total Horas', report.summary.totalHours.toFixed(2)],
+      ['Eficiencia Promedio', `${report.summary.averageEfficiency.toFixed(1)}%`],
+      ['Fecha Desde', report.summary.dateFrom || 'N/A'],
+      ['Fecha Hasta', report.summary.dateTo || 'N/A'],
+    ]
+    const summarySheet = XLSX.utils.aoa_to_sheet(summaryData)
+    XLSX.utils.book_append_sheet(workbook, summarySheet, 'Resumen')
+
+    // Hoja 2: Mecánicos
+    if (report.mechanics.length > 0) {
+      const mechanicsData = [
+        [
+          'Mecánico',
+          'Email',
+          'Taller',
+          'Total Órdenes',
+          'Completadas',
+          'En Progreso',
+          'Pendientes',
+          'Pausadas',
+          'Canceladas',
+          'Horas Totales',
+          'Horas Estimadas',
+          'Promedio (h)',
+          'Eficiencia (%)',
+          'Promedio Completado (días)',
+        ],
+        ...report.mechanics.map((m) => [
+          m.name,
+          m.email,
+          m.workshop?.name || 'Sin taller',
+          m.totalOrders,
+          m.completedOrders,
+          m.inProgressOrders,
+          m.pendingOrders,
+          m.pausedOrders,
+          m.cancelledOrders,
+          m.totalHours.toFixed(2),
+          m.estimatedHours.toFixed(2),
+          m.averageHours.toFixed(2),
+          m.efficiency.toFixed(1),
+          m.averageCompletionDays.toFixed(1),
+        ]),
+      ]
+      const mechanicsSheet = XLSX.utils.aoa_to_sheet(mechanicsData)
+      XLSX.utils.book_append_sheet(workbook, mechanicsSheet, 'Mecánicos')
+    }
+
+    const date = new Date().toISOString().split('T')[0]
+    const fileName = `Reporte_Desempeño_Mecánicos_${date}.xlsx`
+    XLSX.writeFile(workbook, fileName)
+  }
+
+  /**
+   * Exporta el reporte de inventario a Excel
+   */
+  static exportInventoryReportToExcel(report: {
+    summary: {
+      totalParts: number
+      totalValue: number
+      lowStockCount: number
+      outOfStockCount: number
+    }
+    byCategory: Array<{
+      category: string
+      count: number
+      totalValue: number
+      lowStockCount: number
+    }>
+    byWorkshop: Array<{
+      workshopName: string
+      count: number
+      totalValue: number
+      lowStockCount: number
+    }>
+    parts: Array<{
+      code: string
+      name: string
+      category: string
+      unitOfMeasure: string
+      unitPrice: number
+      currentStock: number
+      minStock: number
+      maxStock: number
+      location: string | null
+      totalValue: number
+      isLowStock: boolean
+      isOutOfStock: boolean
+      usageCount: number
+      workshop: { name: string } | null
+    }>
+  }): void {
+    const workbook = XLSX.utils.book_new()
+
+    // Hoja 1: Resumen
+    const summaryData = [
+      ['Métrica', 'Valor'],
+      ['Total Repuestos', report.summary.totalParts],
+      ['Valor Total', `$${report.summary.totalValue.toLocaleString('es-CL')}`],
+      ['Bajo Stock', report.summary.lowStockCount],
+      ['Sin Stock', report.summary.outOfStockCount],
+    ]
+    const summarySheet = XLSX.utils.aoa_to_sheet(summaryData)
+    XLSX.utils.book_append_sheet(workbook, summarySheet, 'Resumen')
+
+    // Hoja 2: Por Categoría
+    if (report.byCategory.length > 0) {
+      const categoryData = [
+        ['Categoría', 'Cantidad', 'Valor Total', 'Bajo Stock'],
+        ...report.byCategory.map((c) => [
+          c.category,
+          c.count,
+          `$${c.totalValue.toLocaleString('es-CL')}`,
+          c.lowStockCount,
+        ]),
+      ]
+      const categorySheet = XLSX.utils.aoa_to_sheet(categoryData)
+      XLSX.utils.book_append_sheet(workbook, categorySheet, 'Por Categoría')
+    }
+
+    // Hoja 3: Por Taller
+    if (report.byWorkshop.length > 0) {
+      const workshopData = [
+        ['Taller', 'Cantidad', 'Valor Total', 'Bajo Stock'],
+        ...report.byWorkshop.map((w) => [
+          w.workshopName,
+          w.count,
+          `$${w.totalValue.toLocaleString('es-CL')}`,
+          w.lowStockCount,
+        ]),
+      ]
+      const workshopSheet = XLSX.utils.aoa_to_sheet(workshopData)
+      XLSX.utils.book_append_sheet(workbook, workshopSheet, 'Por Taller')
+    }
+
+    // Hoja 4: Repuestos
+    if (report.parts.length > 0) {
+      const partsData = [
+        [
+          'Código',
+          'Nombre',
+          'Categoría',
+          'Unidad',
+          'Precio Unitario',
+          'Stock Actual',
+          'Stock Mínimo',
+          'Stock Máximo',
+          'Valor Total',
+          'Ubicación',
+          'Estado',
+          'Uso',
+          'Taller',
+        ],
+        ...report.parts.map((p) => [
+          p.code,
+          p.name,
+          p.category,
+          p.unitOfMeasure,
+          p.unitPrice,
+          p.currentStock,
+          p.minStock,
+          p.maxStock,
+          `$${p.totalValue.toLocaleString('es-CL')}`,
+          p.location || '',
+          p.isOutOfStock ? 'Sin Stock' : p.isLowStock ? 'Bajo Stock' : 'Normal',
+          p.usageCount,
+          p.workshop?.name || 'Sin taller',
+        ]),
+      ]
+      const partsSheet = XLSX.utils.aoa_to_sheet(partsData)
+      XLSX.utils.book_append_sheet(workbook, partsSheet, 'Repuestos')
+    }
+
+    const date = new Date().toISOString().split('T')[0]
+    const fileName = `Reporte_Inventario_${date}.xlsx`
+    XLSX.writeFile(workbook, fileName)
+  }
+
+  /**
+   * Exporta el reporte de costos a Excel
+   */
+  static exportCostsReportToExcel(report: {
+    summary: {
+      totalOrders: number
+      totalLaborCost: number
+      totalSparePartsCost: number
+      totalCost: number
+      totalHours: number
+      averageCostPerOrder: number
+      hourlyRate: number
+      dateFrom: string | null
+      dateTo: string | null
+    }
+    byWorkshop: Array<{
+      workshopName: string
+      orderCount: number
+      totalLaborCost: number
+      totalSparePartsCost: number
+      totalCost: number
+      totalHours: number
+    }>
+    byWorkType: Array<{
+      workType: string
+      orderCount: number
+      totalLaborCost: number
+      totalSparePartsCost: number
+      totalCost: number
+      totalHours: number
+    }>
+    byMechanic: Array<{
+      mechanicName: string
+      orderCount: number
+      totalLaborCost: number
+      totalSparePartsCost: number
+      totalCost: number
+      totalHours: number
+    }>
+    orders: Array<{
+      orderNumber: string
+      workType: string
+      priority: string
+      currentStatus: string
+      totalHours: number
+      laborCost: number
+      sparePartsCost: number
+      totalCost: number
+      vehicle: { licensePlate: string } | null
+      mechanic: { name: string } | null
+      workshop: { name: string } | null
+    }>
+  }): void {
+    const workbook = XLSX.utils.book_new()
+
+    // Hoja 1: Resumen
+    const summaryData = [
+      ['Métrica', 'Valor'],
+      ['Total Órdenes', report.summary.totalOrders],
+      ['Costo Mano de Obra', `$${report.summary.totalLaborCost.toLocaleString('es-CL')}`],
+      ['Costo Repuestos', `$${report.summary.totalSparePartsCost.toLocaleString('es-CL')}`],
+      ['Costo Total', `$${report.summary.totalCost.toLocaleString('es-CL')}`],
+      ['Total Horas', report.summary.totalHours.toFixed(2)],
+      ['Promedio por Orden', `$${report.summary.averageCostPerOrder.toLocaleString('es-CL')}`],
+      ['Tarifa por Hora', `$${report.summary.hourlyRate.toLocaleString('es-CL')}`],
+      ['Fecha Desde', report.summary.dateFrom || 'N/A'],
+      ['Fecha Hasta', report.summary.dateTo || 'N/A'],
+    ]
+    const summarySheet = XLSX.utils.aoa_to_sheet(summaryData)
+    XLSX.utils.book_append_sheet(workbook, summarySheet, 'Resumen')
+
+    // Hoja 2: Por Taller
+    if (report.byWorkshop.length > 0) {
+      const workshopData = [
+        ['Taller', 'Órdenes', 'Mano de Obra', 'Repuestos', 'Total', 'Horas'],
+        ...report.byWorkshop.map((w) => [
+          w.workshopName,
+          w.orderCount,
+          `$${w.totalLaborCost.toLocaleString('es-CL')}`,
+          `$${w.totalSparePartsCost.toLocaleString('es-CL')}`,
+          `$${w.totalCost.toLocaleString('es-CL')}`,
+          w.totalHours.toFixed(2),
+        ]),
+      ]
+      const workshopSheet = XLSX.utils.aoa_to_sheet(workshopData)
+      XLSX.utils.book_append_sheet(workbook, workshopSheet, 'Por Taller')
+    }
+
+    // Hoja 3: Por Tipo de Trabajo
+    if (report.byWorkType.length > 0) {
+      const workTypeData = [
+        ['Tipo de Trabajo', 'Órdenes', 'Mano de Obra', 'Repuestos', 'Total', 'Horas'],
+        ...report.byWorkType.map((w) => [
+          w.workType,
+          w.orderCount,
+          `$${w.totalLaborCost.toLocaleString('es-CL')}`,
+          `$${w.totalSparePartsCost.toLocaleString('es-CL')}`,
+          `$${w.totalCost.toLocaleString('es-CL')}`,
+          w.totalHours.toFixed(2),
+        ]),
+      ]
+      const workTypeSheet = XLSX.utils.aoa_to_sheet(workTypeData)
+      XLSX.utils.book_append_sheet(workbook, workTypeSheet, 'Por Tipo')
+    }
+
+    // Hoja 4: Por Mecánico
+    if (report.byMechanic.length > 0) {
+      const mechanicData = [
+        ['Mecánico', 'Órdenes', 'Mano de Obra', 'Repuestos', 'Total', 'Horas'],
+        ...report.byMechanic.map((m) => [
+          m.mechanicName,
+          m.orderCount,
+          `$${m.totalLaborCost.toLocaleString('es-CL')}`,
+          `$${m.totalSparePartsCost.toLocaleString('es-CL')}`,
+          `$${m.totalCost.toLocaleString('es-CL')}`,
+          m.totalHours.toFixed(2),
+        ]),
+      ]
+      const mechanicSheet = XLSX.utils.aoa_to_sheet(mechanicData)
+      XLSX.utils.book_append_sheet(workbook, mechanicSheet, 'Por Mecánico')
+    }
+
+    // Hoja 5: Órdenes Detalladas
+    if (report.orders.length > 0) {
+      const ordersData = [
+        [
+          'Número Orden',
+          'Tipo Trabajo',
+          'Prioridad',
+          'Estado',
+          'Patente',
+          'Mecánico',
+          'Taller',
+          'Horas',
+          'Costo Mano Obra',
+          'Costo Repuestos',
+          'Costo Total',
+        ],
+        ...report.orders.map((o) => [
+          o.orderNumber,
+          o.workType,
+          o.priority,
+          o.currentStatus,
+          o.vehicle?.licensePlate || 'N/A',
+          o.mechanic?.name || 'Sin asignar',
+          o.workshop?.name || 'N/A',
+          o.totalHours.toFixed(2),
+          `$${o.laborCost.toLocaleString('es-CL')}`,
+          `$${o.sparePartsCost.toLocaleString('es-CL')}`,
+          `$${o.totalCost.toLocaleString('es-CL')}`,
+        ]),
+      ]
+      const ordersSheet = XLSX.utils.aoa_to_sheet(ordersData)
+      XLSX.utils.book_append_sheet(workbook, ordersSheet, 'Órdenes')
+    }
+
+    const date = new Date().toISOString().split('T')[0]
+    const fileName = `Reporte_Costos_${date}.xlsx`
+    XLSX.writeFile(workbook, fileName)
+  }
 }
 

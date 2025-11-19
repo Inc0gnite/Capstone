@@ -519,13 +519,29 @@ export default function Reports() {
             <div className="mt-6 border-t pt-6">
               <div className="flex items-center justify-between mb-4">
                 <h4 className="text-md font-semibold text-gray-900">Resultados del Reporte</h4>
-                <button
-                  onClick={handleExportFleetReportPDF}
-                  className="px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium transition-colors flex items-center gap-2"
-                >
-                  <span>📄</span>
-                  <span>Exportar PDF</span>
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      if (fleetReport) {
+                        ExcelService.exportFleetReportToExcel(
+                          fleetReport,
+                          selectedRegionId ? regions.find(r => r.id === selectedRegionId)?.name : undefined
+                        )
+                      }
+                    }}
+                    className="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium transition-colors flex items-center gap-2"
+                  >
+                    <span>📊</span>
+                    <span>Exportar Excel</span>
+                  </button>
+                  <button
+                    onClick={handleExportFleetReportPDF}
+                    className="px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium transition-colors flex items-center gap-2"
+                  >
+                    <span>📄</span>
+                    <span>Exportar PDF</span>
+                  </button>
+                </div>
               </div>
 
               {/* Resumen */}
@@ -710,6 +726,17 @@ export default function Reports() {
             <div className="mt-6 border-t pt-6">
               <div className="flex items-center justify-between mb-4">
                 <h4 className="text-md font-semibold text-gray-900">Resultados del Reporte</h4>
+                <button
+                  onClick={() => {
+                    if (mechanicsReport) {
+                      ExcelService.exportMechanicsPerformanceReportToExcel(mechanicsReport)
+                    }
+                  }}
+                  className="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium transition-colors flex items-center gap-2"
+                >
+                  <span>📊</span>
+                  <span>Exportar Excel</span>
+                </button>
               </div>
 
               {/* Resumen */}
@@ -864,6 +891,17 @@ export default function Reports() {
             <div className="mt-6 border-t pt-6">
               <div className="flex items-center justify-between mb-4">
                 <h4 className="text-md font-semibold text-gray-900">Resultados del Reporte</h4>
+                <button
+                  onClick={() => {
+                    if (inventoryReport) {
+                      ExcelService.exportInventoryReportToExcel(inventoryReport)
+                    }
+                  }}
+                  className="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium transition-colors flex items-center gap-2"
+                >
+                  <span>📊</span>
+                  <span>Exportar Excel</span>
+                </button>
               </div>
 
               {/* Resumen */}
@@ -1037,6 +1075,17 @@ export default function Reports() {
             <div className="mt-6 border-t pt-6">
               <div className="flex items-center justify-between mb-4">
                 <h4 className="text-md font-semibold text-gray-900">Resultados del Reporte</h4>
+                <button
+                  onClick={() => {
+                    if (costsReport) {
+                      ExcelService.exportCostsReportToExcel(costsReport)
+                    }
+                  }}
+                  className="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium transition-colors flex items-center gap-2"
+                >
+                  <span>📊</span>
+                  <span>Exportar Excel</span>
+                </button>
               </div>
 
               {/* Resumen */}
