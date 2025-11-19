@@ -8,8 +8,15 @@ import { vehicleService } from '../services/vehicleService'
 import { vehicleEntryService } from '../services/vehicleEntryService'
 import { userService } from '../services/userService'
 import { ExcelService } from '../services/excelService'
-import { reportService, type FleetReport } from '../services/reportService'
+import { 
+  reportService, 
+  type FleetReport,
+  type MechanicsPerformanceReport,
+  type InventoryReport,
+  type CostsReport
+} from '../services/reportService'
 import { regionService } from '../services/regionService'
+import { workshopService } from '../services/workshopService'
 import { PDFService } from '../services/pdfService'
 
 type KPIs = {
@@ -43,6 +50,33 @@ export default function Reports() {
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
 
+  // Estados para Reporte de Desempeño de Mecánicos
+  const [showMechanicsReport, setShowMechanicsReport] = useState(false)
+  const [mechanicsReport, setMechanicsReport] = useState<MechanicsPerformanceReport | null>(null)
+  const [loadingMechanicsReport, setLoadingMechanicsReport] = useState(false)
+  const [mechanicsDateFrom, setMechanicsDateFrom] = useState('')
+  const [mechanicsDateTo, setMechanicsDateTo] = useState('')
+  const [mechanicsWorkshopId, setMechanicsWorkshopId] = useState<string>('')
+
+  // Estados para Reporte de Inventario
+  const [showInventoryReport, setShowInventoryReport] = useState(false)
+  const [inventoryReport, setInventoryReport] = useState<InventoryReport | null>(null)
+  const [loadingInventoryReport, setLoadingInventoryReport] = useState(false)
+  const [inventoryCategory, setInventoryCategory] = useState<string>('')
+  const [inventoryLowStock, setInventoryLowStock] = useState(false)
+  const [inventorySearch, setInventorySearch] = useState('')
+  const [inventoryWorkshopId, setInventoryWorkshopId] = useState<string>('')
+  const [categories, setCategories] = useState<string[]>([])
+
+  // Estados para Reporte de Costos
+  const [showCostsReport, setShowCostsReport] = useState(false)
+  const [costsReport, setCostsReport] = useState<CostsReport | null>(null)
+  const [loadingCostsReport, setLoadingCostsReport] = useState(false)
+  const [costsDateFrom, setCostsDateFrom] = useState('')
+  const [costsDateTo, setCostsDateTo] = useState('')
+  const [costsWorkshopId, setCostsWorkshopId] = useState<string>('')
+  const [workshops, setWorkshops] = useState<any[]>([])
+
   const canSeeAllWorkshops = useMemo(() => roleName === 'Administrador', [roleName])
 
   useEffect(() => {
@@ -66,13 +100,15 @@ export default function Reports() {
           workshopId: canSeeAllWorkshops ? undefined : workshopId,
         })
         const regionsPromise = regionService.getAll()
+        const workshopsPromise = canSeeAllWorkshops ? workshopService.getAll() : Promise.resolve({ data: [] })
 
-        const [k, perf, orders, parts, regionsData] = await Promise.all([
+        const [k, perf, orders, parts, regionsData, workshopsData] = await Promise.all([
           kpisPromise,
           perfPromise,
           ordersPromise,
           lowStockPromise,
           regionsPromise,
+          workshopsPromise,
         ])
 
         // Mapear kpis de backend → frontend
@@ -91,6 +127,12 @@ export default function Reports() {
         setRecentOrders(orders.data || [])
         setLowStockParts(parts.data || [])
         setRegions(regionsData.data || [])
+        setWorkshops(workshopsData.data || [])
+
+        // Obtener categorías únicas de repuestos
+        const allParts = parts.data || []
+        const uniqueCategories = Array.from(new Set(allParts.map((p: any) => p.category).filter(Boolean)))
+        setCategories(uniqueCategories as string[])
       } catch (err: any) {
         console.error('❌ Error cargando reportes:', err)
         setError(err?.response?.data?.message || 'Error cargando reportes')
@@ -148,6 +190,70 @@ export default function Reports() {
       allWorkOrders,
       `Reporte de Flota${selectedRegionId ? ` - ${regions.find(r => r.id === selectedRegionId)?.name || ''}` : ''}${dateFrom && dateTo ? ` (${dateFrom} a ${dateTo})` : ''}`
     )
+  }
+
+  const handleGenerateMechanicsReport = async () => {
+    try {
+      setLoadingMechanicsReport(true)
+      setError(null)
+
+      const params: any = {}
+      if (mechanicsWorkshopId) params.workshopId = mechanicsWorkshopId
+      if (mechanicsDateFrom) params.dateFrom = mechanicsDateFrom
+      if (mechanicsDateTo) params.dateTo = mechanicsDateTo
+
+      const report = await reportService.generateMechanicsPerformanceReport(params)
+      setMechanicsReport(report)
+      setShowMechanicsReport(true)
+    } catch (err: any) {
+      console.error('Error generando reporte de desempeño:', err)
+      setError(err?.response?.data?.error || 'Error al generar el reporte de desempeño de mecánicos')
+    } finally {
+      setLoadingMechanicsReport(false)
+    }
+  }
+
+  const handleGenerateInventoryReport = async () => {
+    try {
+      setLoadingInventoryReport(true)
+      setError(null)
+
+      const params: any = {}
+      if (inventoryWorkshopId) params.workshopId = inventoryWorkshopId
+      if (inventoryCategory) params.category = inventoryCategory
+      if (inventoryLowStock) params.lowStock = true
+      if (inventorySearch) params.search = inventorySearch
+
+      const report = await reportService.generateInventoryReport(params)
+      setInventoryReport(report)
+      setShowInventoryReport(true)
+    } catch (err: any) {
+      console.error('Error generando reporte de inventario:', err)
+      setError(err?.response?.data?.error || 'Error al generar el reporte de inventario')
+    } finally {
+      setLoadingInventoryReport(false)
+    }
+  }
+
+  const handleGenerateCostsReport = async () => {
+    try {
+      setLoadingCostsReport(true)
+      setError(null)
+
+      const params: any = {}
+      if (costsWorkshopId) params.workshopId = costsWorkshopId
+      if (costsDateFrom) params.dateFrom = costsDateFrom
+      if (costsDateTo) params.dateTo = costsDateTo
+
+      const report = await reportService.generateCostsReport(params)
+      setCostsReport(report)
+      setShowCostsReport(true)
+    } catch (err: any) {
+      console.error('Error generando reporte de costos:', err)
+      setError(err?.response?.data?.error || 'Error al generar el reporte de costos')
+    } finally {
+      setLoadingCostsReport(false)
+    }
   }
 
   if (loading) {
@@ -476,6 +582,524 @@ export default function Reports() {
                         Mostrando 20 de {fleetReport.vehicles.length} vehículos
                       </div>
                     )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Reporte de Desempeño de Mecánicos */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Reporte de Desempeño de Mecánicos</h3>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+            {canSeeAllWorkshops && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Taller
+                </label>
+                <select
+                  value={mechanicsWorkshopId}
+                  onChange={(e) => setMechanicsWorkshopId(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                >
+                  <option value="">Todos los talleres</option>
+                  {workshops.map((w) => (
+                    <option key={w.id} value={w.id}>
+                      {w.name} ({w.code})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Fecha Desde
+              </label>
+              <input
+                type="date"
+                value={mechanicsDateFrom}
+                onChange={(e) => setMechanicsDateFrom(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Fecha Hasta
+              </label>
+              <input
+                type="date"
+                value={mechanicsDateTo}
+                onChange={(e) => setMechanicsDateTo(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div className="flex items-end">
+              <button
+                onClick={handleGenerateMechanicsReport}
+                disabled={loadingMechanicsReport}
+                className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {loadingMechanicsReport ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    <span>Generando...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>📊</span>
+                    <span>Generar</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {showMechanicsReport && mechanicsReport && (
+            <div className="mt-6 border-t pt-6">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-md font-semibold text-gray-900">Resultados del Reporte</h4>
+              </div>
+
+              {/* Resumen */}
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+                <div className="bg-blue-50 rounded-lg p-4">
+                  <div className="text-sm text-blue-600 font-medium">Total Mecánicos</div>
+                  <div className="text-2xl font-bold text-blue-900">{mechanicsReport.summary.totalMechanics}</div>
+                </div>
+                <div className="bg-green-50 rounded-lg p-4">
+                  <div className="text-sm text-green-600 font-medium">Total Órdenes</div>
+                  <div className="text-2xl font-bold text-green-900">{mechanicsReport.summary.totalOrders}</div>
+                </div>
+                <div className="bg-purple-50 rounded-lg p-4">
+                  <div className="text-sm text-purple-600 font-medium">Completadas</div>
+                  <div className="text-2xl font-bold text-purple-900">{mechanicsReport.summary.totalCompleted}</div>
+                </div>
+                <div className="bg-orange-50 rounded-lg p-4">
+                  <div className="text-sm text-orange-600 font-medium">Total Horas</div>
+                  <div className="text-2xl font-bold text-orange-900">{mechanicsReport.summary.totalHours.toFixed(2)}</div>
+                </div>
+                <div className="bg-indigo-50 rounded-lg p-4">
+                  <div className="text-sm text-indigo-600 font-medium">Eficiencia Promedio</div>
+                  <div className="text-2xl font-bold text-indigo-900">{mechanicsReport.summary.averageEfficiency.toFixed(1)}%</div>
+                </div>
+              </div>
+
+              {/* Tabla de Mecánicos */}
+              {mechanicsReport.mechanics.length > 0 && (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Mecánico</th>
+                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Total Órdenes</th>
+                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Completadas</th>
+                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">En Progreso</th>
+                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Horas Totales</th>
+                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Eficiencia</th>
+                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Promedio (días)</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {mechanicsReport.mechanics.map((mechanic) => (
+                        <tr key={mechanic.id} className="hover:bg-gray-50">
+                          <td className="px-4 py-2 text-sm font-medium text-gray-900">{mechanic.name}</td>
+                          <td className="px-4 py-2 text-sm text-right text-gray-700">{mechanic.totalOrders}</td>
+                          <td className="px-4 py-2 text-sm text-right text-gray-700">{mechanic.completedOrders}</td>
+                          <td className="px-4 py-2 text-sm text-right text-gray-700">{mechanic.inProgressOrders}</td>
+                          <td className="px-4 py-2 text-sm text-right text-gray-700">{mechanic.totalHours.toFixed(2)}</td>
+                          <td className="px-4 py-2 text-sm text-right text-gray-700">{mechanic.efficiency.toFixed(1)}%</td>
+                          <td className="px-4 py-2 text-sm text-right text-gray-700">{mechanic.averageCompletionDays.toFixed(1)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Reporte de Inventario */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Reporte de Inventario</h3>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
+            {canSeeAllWorkshops && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Taller
+                </label>
+                <select
+                  value={inventoryWorkshopId}
+                  onChange={(e) => setInventoryWorkshopId(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                >
+                  <option value="">Todos los talleres</option>
+                  {workshops.map((w) => (
+                    <option key={w.id} value={w.id}>
+                      {w.name} ({w.code})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Categoría
+              </label>
+              <select
+                value={inventoryCategory}
+                onChange={(e) => setInventoryCategory(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+              >
+                <option value="">Todas las categorías</option>
+                {categories.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Búsqueda
+              </label>
+              <input
+                type="text"
+                value={inventorySearch}
+                onChange={(e) => setInventorySearch(e.target.value)}
+                placeholder="Código o nombre..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div className="flex items-center">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={inventoryLowStock}
+                  onChange={(e) => setInventoryLowStock(e.target.checked)}
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                <span className="text-sm text-gray-700">Solo bajo stock</span>
+              </label>
+            </div>
+            <div className="flex items-end">
+              <button
+                onClick={handleGenerateInventoryReport}
+                disabled={loadingInventoryReport}
+                className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {loadingInventoryReport ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    <span>Generando...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>📊</span>
+                    <span>Generar</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {showInventoryReport && inventoryReport && (
+            <div className="mt-6 border-t pt-6">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-md font-semibold text-gray-900">Resultados del Reporte</h4>
+              </div>
+
+              {/* Resumen */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div className="bg-blue-50 rounded-lg p-4">
+                  <div className="text-sm text-blue-600 font-medium">Total Repuestos</div>
+                  <div className="text-2xl font-bold text-blue-900">{inventoryReport.summary.totalParts}</div>
+                </div>
+                <div className="bg-green-50 rounded-lg p-4">
+                  <div className="text-sm text-green-600 font-medium">Valor Total</div>
+                  <div className="text-2xl font-bold text-green-900">${inventoryReport.summary.totalValue.toLocaleString('es-CL')}</div>
+                </div>
+                <div className="bg-yellow-50 rounded-lg p-4">
+                  <div className="text-sm text-yellow-600 font-medium">Bajo Stock</div>
+                  <div className="text-2xl font-bold text-yellow-900">{inventoryReport.summary.lowStockCount}</div>
+                </div>
+                <div className="bg-red-50 rounded-lg p-4">
+                  <div className="text-sm text-red-600 font-medium">Sin Stock</div>
+                  <div className="text-2xl font-bold text-red-900">{inventoryReport.summary.outOfStockCount}</div>
+                </div>
+              </div>
+
+              {/* Por Categoría */}
+              {inventoryReport.byCategory.length > 0 && (
+                <div className="mb-6">
+                  <h5 className="text-sm font-semibold text-gray-700 mb-3">Por Categoría</h5>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Categoría</th>
+                          <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Cantidad</th>
+                          <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Valor Total</th>
+                          <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Bajo Stock</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {inventoryReport.byCategory.map((cat, idx) => (
+                          <tr key={idx}>
+                            <td className="px-4 py-2 text-sm text-gray-900">{cat.category}</td>
+                            <td className="px-4 py-2 text-sm text-right text-gray-700">{cat.count}</td>
+                            <td className="px-4 py-2 text-sm text-right text-gray-700">${cat.totalValue.toLocaleString('es-CL')}</td>
+                            <td className="px-4 py-2 text-sm text-right text-gray-700">{cat.lowStockCount}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Tabla de Repuestos (limitada a primeros 20) */}
+              {inventoryReport.parts.length > 0 && (
+                <div>
+                  <h5 className="text-sm font-semibold text-gray-700 mb-3">
+                    Repuestos ({inventoryReport.parts.length} total)
+                  </h5>
+                  <div className="overflow-x-auto max-h-96 overflow-y-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50 sticky top-0">
+                        <tr>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Código</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Nombre</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Categoría</th>
+                          <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Stock</th>
+                          <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Precio Unit.</th>
+                          <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Valor Total</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {inventoryReport.parts.slice(0, 20).map((part) => (
+                          <tr key={part.id} className="hover:bg-gray-50">
+                            <td className="px-4 py-2 text-sm font-medium text-gray-900">{part.code}</td>
+                            <td className="px-4 py-2 text-sm text-gray-700">{part.name}</td>
+                            <td className="px-4 py-2 text-sm text-gray-700">{part.category}</td>
+                            <td className={`px-4 py-2 text-sm text-right font-medium ${
+                              part.isOutOfStock ? 'text-red-600' : part.isLowStock ? 'text-yellow-600' : 'text-gray-700'
+                            }`}>
+                              {part.currentStock} / {part.minStock}
+                            </td>
+                            <td className="px-4 py-2 text-sm text-right text-gray-700">${part.unitPrice.toLocaleString('es-CL')}</td>
+                            <td className="px-4 py-2 text-sm text-right text-gray-700">${part.totalValue.toLocaleString('es-CL')}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    {inventoryReport.parts.length > 20 && (
+                      <div className="text-center py-2 text-sm text-gray-500">
+                        Mostrando 20 de {inventoryReport.parts.length} repuestos
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Reporte de Costos */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Reporte de Costos</h3>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+            {canSeeAllWorkshops && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Taller
+                </label>
+                <select
+                  value={costsWorkshopId}
+                  onChange={(e) => setCostsWorkshopId(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                >
+                  <option value="">Todos los talleres</option>
+                  {workshops.map((w) => (
+                    <option key={w.id} value={w.id}>
+                      {w.name} ({w.code})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Fecha Desde
+              </label>
+              <input
+                type="date"
+                value={costsDateFrom}
+                onChange={(e) => setCostsDateFrom(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Fecha Hasta
+              </label>
+              <input
+                type="date"
+                value={costsDateTo}
+                onChange={(e) => setCostsDateTo(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div className="flex items-end">
+              <button
+                onClick={handleGenerateCostsReport}
+                disabled={loadingCostsReport}
+                className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {loadingCostsReport ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    <span>Generando...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>📊</span>
+                    <span>Generar</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {showCostsReport && costsReport && (
+            <div className="mt-6 border-t pt-6">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-md font-semibold text-gray-900">Resultados del Reporte</h4>
+              </div>
+
+              {/* Resumen */}
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+                <div className="bg-blue-50 rounded-lg p-4">
+                  <div className="text-sm text-blue-600 font-medium">Total Órdenes</div>
+                  <div className="text-2xl font-bold text-blue-900">{costsReport.summary.totalOrders}</div>
+                </div>
+                <div className="bg-green-50 rounded-lg p-4">
+                  <div className="text-sm text-green-600 font-medium">Costo Mano de Obra</div>
+                  <div className="text-2xl font-bold text-green-900">${costsReport.summary.totalLaborCost.toLocaleString('es-CL')}</div>
+                </div>
+                <div className="bg-purple-50 rounded-lg p-4">
+                  <div className="text-sm text-purple-600 font-medium">Costo Repuestos</div>
+                  <div className="text-2xl font-bold text-purple-900">${costsReport.summary.totalSparePartsCost.toLocaleString('es-CL')}</div>
+                </div>
+                <div className="bg-orange-50 rounded-lg p-4">
+                  <div className="text-sm text-orange-600 font-medium">Costo Total</div>
+                  <div className="text-2xl font-bold text-orange-900">${costsReport.summary.totalCost.toLocaleString('es-CL')}</div>
+                </div>
+                <div className="bg-indigo-50 rounded-lg p-4">
+                  <div className="text-sm text-indigo-600 font-medium">Promedio por Orden</div>
+                  <div className="text-2xl font-bold text-indigo-900">${costsReport.summary.averageCostPerOrder.toLocaleString('es-CL')}</div>
+                </div>
+              </div>
+
+              {/* Por Taller */}
+              {costsReport.byWorkshop.length > 0 && (
+                <div className="mb-6">
+                  <h5 className="text-sm font-semibold text-gray-700 mb-3">Por Taller</h5>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Taller</th>
+                          <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Órdenes</th>
+                          <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Mano de Obra</th>
+                          <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Repuestos</th>
+                          <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Total</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {costsReport.byWorkshop.map((w, idx) => (
+                          <tr key={idx}>
+                            <td className="px-4 py-2 text-sm text-gray-900">{w.workshopName}</td>
+                            <td className="px-4 py-2 text-sm text-right text-gray-700">{w.orderCount}</td>
+                            <td className="px-4 py-2 text-sm text-right text-gray-700">${w.totalLaborCost.toLocaleString('es-CL')}</td>
+                            <td className="px-4 py-2 text-sm text-right text-gray-700">${w.totalSparePartsCost.toLocaleString('es-CL')}</td>
+                            <td className="px-4 py-2 text-sm text-right font-medium text-gray-900">${w.totalCost.toLocaleString('es-CL')}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Por Tipo de Trabajo */}
+              {costsReport.byWorkType.length > 0 && (
+                <div className="mb-6">
+                  <h5 className="text-sm font-semibold text-gray-700 mb-3">Por Tipo de Trabajo</h5>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Tipo</th>
+                          <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Órdenes</th>
+                          <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Mano de Obra</th>
+                          <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Repuestos</th>
+                          <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Total</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {costsReport.byWorkType.map((w, idx) => (
+                          <tr key={idx}>
+                            <td className="px-4 py-2 text-sm text-gray-900 capitalize">{w.workType}</td>
+                            <td className="px-4 py-2 text-sm text-right text-gray-700">{w.orderCount}</td>
+                            <td className="px-4 py-2 text-sm text-right text-gray-700">${w.totalLaborCost.toLocaleString('es-CL')}</td>
+                            <td className="px-4 py-2 text-sm text-right text-gray-700">${w.totalSparePartsCost.toLocaleString('es-CL')}</td>
+                            <td className="px-4 py-2 text-sm text-right font-medium text-gray-900">${w.totalCost.toLocaleString('es-CL')}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Por Mecánico */}
+              {costsReport.byMechanic.length > 0 && (
+                <div className="mb-6">
+                  <h5 className="text-sm font-semibold text-gray-700 mb-3">Por Mecánico</h5>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Mecánico</th>
+                          <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Órdenes</th>
+                          <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Mano de Obra</th>
+                          <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Repuestos</th>
+                          <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Total</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {costsReport.byMechanic.map((m, idx) => (
+                          <tr key={idx}>
+                            <td className="px-4 py-2 text-sm text-gray-900">{m.mechanicName}</td>
+                            <td className="px-4 py-2 text-sm text-right text-gray-700">{m.orderCount}</td>
+                            <td className="px-4 py-2 text-sm text-right text-gray-700">${m.totalLaborCost.toLocaleString('es-CL')}</td>
+                            <td className="px-4 py-2 text-sm text-right text-gray-700">${m.totalSparePartsCost.toLocaleString('es-CL')}</td>
+                            <td className="px-4 py-2 text-sm text-right font-medium text-gray-900">${m.totalCost.toLocaleString('es-CL')}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               )}

@@ -18,5 +18,35 @@ router.get(
   reportController.generateFleetReport
 )
 
+/**
+ * GET /api/reports/mechanics-performance
+ * Generar reporte de desempeño de mecánicos con filtros por taller y rango de fechas
+ */
+router.get(
+  '/mechanics-performance',
+  authorize('reports', 'read'),
+  reportController.generateMechanicsPerformanceReport
+)
+
+/**
+ * GET /api/reports/inventory
+ * Generar reporte de inventario con filtros por taller, categoría y stock
+ */
+router.get(
+  '/inventory',
+  authorize('reports', 'read'),
+  reportController.generateInventoryReport
+)
+
+/**
+ * GET /api/reports/costs
+ * Generar reporte de costos con filtros por taller y rango de fechas
+ */
+router.get(
+  '/costs',
+  authorize('reports', 'read'),
+  reportController.generateCostsReport
+)
+
 export default router
 
