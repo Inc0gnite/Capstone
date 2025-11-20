@@ -160,6 +160,16 @@ router.post(
 )
 
 /**
+ * GET /api/spare-parts/requests
+ * Obtener todas las solicitudes de repuestos (historial completo)
+ */
+router.get(
+  '/requests',
+  authorize('spare-parts', 'read'),
+  sparePartController.getAllRequests
+)
+
+/**
  * GET /api/spare-parts/requests/pending
  * Obtener solicitudes pendientes de aprobación (solo para jefes de taller)
  */

@@ -239,6 +239,27 @@ export class SparePartController {
   }
 
   /**
+   * GET /api/spare-parts/requests
+   * Obtener todas las solicitudes de repuestos (historial completo)
+   */
+  async getAllRequests(req: Request, res: Response) {
+    try {
+      const { workshopId, status, page, limit, dateFrom, dateTo } = req.query
+      const result = await sparePartService.getAllRequests({
+        workshopId: workshopId as string,
+        status: status as string,
+        page: page ? parseInt(page as string, 10) : undefined,
+        limit: limit ? parseInt(limit as string, 10) : undefined,
+        dateFrom: dateFrom as string,
+        dateTo: dateTo as string,
+      })
+      return sendSuccess(res, result)
+    } catch (error: any) {
+      return sendError(res, error.message, 500)
+    }
+  }
+
+  /**
    * POST /api/spare-parts/requests/:id/approve
    * Aprobar solicitud de repuesto
    */

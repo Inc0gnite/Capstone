@@ -765,6 +765,94 @@ export class SparePartService {
   }
 
   /**
+   * Obtener todas las solicitudes de repuestos (historial completo)
+   */
+  async getAllRequests(filters: {
+    workshopId?: string
+    status?: string
+    page?: number
+    limit?: number
+    dateFrom?: string
+    dateTo?: string
+  }) {
+    const {
+      workshopId,
+      status,
+      page = 1,
+      limit = 50,
+      dateFrom,
+      dateTo,
+    } = filters
+
+    const where: any = {}
+
+    if (status) {
+      where.status = status
+    }
+
+    if (workshopId) {
+      where.workOrder = {
+        workshopId,
+      }
+    }
+
+    if (dateFrom || dateTo) {
+      where.requestedAt = {}
+      if (dateFrom) {
+        where.requestedAt.gte = new Date(dateFrom)
+      }
+      if (dateTo) {
+        const endDate = new Date(dateTo)
+        endDate.setHours(23, 59, 59, 999)
+        where.requestedAt.lte = endDate
+      }
+    }
+
+    const pageNum = typeof page === 'string' ? parseInt(page, 10) : page
+    const limitNum = typeof limit === 'string' ? parseInt(limit, 10) : limit
+    const skip = (pageNum - 1) * limitNum
+
+    const [requests, total] = await Promise.all([
+      prisma.workOrderSparePart.findMany({
+        where,
+        skip,
+        take: limitNum,
+        include: {
+          sparePart: true,
+          workOrder: {
+            include: {
+              vehicle: {
+                select: {
+                  licensePlate: true,
+                },
+              },
+              assignedTo: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                },
+              },
+            },
+          },
+        },
+        orderBy: {
+          requestedAt: 'desc',
+        },
+      }),
+      prisma.workOrderSparePart.count({ where }),
+    ])
+
+    return {
+      requests,
+      total,
+      page: pageNum,
+      limit: limitNum,
+      totalPages: Math.ceil(total / limitNum),
+    }
+  }
+
+  /**
    * Aprobar solicitud de repuesto (descontar stock y marcar como entregado)
    */
   async approveRequest(id: string, _approvedById: string) {

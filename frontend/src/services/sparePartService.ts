@@ -198,6 +198,29 @@ export const sparePartService = {
     return response.data.data
   },
 
+  // Obtener todas las solicitudes de repuestos (historial completo)
+  async getAllRequests(params?: {
+    workshopId?: string
+    status?: string
+    page?: number
+    limit?: number
+    dateFrom?: string
+    dateTo?: string
+  }) {
+    const queryParams = new URLSearchParams()
+    if (params?.workshopId) queryParams.append('workshopId', params.workshopId)
+    if (params?.status) queryParams.append('status', params.status)
+    if (params?.page) queryParams.append('page', params.page.toString())
+    if (params?.limit) queryParams.append('limit', params.limit.toString())
+    if (params?.dateFrom) queryParams.append('dateFrom', params.dateFrom)
+    if (params?.dateTo) queryParams.append('dateTo', params.dateTo)
+    
+    const queryString = queryParams.toString()
+    const url = `/spare-parts/requests${queryString ? `?${queryString}` : ''}`
+    const response = await api.get(url)
+    return response.data.data
+  },
+
   // Aprobar solicitud de repuesto
   async approveRequest(requestId: string) {
     const response = await api.post(`/spare-parts/requests/${requestId}/approve`)
