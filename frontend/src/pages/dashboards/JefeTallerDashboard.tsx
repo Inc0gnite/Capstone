@@ -121,15 +121,16 @@ export default function JefeTallerDashboard() {
             <h2 className="text-2xl font-bold text-gray-900">Supervisión del Taller</h2>
             <p className="text-gray-600">Monitoreo y control de operaciones</p>
           </div>
-          {pendingRequestsCount > 0 && (
-            <Link
-              to="/spare-part-requests"
-              className="px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-medium transition-colors flex items-center space-x-2 shadow-md"
-            >
-              <span>📋</span>
-              <span>Solicitudes Pendientes ({pendingRequestsCount})</span>
-            </Link>
-          )}
+          <Link
+            to="/spare-part-requests"
+            className="px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-medium transition-colors flex items-center space-x-2 shadow-md"
+          >
+            <span>📋</span>
+            <span>
+              Solicitudes de Repuestos
+              {pendingRequestsCount > 0 && ` (${pendingRequestsCount})`}
+            </span>
+          </Link>
         </div>
 
         {/* Stats Cards */}
