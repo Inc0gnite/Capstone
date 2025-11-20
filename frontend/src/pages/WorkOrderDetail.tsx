@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { MainLayout } from '../components/Layout/MainLayout'
 import { workOrderService, WorkOrder } from '../services/workOrderService'
@@ -11,7 +11,6 @@ import { WorkOrderTimer } from '../components/WorkOrderTimer'
 import { WordService } from '../services/wordService'
 import { sparePartService } from '../services/sparePartService'
 import { useAuthStore } from '../store/authStore'
-import { CameraCapture } from '../components/photo/CameraCapture'
 import photoService, { VehicleEntryPhoto } from '../services/photoService'
 import { DocumentUpload } from '../components/DocumentUpload'
 
@@ -47,9 +46,9 @@ export default function WorkOrderDetail() {
   const [showExchangeMechanicModal, setShowExchangeMechanicModal] = useState(false)
   const [showRequestSparePartsModal, setShowRequestSparePartsModal] = useState(false)
   const [checklistCompleted, setChecklistCompleted] = useState(false)
-  const [showCamera, setShowCamera] = useState(false)
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
   const [entryPhotos, setEntryPhotos] = useState<VehicleEntryPhoto[]>([])
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const { user } = useAuthStore()
 
   useEffect(() => {
@@ -114,24 +113,69 @@ export default function WorkOrderDetail() {
     setChecklistCompleted(allCompleted)
   }, [])
 
-  const handlePhotoTaken = async (photoDataUrl: string) => {
+  const handleFileSelected = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!workOrder) return
+
+    const files = event.target.files
+    if (!files || files.length === 0) return
+
+    const file = files[0]
+
+    // Validar que sea un archivo de imagen
+    if (!file.type.startsWith('image/')) {
+      alert('Por favor, selecciona solo archivos de imagen (JPG, PNG, GIF, WEBP)')
+      // Limpiar el input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+      return
+    }
 
     try {
       setUploadingPhoto(true)
-      // Por ahora usamos la DataURL directamente
-      // En producción, aquí subirías la foto a Cloudinary u otro servicio
-      await workOrderService.addPhoto(workOrder.id, photoDataUrl, 'Foto del proceso', 'during')
       
-      // Recargar la orden para mostrar la nueva foto
-      await loadWorkOrder()
-      setShowCamera(false)
+      // Convertir el archivo a DataURL
+      const reader = new FileReader()
+      reader.onload = async (e) => {
+        try {
+          const photoDataUrl = e.target?.result as string
+          await workOrderService.addPhoto(workOrder.id, photoDataUrl, file.name || 'Foto del proceso', 'during')
+          
+          // Recargar la orden para mostrar la nueva foto
+          await loadWorkOrder()
+        } catch (err: any) {
+          console.error('Error guardando foto:', err)
+          alert('Error al guardar la foto: ' + (err.message || 'Error desconocido'))
+        } finally {
+          setUploadingPhoto(false)
+          // Limpiar el input
+          if (fileInputRef.current) {
+            fileInputRef.current.value = ''
+          }
+        }
+      }
+      
+      reader.onerror = () => {
+        alert('Error al leer el archivo')
+        setUploadingPhoto(false)
+        if (fileInputRef.current) {
+          fileInputRef.current.value = ''
+        }
+      }
+      
+      reader.readAsDataURL(file)
     } catch (err: any) {
-      console.error('Error guardando foto:', err)
-      alert('Error al guardar la foto: ' + (err.message || 'Error desconocido'))
-    } finally {
+      console.error('Error procesando archivo:', err)
+      alert('Error al procesar el archivo: ' + (err.message || 'Error desconocido'))
       setUploadingPhoto(false)
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
     }
+  }
+
+  const handleUploadButtonClick = () => {
+    fileInputRef.current?.click()
   }
 
   const handleExchangeMechanic = () => {
@@ -769,23 +813,33 @@ export default function WorkOrderDetail() {
                     <span className="ml-2 text-sm font-normal text-gray-500">({allPhotos.length})</span>
                   )}
                 </h3>
-                <button
-                  onClick={() => setShowCamera(true)}
-                  disabled={uploadingPhoto}
-                  className="px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
-                >
-                  {uploadingPhoto ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      <span>Subiendo...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>📷</span>
-                      <span>Tomar Foto</span>
-                    </>
-                  )}
-                </button>
+                <>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileSelected}
+                    className="hidden"
+                    disabled={uploadingPhoto}
+                  />
+                  <button
+                    onClick={handleUploadButtonClick}
+                    disabled={uploadingPhoto}
+                    className="px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                  >
+                    {uploadingPhoto ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        <span>Subiendo...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>📷</span>
+                        <span>Subir Foto</span>
+                      </>
+                    )}
+                  </button>
+                </>
               </div>
               
               {hasPhotos ? (
@@ -825,7 +879,7 @@ export default function WorkOrderDetail() {
                 <div className="text-center py-8 sm:py-12 bg-gray-50 rounded-lg">
                   <div className="text-4xl sm:text-5xl mb-3 sm:mb-4">📷</div>
                   <p className="text-sm sm:text-base text-gray-600 mb-2">No hay fotos registradas</p>
-                  <p className="text-xs sm:text-sm text-gray-500">Toma fotos del proceso de trabajo para documentar el avance</p>
+                  <p className="text-xs sm:text-sm text-gray-500">Sube fotos del proceso de trabajo para documentar el avance</p>
                 </div>
               )}
             </div>
@@ -1191,13 +1245,6 @@ export default function WorkOrderDetail() {
         />
       )}
 
-      {/* Modal de cámara para tomar fotos */}
-      {showCamera && (
-        <CameraCapture
-          onPhotoTaken={handlePhotoTaken}
-          onClose={() => setShowCamera(false)}
-        />
-      )}
     </MainLayout>
   )
 }
