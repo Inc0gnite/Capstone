@@ -503,23 +503,21 @@ export class SparePartService {
         throw new Error(`Stock insuficiente para ${currentSparePart.name}. Disponible: ${currentSparePart.currentStock}, Solicitado: ${quantity}`)
       }
 
-      // Verificar si ya existe una solicitud del mismo repuesto para esta orden
+      // Verificar si ya existe una solicitud PENDIENTE del mismo repuesto para esta orden
+      // Solo considerar solicitudes en estado 'solicitado' (pendientes de aprobación)
+      // Si hay una solicitud entregada, se puede crear una nueva solicitud
       const existingRequest = await tx.workOrderSparePart.findFirst({
         where: {
           workOrderId,
           sparePartId,
-          status: { in: ['solicitado', 'entregado'] }, // Solo considerar solicitudes activas
+          status: 'solicitado', // Solo considerar solicitudes pendientes de aprobación
         },
       })
 
       let request
 
       if (existingRequest) {
-        // Si existe y está en estado 'solicitado', actualizar la cantidad solicitada
-        // Si está en estado 'entregado', 'usado' o 'sobrante', no se puede modificar
-        if (existingRequest.status !== 'solicitado') {
-          throw new Error(`No se puede modificar una solicitud que ya está ${existingRequest.status}`)
-        }
+        // Si existe una solicitud pendiente, actualizar la cantidad solicitada
 
         const newQuantityRequested = existingRequest.quantityRequested + quantity
 
@@ -656,22 +654,21 @@ export class SparePartService {
           )
         }
 
-        // Verificar si ya existe una solicitud del mismo repuesto para esta orden
+        // Verificar si ya existe una solicitud PENDIENTE del mismo repuesto para esta orden
+        // Solo considerar solicitudes en estado 'solicitado' (pendientes de aprobación)
+        // Si hay una solicitud entregada, se puede crear una nueva solicitud
         const existingRequest = await tx.workOrderSparePart.findFirst({
           where: {
             workOrderId,
             sparePartId: request.sparePartId,
-            status: { in: ['solicitado', 'entregado'] }, // Solo considerar solicitudes activas
+            status: 'solicitado', // Solo considerar solicitudes pendientes de aprobación
           },
         })
 
         let createdRequest
 
         if (existingRequest) {
-          // Si existe y está en estado 'solicitado', actualizar la cantidad solicitada
-          if (existingRequest.status !== 'solicitado') {
-            throw new Error(`No se puede modificar una solicitud que ya está ${existingRequest.status}`)
-          }
+          // Si existe una solicitud pendiente, actualizar la cantidad solicitada
 
           const newQuantityRequested = existingRequest.quantityRequested + request.quantity
 
