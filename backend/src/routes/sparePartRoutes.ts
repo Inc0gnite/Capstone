@@ -94,6 +94,28 @@ router.post(
 )
 
 /**
+ * GET /api/spare-parts/requests/pending
+ * Obtener solicitudes pendientes de aprobación (solo para jefes de taller)
+ * IMPORTANTE: Esta ruta debe ir ANTES de /requests y /:id para evitar conflictos
+ */
+router.get(
+  '/requests/pending',
+  authorize('spare-parts', 'read'),
+  sparePartController.getPendingRequests
+)
+
+/**
+ * GET /api/spare-parts/requests
+ * Obtener todas las solicitudes de repuestos (historial completo)
+ * IMPORTANTE: Esta ruta debe ir ANTES de /:id para evitar conflictos
+ */
+router.get(
+  '/requests',
+  authorize('spare-parts', 'read'),
+  sparePartController.getAllRequests
+)
+
+/**
  * GET /api/spare-parts
  */
 router.get(
@@ -157,27 +179,6 @@ router.post(
   validateBody(['quantity', 'movementType', 'reason']),
   auditLog('adjust-stock', 'spare-parts'),
   sparePartController.adjustStock
-)
-
-/**
- * GET /api/spare-parts/requests/pending
- * Obtener solicitudes pendientes de aprobación (solo para jefes de taller)
- * IMPORTANTE: Esta ruta debe ir ANTES de /requests para evitar conflictos
- */
-router.get(
-  '/requests/pending',
-  authorize('spare-parts', 'read'),
-  sparePartController.getPendingRequests
-)
-
-/**
- * GET /api/spare-parts/requests
- * Obtener todas las solicitudes de repuestos (historial completo)
- */
-router.get(
-  '/requests',
-  authorize('spare-parts', 'read'),
-  sparePartController.getAllRequests
 )
 
 /**
