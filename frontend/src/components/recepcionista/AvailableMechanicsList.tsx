@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { mechanicService, MechanicWorkload } from '../../services/mechanicService'
+import { AlertTriangle, UserCog, Wrench, CheckCircle, Ban } from 'lucide-react'
 
 interface AvailableMechanicsListProps {
   workshopId: string
@@ -87,7 +88,7 @@ export function AvailableMechanicsList({
     return (
       <div className="bg-white rounded-lg shadow p-6">
         <div className="text-center py-8">
-          <div className="text-red-500 text-4xl mb-2">⚠️</div>
+          <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-2" />
           <p className="text-red-600 mb-4">{error}</p>
           <button
             onClick={loadMechanics}
@@ -104,7 +105,8 @@ export function AvailableMechanicsList({
     <div className="bg-white rounded-lg shadow p-6">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-semibold text-gray-900">
-          👨‍🔧 Mecánicos del Taller
+          <UserCog className="w-5 h-5 inline mr-2" />
+          Mecánicos del Taller
         </h3>
         
         {!showOnlyAvailable && (
@@ -145,7 +147,7 @@ export function AvailableMechanicsList({
 
       {filteredMechanics.length === 0 ? (
         <div className="text-center py-8 text-gray-500">
-          <div className="text-4xl mb-2">👨‍🔧</div>
+          <UserCog className="w-12 h-12 text-gray-400 mx-auto mb-2" />
           <p>No hay mecánicos {filter === 'available' ? 'disponibles' : filter === 'busy' ? 'ocupados' : 'en este taller'}</p>
         </div>
       ) : (
@@ -180,11 +182,22 @@ export function AvailableMechanicsList({
                           ? 'bg-green-100 text-green-800' 
                           : 'bg-red-100 text-red-800'
                       }`}>
-                        {mechanic.inProgressOrders > 0 
-                          ? '🔨 En progreso' 
-                          : mechanic.isAvailable 
-                          ? '✅ Disponible' 
-                          : '⛔ Lleno'}
+                        {mechanic.inProgressOrders > 0 ? (
+                          <>
+                            <Wrench className="w-3 h-3 inline mr-1" />
+                            En progreso
+                          </>
+                        ) : mechanic.isAvailable ? (
+                          <>
+                            <CheckCircle className="w-3 h-3 inline mr-1" />
+                            Disponible
+                          </>
+                        ) : (
+                          <>
+                            <Ban className="w-3 h-3 inline mr-1" />
+                            Lleno
+                          </>
+                        )}
                       </span>
                     </div>
                     

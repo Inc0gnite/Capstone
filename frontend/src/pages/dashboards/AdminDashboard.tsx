@@ -5,6 +5,7 @@ import { dashboardService } from '../../services/dashboardService'
 import { workOrderService } from '../../services/workOrderService'
 import { sparePartService } from '../../services/sparePartService'
 import { vehicleService } from '../../services/vehicleService'
+import { Car, Wrench, Factory, CheckCircle, FileText, XCircle, Info } from 'lucide-react'
 
 export default function AdminDashboard() {
   const navigate = useNavigate()
@@ -41,7 +42,7 @@ export default function AdminDashboard() {
         setLowStock(stock.data || [])
         setTotalVehicles((vehicles.data || []).length)
       } catch (err: any) {
-        console.error('❌ Error cargando dashboard administrador:', err)
+        console.error('Error cargando dashboard administrador:', err)
         setError('No fue posible cargar los datos del dashboard.')
       } finally {
         setLoadingStats(false)
@@ -79,28 +80,28 @@ export default function AdminDashboard() {
               title="Total Vehículos"
               value={(totalVehicles || 0).toString()}
               change=""
-              icon="🚗"
+              icon={Car}
               color="blue"
             />
             <StatCard
               title="Órdenes Activas"
               value={(stats?.inProgress || 0).toString()}
               change={`Total: ${stats?.total || 0}`}
-              icon="🔨"
+              icon={Wrench}
               color="yellow"
             />
             <StatCard
               title="En Taller"
               value={(stats?.pending || 0).toString()}
               change="Pendientes"
-              icon="🏭"
+              icon={Factory}
               color="green"
             />
             <StatCard
               title="Completadas Hoy"
               value={(stats?.completedToday || 0).toString()}
               change="Hoy"
-              icon="✅"
+              icon={CheckCircle}
               color="purple"
             />
           </div>
@@ -139,7 +140,7 @@ export default function AdminDashboard() {
               {recentActivity.length > 0 ? recentActivity.map((a: any, idx: number) => (
                 <ActivityItem
                   key={idx}
-                  icon="🛈"
+                  icon={Info}
                   title={a.title || a.action || 'Actividad'}
                   description={a.description || a.resource || ''}
                   time={new Date(a.createdAt || Date.now()).toLocaleString()}
@@ -193,10 +194,10 @@ export default function AdminDashboard() {
         <div className="bg-white rounded-lg shadow p-4 sm:p-6">
           <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Acciones Rápidas</h3>
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-            <QuickAction icon="➕" label="Nuevo Usuario" onClick={() => navigate('/users')} />
-            <QuickAction icon="🚗" label="Registrar Vehículo" onClick={() => navigate('/vehicles')} />
-            <QuickAction icon="📝" label="Nuevo Ingreso" onClick={() => navigate('/entries')} />
-            <QuickAction icon="✅" label="Registrar Salida" onClick={() => navigate('/entries?action=exit')} />
+            <QuickAction icon={null} label="Nuevo Usuario" onClick={() => navigate('/users')} />
+            <QuickAction icon={Car} label="Registrar Vehículo" onClick={() => navigate('/vehicles')} />
+            <QuickAction icon={FileText} label="Nuevo Ingreso" onClick={() => navigate('/entries')} />
+            <QuickAction icon={CheckCircle} label="Registrar Salida" onClick={() => navigate('/entries?action=exit')} />
           </div>
         </div>
       </div>
@@ -205,7 +206,7 @@ export default function AdminDashboard() {
 }
 
 // Componentes auxiliares
-function StatCard({ title, value, change, icon, color }: any) {
+function StatCard({ title, value, change, icon: IconComponent, color }: any) {
   const colors: Record<string, string> = {
     blue: 'bg-blue-50 text-blue-600',
     yellow: 'bg-yellow-50 text-yellow-600',
@@ -221,7 +222,9 @@ function StatCard({ title, value, change, icon, color }: any) {
           <p className="text-xl sm:text-2xl font-bold text-gray-900 mt-1">{value}</p>
           <p className="text-xs sm:text-sm text-gray-500 mt-1 truncate">{change} vs mes anterior</p>
         </div>
-        <div className={`text-3xl sm:text-4xl ${colors[color]} p-2 sm:p-3 rounded-lg flex-shrink-0 ml-2`}>{icon}</div>
+        <div className={`${colors[color]} p-2 sm:p-3 rounded-lg flex-shrink-0 ml-2`}>
+          {IconComponent ? <IconComponent className="w-8 h-8 sm:w-10 sm:h-10" /> : icon}
+        </div>
       </div>
     </div>
   )
@@ -248,10 +251,14 @@ function OrderItem({ orderNumber, vehicle, priority, mechanic }: any) {
   )
 }
 
-function ActivityItem({ icon, title, description, time }: any) {
+function ActivityItem({ icon: IconComponent, title, description, time }: any) {
   return (
     <div className="flex items-start space-x-3">
-      <span className="text-2xl">{icon}</span>
+      {IconComponent ? (
+        <IconComponent className="w-5 h-5 text-gray-400 mt-0.5" />
+      ) : (
+        <span className="text-2xl">•</span>
+      )}
       <div className="flex-1">
         <p className="text-sm font-medium text-gray-900">{title}</p>
         <p className="text-sm text-gray-600">{description}</p>
@@ -275,8 +282,14 @@ function MechanicPerformance({ name, completed, inProgress, efficiency }: any) {
         ></div>
       </div>
       <div className="flex justify-between mt-1">
-        <p className="text-xs text-gray-500">✅ {completed} completadas</p>
-        <p className="text-xs text-gray-500">🔨 {inProgress} en progreso</p>
+        <p className="text-xs text-gray-500 flex items-center gap-1">
+          <CheckCircle className="w-3 h-3" />
+          {completed} completadas
+        </p>
+        <p className="text-xs text-gray-500 flex items-center gap-1">
+          <Wrench className="w-3 h-3" />
+          {inProgress} en progreso
+        </p>
       </div>
     </div>
   )
@@ -306,10 +319,14 @@ function StockAlert({ item, current, min }: any) {
   )
 }
 
-function QuickAction({ icon, label, onClick }: any) {
+function QuickAction({ icon: IconComponent, label, onClick }: any) {
   return (
     <button onClick={onClick} className="flex flex-col items-center justify-center p-3 sm:p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition">
-      <span className="text-2xl sm:text-3xl mb-1 sm:mb-2">{icon}</span>
+      {IconComponent ? (
+        <IconComponent className="w-6 h-6 sm:w-8 sm:h-8 mb-1 sm:mb-2 text-gray-600" />
+      ) : (
+        <span className="text-2xl sm:text-3xl mb-1 sm:mb-2">+</span>
+      )}
       <span className="text-xs sm:text-sm font-medium text-gray-700 text-center">{label}</span>
     </button>
   )

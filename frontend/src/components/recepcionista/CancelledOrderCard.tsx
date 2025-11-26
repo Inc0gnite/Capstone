@@ -1,4 +1,5 @@
 import { WorkOrder } from '../../services/workOrderService'
+import { Eye, Clipboard, RefreshCw } from 'lucide-react'
 
 interface CancelledOrderCardProps {
   order: WorkOrder
@@ -101,21 +102,24 @@ export function CancelledOrderCard({ order, onUpdate }: CancelledOrderCardProps)
           onClick={() => window.location.href = `/work-orders/${order.id}`}
           className="px-3 py-1 bg-gray-100 text-gray-700 rounded text-sm hover:bg-gray-200 transition-colors"
         >
-          👁️ Ver Detalles
+          <Eye className="w-4 h-4 inline mr-1" />
+          Ver Detalles
         </button>
 
         <button
           onClick={() => window.location.href = `/entries/${order.entryId}`}
           className="px-3 py-1 bg-blue-100 text-blue-700 rounded text-sm hover:bg-blue-200 transition-colors"
         >
-          📋 Ver Ingreso
+          <Clipboard className="w-4 h-4 inline mr-1" />
+          Ver Ingreso
         </button>
 
         <button
           onClick={onUpdate}
           className="px-3 py-1 bg-gray-100 text-gray-700 rounded text-sm hover:bg-gray-200 transition-colors"
         >
-          🔄 Actualizar
+          <RefreshCw className="w-4 h-4 inline mr-1" />
+          Actualizar
         </button>
       </div>
     </div>

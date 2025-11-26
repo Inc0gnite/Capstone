@@ -1,5 +1,41 @@
 import { useEffect, useState } from 'react'
 import { vehicleService } from '../../services/vehicleService'
+import { Pencil } from 'lucide-react'
+
+// Lista de marcas de vehículos comunes
+const VEHICLE_BRANDS = [
+  'Toyota',
+  'Ford',
+  'Chevrolet',
+  'Nissan',
+  'Volkswagen',
+  'Hyundai',
+  'Kia',
+  'Mazda',
+  'Suzuki',
+  'Mitsubishi',
+  'Honda',
+  'Isuzu',
+  'Mercedes-Benz',
+  'BMW',
+  'Audi',
+  'Peugeot',
+  'Renault',
+  'Fiat',
+  'Citroën',
+  'Jeep',
+  'Dodge',
+  'Ram',
+  'GMC',
+  'Volvo',
+  'Scania',
+  'Iveco',
+  'MAN',
+  'Freightliner',
+  'Kenworth',
+  'Peterbilt',
+  'Otro'
+]
 
 interface EditVehicleModalProps {
   isOpen: boolean
@@ -82,7 +118,10 @@ export function EditVehicleModal({ isOpen, onClose, onSuccess, vehicle }: EditVe
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
         <div className="p-3 sm:p-4 border-b flex items-center justify-between sticky top-0 bg-white">
-          <h2 className="text-base sm:text-lg font-semibold">✏️ Editar Vehículo - {vehicle.licensePlate}</h2>
+          <h2 className="text-base sm:text-lg font-semibold flex items-center gap-2">
+            <Pencil className="w-5 h-5" />
+            Editar Vehículo - {vehicle.licensePlate}
+          </h2>
           <button onClick={handleClose} className="text-gray-500 hover:text-gray-700 text-xl sm:text-2xl p-1" aria-label="Cerrar">✕</button>
         </div>
 
@@ -94,12 +133,18 @@ export function EditVehicleModal({ isOpen, onClose, onSuccess, vehicle }: EditVe
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
             <div>
               <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">Marca</label>
-              <input
+              <select
                 value={brand}
                 onChange={(e) => setBrand(e.target.value)}
                 className="w-full px-2.5 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border rounded-lg focus:ring-2 focus:ring-blue-500"
-                placeholder="Toyota"
-              />
+              >
+                <option value="">Selecciona una marca</option>
+                {VEHICLE_BRANDS.map((brandOption) => (
+                  <option key={brandOption} value={brandOption}>
+                    {brandOption}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div>

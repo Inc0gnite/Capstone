@@ -4,6 +4,7 @@ import { workOrderService, WorkOrder } from '../../services/workOrderService'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { sortWorkOrders } from '../../utils/workOrderSorting'
+import { RefreshCw, CheckCircle, XCircle, AlertTriangle, Clipboard } from 'lucide-react'
 
 export default function MechanicOrders() {
   const { user } = useAuthStore()
@@ -63,10 +64,10 @@ export default function MechanicOrders() {
 
   const handleStatusChange = async (orderId: string, newStatus: string) => {
     try {
-      console.log('🔄 Cambiando estado de orden:', { orderId, newStatus })
+      console.log('Cambiando estado de orden:', { orderId, newStatus })
       
       const result = await workOrderService.changeStatus(orderId, newStatus)
-      console.log('✅ Estado cambiado exitosamente:', result)
+      console.log('Estado cambiado exitosamente:', result)
       
       // Actualizar la orden en el estado local
       setOrders(prevOrders =>
@@ -83,7 +84,7 @@ export default function MechanicOrders() {
       }))
       
     } catch (err: any) {
-      console.error('❌ Error cambiando estado:', err)
+      console.error('Error cambiando estado:', err)
       const errorMessage = err.response?.data?.error || err.response?.data?.message || err.message || 'Error cambiando estado'
       setError(errorMessage)
       
@@ -177,7 +178,7 @@ export default function MechanicOrders() {
       <MainLayout>
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
-            <div className="text-red-500 text-6xl mb-4">⚠️</div>
+            <AlertTriangle className="w-16 h-16 mx-auto mb-4 text-red-500" />
             <p className="text-red-600">{error}</p>
           </div>
         </div>
@@ -321,7 +322,14 @@ export default function MechanicOrders() {
                         }`}
                         title={hasOrderInProgress ? 'Ya tienes una orden en progreso' : ''}
                       >
-                        {hasOrderInProgress ? '⚠️ No disponible' : 'Iniciar Trabajo'}
+                        {hasOrderInProgress ? (
+                          <>
+                            <AlertTriangle className="w-4 h-4 inline mr-1" />
+                            No disponible
+                          </>
+                        ) : (
+                          'Iniciar Trabajo'
+                        )}
                       </button>
                     )}
                   </div>
@@ -330,7 +338,7 @@ export default function MechanicOrders() {
             ))
           ) : (
             <div className="text-center py-12">
-              <div className="text-gray-400 text-6xl mb-4">📋</div>
+              <Clipboard className="w-16 h-16 mx-auto mb-4 text-gray-400" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">
                 No hay órdenes {filter === 'all' ? '' : `con estado ${filter}`}
               </h3>

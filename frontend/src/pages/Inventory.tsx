@@ -7,9 +7,9 @@ import { ViewMovementsModal } from '../components/modals/ViewMovementsModal'
 
 export default function Inventory() {
   // Log para verificar que se está ejecutando el código nuevo
-  console.log('✅ Inventory.tsx - Versión actualizada con unitOfMeasure - v3.0')
-  console.log('🔍 Si NO ves el campo "Unidad de Medida" en el formulario, el navegador tiene caché')
-  console.log('🔍 Solución: Ctrl+Shift+Delete → Borrar caché → Reiniciar navegador')
+  console.log('Inventory.tsx - Versión actualizada con unitOfMeasure - v3.0')
+  console.log('Si NO ves el campo "Unidad de Medida" en el formulario, el navegador tiene caché')
+  console.log('Solución: Ctrl+Shift+Delete → Borrar caché → Reiniciar navegador')
   
   const { user } = useAuthStore()
   const [parts, setParts] = useState<SparePart[]>([])
@@ -233,15 +233,15 @@ export default function Inventory() {
         workshopId: (user as any)?.workshopId || (user as any)?.workshop?.id
       }
       
-      console.log('📦 Datos a enviar al crear repuesto:', JSON.stringify(data, null, 2))
-      console.log('🔍 unitOfMeasure:', unitOfMeasure, 'unitPrice:', unitPrice)
+      console.log('Datos a enviar al crear repuesto:', JSON.stringify(data, null, 2))
+      console.log('unitOfMeasure:', unitOfMeasure, 'unitPrice:', unitPrice)
       
       await sparePartService.create(data as any)
       closeModals()
       await loadParts()
     } catch (err: any) {
-      console.error('❌ Error al crear repuesto:', err)
-      console.error('❌ Error response:', err?.response?.data)
+      console.error('Error al crear repuesto:', err)
+      console.error('Error response:', err?.response?.data)
       const errorMessage = err?.response?.data?.error || err?.message || 'No se pudo crear el repuesto'
       alert(errorMessage)
     } finally {
@@ -329,7 +329,7 @@ export default function Inventory() {
       <MainLayout>
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
-            <div className="text-red-500 text-6xl mb-4">⚠️</div>
+            <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-4" />
             <p className="text-red-600">{error}</p>
           </div>
         </div>
@@ -463,7 +463,8 @@ export default function Inventory() {
                             className="px-3 py-1 rounded bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors text-xs sm:text-sm"
                             title="Ver Movimientos"
                           >
-                            📋 Ver Movimientos
+                            <Clipboard className="w-4 h-4 inline mr-1" />
+                            Ver Movimientos
                           </button>
                           {/* Solo mostrar botones de edición si no es mecánico */}
                           {((user as any)?.role?.name || '') !== 'Mecánico' && (
@@ -473,7 +474,8 @@ export default function Inventory() {
                                 className="px-3 py-1 rounded bg-orange-100 text-orange-700 hover:bg-orange-200 transition-colors text-xs sm:text-sm"
                                 title="Ajustar Stock"
                               >
-                                📊 Ajustar Stock
+                                <BarChart className="w-4 h-4 inline mr-1" />
+                                Ajustar Stock
                               </button>
                               <button
                                 onClick={() => openEdit(p)}

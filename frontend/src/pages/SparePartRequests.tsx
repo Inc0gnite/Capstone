@@ -3,6 +3,7 @@ import { MainLayout } from '../components/Layout/MainLayout'
 import { sparePartService } from '../services/sparePartService'
 import { useAuthStore } from '../store/authStore'
 import { Link } from 'react-router-dom'
+import { CheckCircle, XCircle, Eye, RefreshCw, Clipboard } from 'lucide-react'
 
 interface SparePartRequest {
   id: string
@@ -295,20 +296,29 @@ export default function SparePartRequests() {
                     : 'Aprobar solicitud'
                 }
               >
-                {processingId === request.id ? 'Procesando...' : '✅ Aprobar'}
+                {processingId === request.id ? (
+                  'Procesando...'
+                ) : (
+                  <>
+                    <CheckCircle className="w-4 h-4 inline mr-1" />
+                    Aprobar
+                  </>
+                )}
               </button>
               <button
                 onClick={() => setRejectingId(request.id)}
                 disabled={processingId === request.id}
                 className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                ❌ Rechazar
+                <XCircle className="w-4 h-4 inline mr-1" />
+                Rechazar
               </button>
               <Link
                 to={`/work-orders/${request.workOrderId}`}
                 className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors text-center"
               >
-                👁️ Ver Orden
+                <Eye className="w-4 h-4 inline mr-1" />
+                Ver Orden
               </Link>
             </div>
           )
@@ -321,7 +331,8 @@ export default function SparePartRequests() {
               to={`/work-orders/${request.workOrderId}`}
               className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors text-center"
             >
-              👁️ Ver Orden
+              <Eye className="w-4 h-4 inline mr-1" />
+              Ver Orden
             </Link>
           </div>
         )}
@@ -359,7 +370,8 @@ export default function SparePartRequests() {
             onClick={() => activeTab === 'pending' ? loadPendingRequests() : loadHistoryRequests(historyPage)}
             className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium transition-colors"
           >
-            🔄 Actualizar
+            <RefreshCw className="w-4 h-4 inline mr-1" />
+            Actualizar
           </button>
         </div>
 
@@ -408,7 +420,7 @@ export default function SparePartRequests() {
           </div>
         ) : currentRequests.length === 0 ? (
           <div className="bg-white rounded-lg shadow p-8 text-center">
-            <div className="text-6xl mb-4">📋</div>
+            <Clipboard className="w-16 h-16 mx-auto mb-4 text-gray-400" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
               {activeTab === 'pending' 
                 ? 'No hay solicitudes pendientes'

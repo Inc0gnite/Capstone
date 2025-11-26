@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { vehicleService } from '../../services/vehicleService'
 import { vehicleEntryService } from '../../services/vehicleEntryService'
+import { Trash2, AlertTriangle, X, Ban } from 'lucide-react'
 
 interface DeleteVehicleModalProps {
   isOpen: boolean
@@ -149,14 +150,14 @@ export function DeleteVehicleModal({
         <div className="bg-red-500 text-white p-4 rounded-t-lg">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold flex items-center">
-              <span className="mr-2">🗑️</span>
+              <Trash2 className="w-5 h-5 mr-2" />
               Eliminar Vehículo
             </h2>
             <button
               onClick={handleClose}
               className="text-white hover:text-gray-200 transition-colors"
             >
-              ✕
+              <X className="w-5 h-5" />
             </button>
           </div>
         </div>
@@ -181,7 +182,7 @@ export function DeleteVehicleModal({
           {vehicleStatus && !vehicleStatus.canDelete && (
             <div className="mb-4 p-4 bg-orange-100 border border-orange-400 text-orange-800 rounded-lg">
               <div className="flex items-start">
-                <span className="text-orange-600 mr-2">⚠️</span>
+                <AlertTriangle className="w-5 h-5 text-orange-600 mr-2 flex-shrink-0" />
                 <div>
                   <h4 className="font-semibold mb-2">No se puede eliminar el vehículo</h4>
                   <p className="text-sm mb-2">{vehicleStatus.reason}</p>
@@ -209,7 +210,10 @@ export function DeleteVehicleModal({
 
           <div className="mb-6">
             <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-              <h3 className="font-semibold text-red-900 mb-2">⚠️ Advertencia</h3>
+              <h3 className="font-semibold text-red-900 mb-2 flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5" />
+                Advertencia
+              </h3>
               <p className="text-sm text-red-800">
                 Esta acción eliminará <strong>permanentemente</strong> el vehículo y todos sus datos relacionados:
               </p>
@@ -272,9 +276,22 @@ export function DeleteVehicleModal({
                   : 'bg-red-600 text-white hover:bg-red-700'
               }`}
             >
-              {loading ? '🗑️ Eliminando...' : 
-               (vehicleStatus && !vehicleStatus.canDelete) ? '🚫 No se puede eliminar' : 
-               '🗑️ Eliminar Permanentemente'}
+              {loading ? (
+                <>
+                  <Trash2 className="w-4 h-4 inline mr-1" />
+                  Eliminando...
+                </>
+              ) : (vehicleStatus && !vehicleStatus.canDelete) ? (
+                <>
+                  <Ban className="w-4 h-4 inline mr-1" />
+                  No se puede eliminar
+                </>
+              ) : (
+                <>
+                  <Trash2 className="w-4 h-4 inline mr-1" />
+                  Eliminar Permanentemente
+                </>
+              )}
             </button>
           </div>
         </div>

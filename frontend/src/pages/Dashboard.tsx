@@ -7,6 +7,7 @@ import MecanicoDashboard from './dashboards/MecanicoDashboard'
 import JefeTallerDashboard from './dashboards/JefeTallerDashboard'
 import InventarioDashboard from './dashboards/InventarioDashboard'
 import { CreateEntryModalAdvanced } from '../components/modals/CreateEntryModalAdvanced'
+import { Car } from 'lucide-react'
 
 function Dashboard() {
   const { user, getCurrentUser, isLoading, clearUser } = useAuthStore()
@@ -20,17 +21,17 @@ function Dashboard() {
         
         // Si el usuario ya está en el store, no necesitamos validar
         if (user) {
-          console.log('✅ Usuario ya validado en store:', user.email, 'Rol:', (user as any)?.role?.name)
+          console.log('Usuario ya validado en store:', user.email, 'Rol:', (user as any)?.role?.name)
           setIsValidating(false)
           return
         }
         
         // Solo validar si no hay usuario en el store
-        console.log('🔍 No hay usuario en store, validando...')
+        console.log('No hay usuario en store, validando...')
         await getCurrentUser()
-        console.log('✅ Usuario validado:', user?.email, 'Rol:', (user as any)?.role?.name)
+        console.log('Usuario validado:', user?.email, 'Rol:', (user as any)?.role?.name)
       } catch (error) {
-        console.error('❌ Error validando usuario:', error)
+        console.error('Error validando usuario:', error)
         // Solo redirigir al login si realmente no hay sesión
         clearUser()
         window.location.href = '/login'
@@ -46,7 +47,7 @@ function Dashboard() {
   useEffect(() => {
     const tabId = crypto.randomUUID()
     sessionStorage.setItem('tabId', tabId)
-    console.log('🆔 ID de pestaña generado:', tabId)
+    console.log('ID de pestaña generado:', tabId)
   }, [])
 
   // Redirigir automáticamente según el rol - MOVIDO ANTES DE LOS RENDERS CONDICIONALES
@@ -54,11 +55,11 @@ function Dashboard() {
     if (!user || !(user as any).role) return
     
     const roleName = (user as any).role?.name
-    console.log('🔍 Dashboard.tsx - Rol detectado:', roleName)
-    console.log('🔍 Dashboard.tsx - Usuario:', user)
+    console.log('Dashboard.tsx - Rol detectado:', roleName)
+    console.log('Dashboard.tsx - Usuario:', user)
     
     if (!roleName) {
-      console.log('⚠️ No hay rol detectado, esperando...')
+      console.log('No hay rol detectado, esperando...')
       return
     }
     
@@ -74,11 +75,11 @@ function Dashboard() {
     const dashboardPath = roleDashboardMap[roleName]
     
     if (dashboardPath) {
-      console.log(`🔄 Redirigiendo ${roleName} a su dashboard específico: ${dashboardPath}`)
+      console.log(`Redirigiendo ${roleName} a su dashboard específico: ${dashboardPath}`)
       // Usar window.location.href para forzar la redirección
       window.location.href = dashboardPath
     } else {
-      console.log(`⚠️ No hay dashboard específico para el rol: ${roleName}`)
+      console.log(`No hay dashboard específico para el rol: ${roleName}`)
     }
   }, [user])
 
@@ -119,7 +120,7 @@ function Dashboard() {
   const roleName = (user as any).role?.name
   
   // Debug: Mostrar información del usuario actual
-  console.log('🔍 Dashboard - Usuario actual:', {
+  console.log('Dashboard - Usuario actual:', {
     id: user?.id,
     email: user?.email,
     firstName: user?.firstName,
@@ -143,7 +144,7 @@ function Dashboard() {
             title="Registrar Nuevo Vehículo"
           >
             <div className="flex items-center space-x-1 sm:space-x-2">
-              <span className="text-xl sm:text-2xl">🚗</span>
+              <Car className="w-5 h-5 sm:w-6 sm:h-6" />
               <span className="hidden sm:inline font-medium text-sm sm:text-base">Nuevo Vehículo</span>
             </div>
           </button>

@@ -6,6 +6,7 @@ import { CreateWorkOrderFromVehicleModal } from '../components/modals/CreateWork
 import { useAuthStore } from '../store/authStore'
 import { mechanicService, MechanicWorkload } from '../services/mechanicService'
 import { sortWorkOrders } from '../utils/workOrderSorting'
+import { Pause, RefreshCw, FileText, Wrench, CheckCircle, XCircle, Clipboard, Clock } from 'lucide-react'
 
 export default function WorkOrders() {
   const [filter, setFilter] = useState<'all' | 'pendiente' | 'en_progreso' | 'pausado' | 'completado' | 'cancelado'>('all')
@@ -42,13 +43,13 @@ export default function WorkOrders() {
       
       // Protección contra llamadas concurrentes y frecuentes
       if (mechanicsLoadingRef.current) {
-        console.log('⏸️ Ya hay una carga de mecánicos en curso, omitiendo...')
+        console.log('Ya hay una carga de mecánicos en curso, omitiendo...')
         return
       }
       
       const now = Date.now()
       if (now - lastMechanicsLoadRef.current < 30000) { // Mínimo 30 segundos
-        console.log('⏸️ Carga de mecánicos demasiado reciente, omitiendo...')
+        console.log('Carga de mecánicos demasiado reciente, omitiendo...')
         return
       }
       
@@ -183,7 +184,7 @@ export default function WorkOrders() {
               className="px-2 sm:px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium transition-colors flex items-center space-x-1 sm:space-x-2 text-sm"
               title="Actualizar estadísticas desde BD"
             >
-              <span className={`${loading ? 'animate-spin' : ''}`}>🔄</span>
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
               <span className="hidden sm:inline">Actualizar</span>
             </button>
             {/* Solo mostrar botón de crear para roles que no sean Jefe de Taller */}
@@ -192,8 +193,11 @@ export default function WorkOrders() {
                 onClick={handleCreateOrder}
                 className="px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors text-sm sm:text-base"
               >
-                <span className="sm:hidden">📝</span>
-                <span className="hidden sm:inline">📝 Nueva Orden</span>
+                <FileText className="w-4 h-4 sm:hidden" />
+                <span className="hidden sm:inline flex items-center gap-2">
+                  <FileText className="w-4 h-4" />
+                  Nueva Orden
+                </span>
               </button>
             )}
           </div>
@@ -211,7 +215,7 @@ export default function WorkOrders() {
           <StatCard
             title="Total"
             value={(stats.total || 0).toString()}
-            icon="📋"
+            icon={Clipboard}
             color="gray"
             onClick={() => handleFilterChange('all')}
             active={filter === 'all'}
@@ -219,7 +223,7 @@ export default function WorkOrders() {
           <StatCard
             title="Pendientes"
             value={(stats.pendientes || 0).toString()}
-            icon="⏳"
+            icon={Clock}
             color="yellow"
             onClick={() => handleFilterChange('pendiente')}
             active={filter === 'pendiente'}
@@ -227,7 +231,7 @@ export default function WorkOrders() {
           <StatCard
             title="En Progreso"
             value={(stats.en_progreso || 0).toString()}
-            icon="🔨"
+            icon={Wrench}
             color="blue"
             onClick={() => handleFilterChange('en_progreso')}
             active={filter === 'en_progreso'}
@@ -235,7 +239,7 @@ export default function WorkOrders() {
           <StatCard
             title="Completadas"
             value={(stats.completados || 0).toString()}
-            icon="✅"
+            icon={CheckCircle}
             color="green"
             onClick={() => handleFilterChange('completado')}
             active={filter === 'completado'}
@@ -347,12 +351,20 @@ export default function WorkOrders() {
             </div>
           ) : (
             <div className="text-center py-8 text-gray-500">
-              <div className="text-4xl mb-2">
-                {filter === 'pendiente' ? '⏳' :
-                 filter === 'en_progreso' ? '🔨' :
-                 filter === 'pausado' ? '⏸️' :
-                 filter === 'completado' ? '✅' :
-                 filter === 'cancelado' ? '❌' : '📋'}
+              <div className="mb-2">
+                {filter === 'pendiente' ? (
+                  <Clock className="w-12 h-12 text-gray-400 mx-auto" />
+                ) : filter === 'en_progreso' ? (
+                  <Wrench className="w-12 h-12 text-blue-400 mx-auto" />
+                ) : filter === 'pausado' ? (
+                  <Pause className="w-12 h-12 text-orange-400 mx-auto" />
+                ) : filter === 'completado' ? (
+                  <CheckCircle className="w-12 h-12 text-green-400 mx-auto" />
+                ) : filter === 'cancelado' ? (
+                  <XCircle className="w-12 h-12 text-red-400 mx-auto" />
+                ) : (
+                  <Clipboard className="w-12 h-12 text-gray-400 mx-auto" />
+                )}
               </div>
               <p>No hay órdenes {filter === 'all' ? '' : filter}</p>
             </div>
@@ -372,7 +384,7 @@ export default function WorkOrders() {
   )
 }
 
-function StatCard({ title, value, icon, color, onClick, active }: any) {
+function StatCard({ title, value, icon: IconComponent, color, onClick, active }: any) {
   const colors: Record<string, string> = {
     gray: 'bg-gray-50 text-gray-600',
     yellow: 'bg-yellow-50 text-yellow-600',
@@ -392,7 +404,9 @@ function StatCard({ title, value, icon, color, onClick, active }: any) {
           <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">{title}</p>
           <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mt-1 sm:mt-2">{value}</p>
         </div>
-        <div className={`text-3xl sm:text-4xl lg:text-5xl ${colors[color]} p-2 sm:p-3 lg:p-4 rounded-lg flex-shrink-0 ml-2`}>{icon}</div>
+        <div className={`${colors[color]} p-2 sm:p-3 lg:p-4 rounded-lg flex-shrink-0 ml-2`}>
+          {IconComponent ? <IconComponent className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12" /> : icon}
+        </div>
       </div>
     </div>
   )

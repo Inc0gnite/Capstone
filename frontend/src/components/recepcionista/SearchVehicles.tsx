@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { VehicleEntry } from '../../services/vehicleEntryService'
+import { Search, Clock, Eye, Lightbulb } from 'lucide-react'
 
 interface SearchVehiclesProps {
   onSearch: (query: string) => Promise<VehicleEntry[]>
@@ -66,7 +67,8 @@ export function SearchVehicles({ onSearch, onVehicleSelected }: SearchVehiclesPr
   return (
     <div className="bg-white rounded-lg shadow p-6">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">
-        🔍 Búsqueda de Vehículo
+        <Search className="w-5 h-5 inline mr-2" />
+        Búsqueda de Vehículo
       </h3>
       
       {/* Formulario de búsqueda */}
@@ -84,7 +86,17 @@ export function SearchVehicles({ onSearch, onVehicleSelected }: SearchVehiclesPr
             disabled={loading}
             className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {loading ? '⏳ Buscando...' : '🔍 Buscar'}
+            {loading ? (
+              <>
+                <Clock className="w-4 h-4 inline mr-1" />
+                Buscando...
+              </>
+            ) : (
+              <>
+                <Search className="w-4 h-4 inline mr-1" />
+                Buscar
+              </>
+            )}
           </button>
         </div>
       </form>
@@ -146,8 +158,9 @@ export function SearchVehicles({ onSearch, onVehicleSelected }: SearchVehiclesPr
                 </div>
                 
                 <div className="ml-4">
-                  <button className="px-3 py-1 bg-blue-100 text-blue-700 rounded text-sm hover:bg-blue-200 transition-colors">
-                    👁️ Ver Detalles
+                  <button className="px-3 py-1 bg-blue-100 text-blue-700 rounded text-sm hover:bg-blue-200 transition-colors flex items-center gap-1">
+                    <Eye className="w-4 h-4" />
+                    Ver Detalles
                   </button>
                 </div>
               </div>
@@ -166,7 +179,10 @@ export function SearchVehicles({ onSearch, onVehicleSelected }: SearchVehiclesPr
       {/* Sugerencias de búsqueda */}
       {!query && (
         <div className="text-sm text-gray-500">
-          <p className="mb-2">💡 <strong>Sugerencias de búsqueda:</strong></p>
+          <p className="mb-2 flex items-center gap-1">
+            <Lightbulb className="w-4 h-4" />
+            <strong>Sugerencias de búsqueda:</strong>
+          </p>
           <ul className="list-disc list-inside space-y-1">
             <li>Patente del vehículo (ej: ABCD-12)</li>
             <li>Código de ingreso (ej: ING-2025-001)</li>

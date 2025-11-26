@@ -7,6 +7,7 @@ import { vehicleEntryService } from '../services/vehicleEntryService'
 import { vehicleService } from '../services/vehicleService'
 import { debugTokenStatus } from '../services/api'
 import type { VehicleEntry, Vehicle } from '../../../shared/types'
+import { Search, BarChart, CheckCircle, XCircle, Factory, FileText, Clipboard, Clock } from 'lucide-react'
 
 export default function Entries() {
   const [searchParams] = useSearchParams()
@@ -38,21 +39,21 @@ export default function Entries() {
       // Buscar el ingreso activo del vehículo
       const findActiveEntry = async () => {
         try {
-          console.log('🔍 Buscando ingreso activo para vehículo:', vehicleId)
+          console.log('Buscando ingreso activo para vehículo:', vehicleId)
           const activeEntries = await vehicleEntryService.getActiveEntries()
-          console.log('📊 Ingresos activos encontrados:', activeEntries.length)
+          console.log('Ingresos activos encontrados:', activeEntries.length)
           
           const activeEntry = activeEntries.find(entry => entry.vehicleId === vehicleId)
           if (activeEntry) {
-            console.log('✅ Ingreso activo encontrado:', activeEntry.entryCode)
+            console.log('Ingreso activo encontrado:', activeEntry.entryCode)
             setSelectedEntry(activeEntry)
             setShowExitForm(true)
           } else {
-            console.log('❌ No se encontró ingreso activo para el vehículo')
+            console.log('No se encontró ingreso activo para el vehículo')
             alert('No se encontró un ingreso activo para este vehículo')
           }
         } catch (error) {
-          console.error('❌ Error buscando ingreso activo:', error)
+          console.error('Error buscando ingreso activo:', error)
           alert('Error al buscar el ingreso activo del vehículo')
         }
       }
@@ -63,7 +64,7 @@ export default function Entries() {
   // Escuchar eventos de órdenes marcadas como listas
   useEffect(() => {
     const handleOrderMarkedReady = () => {
-      console.log('📢 Orden marcada como lista, actualizando estado de vehículos...')
+      console.log('Orden marcada como lista, actualizando estado de vehículos...')
       loadData() // Recargar datos para actualizar el estado
     }
 
@@ -95,7 +96,7 @@ export default function Entries() {
 
   const checkVehiclesReadyForExit = async (entries: VehicleEntry[]) => {
     try {
-      console.log('🔍 Verificando qué vehículos están listos para salida...')
+      console.log('Verificando qué vehículos están listos para salida...')
       const readyEntries = new Set<string>()
       
       // Verificar cada entrada individualmente
@@ -104,19 +105,19 @@ export default function Entries() {
           const isReady = await vehicleEntryService.isReadyForExit(entry.id)
           if (isReady) {
             readyEntries.add(entry.id)
-            console.log(`✅ ${entry.entryCode} está listo para salida`)
+            console.log(`${entry.entryCode} está listo para salida`)
           } else {
-            console.log(`⏳ ${entry.entryCode} aún no está listo para salida`)
+            console.log(`${entry.entryCode} aún no está listo para salida`)
           }
         } catch (error) {
-          console.error(`❌ Error verificando ${entry.entryCode}:`, error)
+          console.error(`Error verificando ${entry.entryCode}:`, error)
         }
       }
       
       setReadyForExit(readyEntries)
-      console.log(`📊 Total de vehículos listos para salida: ${readyEntries.size}`)
+      console.log(`Total de vehículos listos para salida: ${readyEntries.size}`)
     } catch (error) {
-      console.error('❌ Error verificando vehículos listos para salida:', error)
+      console.error('Error verificando vehículos listos para salida:', error)
       setReadyForExit(new Set<string>())
     }
   }
@@ -200,8 +201,11 @@ export default function Entries() {
               onClick={() => setShowCreateFormAdvanced(true)}
               className="bg-green-600 hover:bg-green-700 text-white px-3 sm:px-4 py-2 rounded-lg font-medium transition-colors text-sm sm:text-base"
             >
-              <span className="sm:hidden">📝</span>
-              <span className="hidden sm:inline">📝 Ingresar Vehiculo</span>
+              <FileText className="w-4 h-4 sm:hidden" />
+              <span className="hidden sm:inline flex items-center gap-1">
+                <FileText className="w-4 h-4" />
+                Ingresar Vehiculo
+              </span>
             </button>
           </div>
         </div>
@@ -211,7 +215,7 @@ export default function Entries() {
           <div className="bg-white rounded-lg shadow p-4 sm:p-6">
             <div className="flex items-center">
               <div className="p-2 bg-blue-100 rounded-lg flex-shrink-0">
-                <span className="text-xl sm:text-2xl">🏭</span>
+                <Factory className="w-6 h-6 sm:w-8 sm:h-8" />
               </div>
               <div className="ml-3 sm:ml-4 min-w-0 flex-1">
                 <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Total Ingresos</p>
@@ -223,7 +227,7 @@ export default function Entries() {
           <div className="bg-white rounded-lg shadow p-4 sm:p-6">
             <div className="flex items-center">
               <div className="p-2 bg-green-100 rounded-lg flex-shrink-0">
-                <span className="text-xl sm:text-2xl">✅</span>
+                <CheckCircle className="w-6 h-6 sm:w-8 sm:h-8 text-green-600" />
               </div>
               <div className="ml-3 sm:ml-4 min-w-0 flex-1">
                 <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Activos</p>
@@ -235,7 +239,7 @@ export default function Entries() {
           <div className="bg-white rounded-lg shadow p-4 sm:p-6">
             <div className="flex items-center">
               <div className="p-2 bg-purple-100 rounded-lg flex-shrink-0">
-                <span className="text-xl sm:text-2xl">📋</span>
+                <Clipboard className="w-6 h-6 sm:w-8 sm:h-8" />
               </div>
               <div className="ml-3 sm:ml-4 min-w-0 flex-1">
                 <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Completados</p>
@@ -325,11 +329,13 @@ export default function Entries() {
                     <td className="px-4 py-3 text-sm text-gray-900">
                       {readyForExit.has(entry.id) ? (
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          ✅ Listo para salida
+                          <CheckCircle className="w-4 h-4 inline mr-1" />
+                          Listo para salida
                         </span>
                       ) : (
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                          ⏳ En mantenimiento
+                          <Clock className="w-3 h-3 inline mr-1" />
+                          En mantenimiento
                         </span>
                       )}
                     </td>
@@ -343,7 +349,8 @@ export default function Entries() {
                         </button>
                       ) : (
                         <span className="text-gray-400 mr-3">
-                          ⏳ Esperando orden lista
+                          <Clock className="w-3 h-3 inline mr-1" />
+                          Esperando orden lista
                         </span>
                       )}
                       <button 
@@ -381,7 +388,8 @@ export default function Entries() {
                     </div>
                     {readyForExit.has(entry.id) ? (
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 flex-shrink-0 ml-2">
-                        ✅ Listo
+                        <CheckCircle className="w-4 h-4 inline mr-1" />
+                        Listo
                       </span>
                     ) : (
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 flex-shrink-0 ml-2">
@@ -574,7 +582,7 @@ export default function Entries() {
           setSelectedEntry(null)
         }}
         onSuccess={() => {
-          console.log('✅ Salida registrada exitosamente, actualizando datos...')
+          console.log('Salida registrada exitosamente, actualizando datos...')
           loadData()
           setShowExitForm(false)
           setSelectedEntry(null)

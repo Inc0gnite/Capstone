@@ -5,6 +5,7 @@ import { configService } from '../../services/configService'
 import { useAuthStore } from '../../store/authStore'
 import { PhotoGallery, type Photo } from '../photo/PhotoGallery'
 import type { Vehicle } from '../../../../shared/types'
+import { Camera } from 'lucide-react'
 
 interface CreateEntryModalProps {
   isOpen: boolean
@@ -325,7 +326,10 @@ export function CreateEntryModal({ isOpen, onClose, onSuccess }: CreateEntryModa
             {/* Sección de Fotografías */}
             <div className="border-t pt-4 sm:pt-6">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 mb-3 sm:mb-4">
-                <h3 className="text-base sm:text-lg font-medium text-gray-900">📸 Fotografías del Vehículo</h3>
+                <h3 className="text-base sm:text-lg font-medium text-gray-900 flex items-center gap-2">
+                  <Camera className="w-5 h-5" />
+                  Fotografías del Vehículo
+                </h3>
                 <button
                   type="button"
                   onClick={() => setShowPhotoSection(!showPhotoSection)}

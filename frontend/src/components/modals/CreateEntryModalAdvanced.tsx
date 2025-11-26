@@ -10,12 +10,48 @@ import { VINField } from '../forms/VINField'
 import { PhotoGallery, type Photo } from '../photo/PhotoGallery'
 import { useAuthStore } from '../../store/authStore'
 import type { Vehicle } from '../../../../shared/types'
+import { Camera } from 'lucide-react'
 
 interface CreateEntryModalProps {
   isOpen: boolean
   onClose: () => void
   onSuccess: () => void
 }
+
+// Lista de marcas de vehículos comunes
+const VEHICLE_BRANDS = [
+  'Toyota',
+  'Ford',
+  'Chevrolet',
+  'Nissan',
+  'Volkswagen',
+  'Hyundai',
+  'Kia',
+  'Mazda',
+  'Suzuki',
+  'Mitsubishi',
+  'Honda',
+  'Isuzu',
+  'Mercedes-Benz',
+  'BMW',
+  'Audi',
+  'Peugeot',
+  'Renault',
+  'Fiat',
+  'Citroën',
+  'Jeep',
+  'Dodge',
+  'Ram',
+  'GMC',
+  'Volvo',
+  'Scania',
+  'Iveco',
+  'MAN',
+  'Freightliner',
+  'Kenworth',
+  'Peterbilt',
+  'Otro'
+]
 
 export function CreateEntryModalAdvanced({ isOpen, onClose, onSuccess }: CreateEntryModalProps) {
   const { user } = useAuthStore()
@@ -620,14 +656,19 @@ export function CreateEntryModalAdvanced({ isOpen, onClose, onSuccess }: CreateE
                   <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                     Marca *
                   </label>
-                  <input
-                    type="text"
+                  <select
                     value={vehicleData.brand}
                     onChange={(e) => setVehicleData({ ...vehicleData, brand: e.target.value })}
                     className="w-full px-2.5 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Toyota"
                     required
-                  />
+                  >
+                    <option value="">Selecciona una marca</option>
+                    {VEHICLE_BRANDS.map((brand) => (
+                      <option key={brand} value={brand}>
+                        {brand}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
@@ -877,7 +918,10 @@ export function CreateEntryModalAdvanced({ isOpen, onClose, onSuccess }: CreateE
               {/* Sección de Fotografías */}
               <div className="border-t pt-4 sm:pt-6">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 mb-3 sm:mb-4">
-                  <h3 className="text-base sm:text-lg font-medium text-gray-900">📸 Fotografías del Vehículo</h3>
+                  <h3 className="text-base sm:text-lg font-medium text-gray-900 flex items-center gap-2">
+                    <Camera className="w-5 h-5" />
+                    Fotografías del Vehículo
+                  </h3>
                   <button
                     type="button"
                     onClick={() => setShowPhotoSection(!showPhotoSection)}

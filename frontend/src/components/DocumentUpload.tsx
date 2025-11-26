@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { documentService } from '../services/documentService'
 import type { Document } from '../../../shared/types'
+import { Save } from 'lucide-react'
 
 interface DocumentUploadProps {
   relatedTo: 'vehicle-entry' | 'vehicle' | 'work-order'
@@ -277,7 +278,7 @@ export function DocumentUpload({
                 </>
               ) : (
                 <>
-                  <span>💾</span>
+                  <Save className="w-4 h-4" />
                   <span>Guardar</span>
                 </>
               )}

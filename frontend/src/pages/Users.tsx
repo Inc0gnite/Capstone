@@ -4,6 +4,7 @@ import { userService, type User } from '../services/userService'
 import { workOrderService } from '../services/workOrderService'
 import { roleService, type Role } from '../services/roleService'
 import { workshopService, type Workshop } from '../services/workshopService'
+import { XCircle, RefreshCw, Eye, EyeOff } from 'lucide-react'
 
 export default function Users() {
   const [users, setUsers] = useState<User[]>([])
@@ -45,7 +46,7 @@ export default function Users() {
         setRoles((rolesRes.data || []).filter((r: Role) => r.name !== 'Encargado de Inventario'))
         setWorkshops(wsRes.data || [])
       } catch (err: any) {
-        console.error('❌ Error cargando usuarios:', err)
+        console.error('Error cargando usuarios:', err)
         setError('No fue posible cargar los usuarios.')
       } finally {
         setLoading(false)
@@ -110,7 +111,7 @@ export default function Users() {
       await userService.toggleActive(user.id, !user.isActive)
       setUsers(prev => prev.map(u => u.id === user.id ? { ...u, isActive: !u.isActive } : u))
     } catch (err) {
-      console.error('❌ Error cambiando estado:', err)
+      console.error('Error cambiando estado:', err)
       alert('No fue posible actualizar el estado del usuario')
     } finally {
       setMutatingId('')
@@ -147,7 +148,7 @@ export default function Users() {
       setChangePassword(false)
       setNewPassword('')
     } catch (err) {
-      console.error('❌ Error actualizando usuario:', err)
+      console.error('Error actualizando usuario:', err)
       alert('No fue posible actualizar el usuario')
     } finally {
       setMutatingId('')
@@ -204,7 +205,8 @@ export default function Users() {
               className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm font-medium"
               title="Actualizar datos"
             >
-              🔄 Actualizar
+              <RotateCcw className="w-4 h-4 inline mr-1" />
+              Actualizar
             </button>
           </div>
         </div>
@@ -361,7 +363,7 @@ export default function Users() {
                         className={`absolute inset-y-0 right-2 my-auto text-sm ${!changePassword ? 'text-gray-300 cursor-not-allowed' : 'text-gray-600 hover:text-gray-800'}`}
                         title={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                       >
-                        {showPassword ? '🙈' : '👁️'}
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
                     </div>
                     {changePassword && newPassword && newPassword.length < 8 && (

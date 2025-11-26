@@ -4,6 +4,7 @@ import { AssignMechanicModal } from '../modals/AssignMechanicModal'
 import { ExchangeMechanicModal } from '../modals/ExchangeMechanicModal'
 import { MechanicInfoDropdown } from '../mechanic/MechanicInfoDropdown'
 import { WordService } from '../../services/wordService'
+import { Eye, UserCog, RefreshCw, FileText } from 'lucide-react'
 
 interface ActiveOrderCardProps {
   order: WorkOrder
@@ -192,7 +193,8 @@ export function ActiveOrderCard({ order, onUpdate, workshopId, showQuickActions 
           onClick={() => window.location.href = `/work-orders/${order.id}`}
           className="px-3 py-1 bg-blue-100 text-blue-700 rounded text-sm hover:bg-blue-200 transition-colors"
         >
-          👁️ Ver Detalles
+          <Eye className="w-4 h-4 inline mr-1" />
+          Ver Detalles
         </button>
         
         {showQuickActions && (
@@ -201,7 +203,8 @@ export function ActiveOrderCard({ order, onUpdate, workshopId, showQuickActions 
               <>
                 <MechanicInfoDropdown mechanic={order.assignedTo}>
                   <button className="px-3 py-1 bg-green-100 text-green-700 rounded text-sm hover:bg-green-200 transition-colors">
-                    👨‍🔧 Ver Mecánico
+                    <UserCog className="w-4 h-4 inline mr-1" />
+                    Ver Mecánico
                   </button>
                 </MechanicInfoDropdown>
                 {workshopId && (
@@ -210,13 +213,15 @@ export function ActiveOrderCard({ order, onUpdate, workshopId, showQuickActions 
                       onClick={handleAssignMechanic}
                       className="px-3 py-1 bg-orange-100 text-orange-700 rounded text-sm hover:bg-orange-200 transition-colors"
                     >
-                      🔄 Reasignar
+                      <RefreshCw className="w-4 h-4 inline mr-1" />
+                      Reasignar
                     </button>
                     <button
                       onClick={() => setShowExchangeModal(true)}
                       className="px-3 py-1 bg-purple-100 text-purple-700 rounded text-sm hover:bg-purple-200 transition-colors"
                     >
-                      🔄 Intercambiar
+                      <RefreshCw className="w-4 h-4 inline mr-1" />
+                      Intercambiar
                     </button>
                   </>
                 )}
@@ -227,7 +232,8 @@ export function ActiveOrderCard({ order, onUpdate, workshopId, showQuickActions 
                   onClick={handleAssignMechanic}
                   className="px-3 py-1 bg-blue-100 text-blue-700 rounded text-sm hover:bg-blue-200 transition-colors"
                 >
-                  👨‍🔧 Asignar Mecánico
+                  <UserCog className="w-4 h-4 inline mr-1" />
+                  Asignar Mecánico
                 </button>
               )
             )}
@@ -238,11 +244,13 @@ export function ActiveOrderCard({ order, onUpdate, workshopId, showQuickActions 
                 onClick={handleExportWord}
                 className="px-3 py-1 bg-blue-100 text-blue-700 rounded text-sm hover:bg-blue-200 transition-colors"
               >
-                📝 Exportar Documento
+                <FileText className="w-4 h-4 inline mr-1" />
+                Exportar Documento
               </button>
             ) : (
               <div className="px-3 py-1 bg-gray-100 text-gray-500 rounded text-sm cursor-not-allowed">
-                📝 Documento (Solo completadas)
+                <FileText className="w-4 h-4 inline mr-1" />
+                Documento (Solo completadas)
               </div>
             )}
           </>
@@ -252,7 +260,8 @@ export function ActiveOrderCard({ order, onUpdate, workshopId, showQuickActions 
           onClick={onUpdate}
           className="px-3 py-1 bg-gray-100 text-gray-700 rounded text-sm hover:bg-gray-200 transition-colors"
         >
-          🔄 Actualizar
+          <RefreshCw className="w-4 h-4 inline mr-1" />
+          Actualizar
         </button>
       </div>
 

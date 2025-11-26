@@ -18,6 +18,7 @@ import {
 import { regionService } from '../services/regionService'
 import { workshopService } from '../services/workshopService'
 import { PDFService } from '../services/pdfService'
+import { XCircle, Truck, UserCog, Package, DollarSign, BarChart, Clipboard, Clock, Wrench, Pause, CheckCircle, Calendar } from 'lucide-react'
 
 type KPIs = {
   total: number
@@ -137,7 +138,7 @@ export default function Reports() {
         const uniqueCategories = Array.from(new Set(allParts.map((p: any) => p.category).filter(Boolean)))
         setCategories(uniqueCategories as string[])
       } catch (err: any) {
-        console.error('❌ Error cargando reportes:', err)
+        console.error('Error cargando reportes:', err)
         setError(err?.response?.data?.message || 'Error cargando reportes')
       } finally {
         setLoading(false)
@@ -311,10 +312,10 @@ export default function Reports() {
   }
 
   const reportTypes = [
-    { value: 'fleet', label: 'Reporte de Flota', icon: '🚛' },
-    { value: 'mechanics', label: 'Reporte de Desempeño de Mecánicos', icon: '👷' },
-    { value: 'inventory', label: 'Reporte de Inventario', icon: '📦' },
-    { value: 'costs', label: 'Reporte de Costos', icon: '💰' },
+    { value: 'fleet', label: 'Reporte de Flota', icon: Truck },
+    { value: 'mechanics', label: 'Reporte de Desempeño de Mecánicos', icon: UserCog },
+    { value: 'inventory', label: 'Reporte de Inventario', icon: Package },
+    { value: 'costs', label: 'Reporte de Costos', icon: DollarSign },
   ]
 
   return (
@@ -420,7 +421,7 @@ export default function Reports() {
             }}
             className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium transition-colors flex items-center gap-2"
           >
-            <span>📊</span>
+            <BarChart className="w-4 h-4" />
             <span>Exportar Excel</span>
           </button>
         </div>
@@ -437,11 +438,14 @@ export default function Reports() {
               className="w-full md:w-1/2 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
             >
               <option value="">-- Seleccione un tipo de reporte --</option>
-              {reportTypes.map((type) => (
-                <option key={type.value} value={type.value}>
-                  {type.icon} {type.label}
-                </option>
-              ))}
+              {reportTypes.map((type) => {
+                const IconComponent = type.icon
+                return (
+                  <option key={type.value} value={type.value}>
+                    {type.label}
+                  </option>
+                )
+              })}
             </select>
           </div>
         </div>
@@ -450,7 +454,10 @@ export default function Reports() {
         {selectedReportType === 'fleet' && (
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">🚛 Reporte de Flota</h3>
+            <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+              <Truck className="w-5 h-5" />
+              Reporte de Flota
+            </h3>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
@@ -506,7 +513,7 @@ export default function Reports() {
                   </>
                 ) : (
                   <>
-                    <span>📊</span>
+                    <BarChart className="w-4 h-4" />
                     <span>Generar</span>
                   </>
                 )}
@@ -531,7 +538,7 @@ export default function Reports() {
                     }}
                     className="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium transition-colors flex items-center gap-2"
                   >
-                    <span>📊</span>
+                    <BarChart className="w-4 h-4" />
                     <span>Exportar Excel</span>
                   </button>
                   <button
@@ -656,7 +663,10 @@ export default function Reports() {
         {selectedReportType === 'mechanics' && (
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">👷 Reporte de Desempeño de Mecánicos</h3>
+            <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+              <UserCog className="w-5 h-5" />
+              Reporte de Desempeño de Mecánicos
+            </h3>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
@@ -714,7 +724,7 @@ export default function Reports() {
                   </>
                 ) : (
                   <>
-                    <span>📊</span>
+                    <BarChart className="w-4 h-4" />
                     <span>Generar</span>
                   </>
                 )}
@@ -734,7 +744,7 @@ export default function Reports() {
                   }}
                   className="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium transition-colors flex items-center gap-2"
                 >
-                  <span>📊</span>
+                  <BarChart className="w-4 h-4" />
                   <span>Exportar Excel</span>
                 </button>
               </div>
@@ -803,7 +813,10 @@ export default function Reports() {
         {selectedReportType === 'inventory' && (
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">📦 Reporte de Inventario</h3>
+            <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+              <Package className="w-5 h-5" />
+              Reporte de Inventario
+            </h3>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
@@ -879,7 +892,7 @@ export default function Reports() {
                   </>
                 ) : (
                   <>
-                    <span>📊</span>
+                    <BarChart className="w-4 h-4" />
                     <span>Generar</span>
                   </>
                 )}
@@ -899,7 +912,7 @@ export default function Reports() {
                   }}
                   className="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium transition-colors flex items-center gap-2"
                 >
-                  <span>📊</span>
+                  <BarChart className="w-4 h-4" />
                   <span>Exportar Excel</span>
                 </button>
               </div>
@@ -1005,7 +1018,10 @@ export default function Reports() {
         {selectedReportType === 'costs' && (
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">💰 Reporte de Costos</h3>
+            <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+              <DollarSign className="w-5 h-5" />
+              Reporte de Costos
+            </h3>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
@@ -1063,7 +1079,7 @@ export default function Reports() {
                   </>
                 ) : (
                   <>
-                    <span>📊</span>
+                    <BarChart className="w-4 h-4" />
                     <span>Generar</span>
                   </>
                 )}
@@ -1083,7 +1099,7 @@ export default function Reports() {
                   }}
                   className="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium transition-colors flex items-center gap-2"
                 >
-                  <span>📊</span>
+                  <BarChart className="w-4 h-4" />
                   <span>Exportar Excel</span>
                 </button>
               </div>
@@ -1212,7 +1228,7 @@ export default function Reports() {
         {/* Mensaje cuando no hay reporte seleccionado */}
         {!selectedReportType && (
           <div className="bg-white rounded-lg shadow p-12 text-center">
-            <div className="text-6xl mb-4">📊</div>
+            <BarChart className="w-16 h-16 mx-auto mb-4 text-gray-400" />
             <h3 className="text-xl font-semibold text-gray-900 mb-2">Selecciona un tipo de reporte</h3>
             <p className="text-gray-600">
               Elige un tipo de reporte del menú desplegable para comenzar a generar reportes
@@ -1223,12 +1239,12 @@ export default function Reports() {
         {/* KPIs - Mostrar solo si hay datos y no hay reporte seleccionado */}
         {!selectedReportType && kpis && (
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            <KpiCard title="Total" value={kpis.total} color="gray" icon="📋" />
-            <KpiCard title="Pendientes" value={kpis.pendientes} color="yellow" icon="⏳" />
-            <KpiCard title="En Progreso" value={kpis.en_progreso} color="blue" icon="🔨" />
-            <KpiCard title="Pausadas" value={kpis.pausados} color="orange" icon="⏸️" />
-            <KpiCard title="Completadas" value={kpis.completados} color="green" icon="✅" />
-            <KpiCard title="Hoy" value={kpis.completadosHoy} color="emerald" icon="📅" />
+            <KpiCard title="Total" value={kpis.total} color="gray" icon={Clipboard} />
+            <KpiCard title="Pendientes" value={kpis.pendientes} color="yellow" icon={Clock} />
+            <KpiCard title="En Progreso" value={kpis.en_progreso} color="blue" icon={Wrench} />
+            <KpiCard title="Pausadas" value={kpis.pausados} color="orange" icon={Pause} />
+            <KpiCard title="Completadas" value={kpis.completados} color="green" icon={CheckCircle} />
+            <KpiCard title="Hoy" value={kpis.completadosHoy} color="emerald" icon={Calendar} />
           </div>
         )}
 
@@ -1321,7 +1337,7 @@ export default function Reports() {
   )
 }
 
-function KpiCard({ title, value, color, icon }: { title: string; value: number; color: string; icon: string }) {
+function KpiCard({ title, value, color, icon: IconComponent }: { title: string; value: number; color: string; icon: any }) {
   const colorMap: Record<string, string> = {
     gray: 'bg-gray-100 text-gray-900',
     yellow: 'bg-yellow-100 text-yellow-900',
@@ -1337,7 +1353,9 @@ function KpiCard({ title, value, color, icon }: { title: string; value: number; 
           <div className="text-sm font-medium opacity-80">{title}</div>
           <div className="text-2xl font-bold">{value}</div>
         </div>
-        <div className="text-2xl">{icon}</div>
+        {IconComponent && (
+          <IconComponent className="w-8 h-8" />
+        )}
       </div>
     </div>
   )

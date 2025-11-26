@@ -10,6 +10,10 @@ import { EditVehicleModal } from '../components/modals/EditVehicleModal'
 import { DocumentUpload } from '../components/DocumentUpload'
 import { useAuthStore } from '../store/authStore'
 import type { Vehicle, VehicleFilters, Region } from '../../../shared/types'
+import { 
+  Car, CheckCircle, Wrench, XCircle, Search, Pencil, 
+  Trash2, Eye, EyeOff, Clipboard, FileText, Wrench as WrenchIcon
+} from 'lucide-react'
 
 export default function Vehicles() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
@@ -239,7 +243,7 @@ export default function Vehicles() {
           <div className="bg-white rounded-lg shadow p-4 sm:p-6">
             <div className="flex items-center">
               <div className="p-2 bg-blue-100 rounded-lg flex-shrink-0">
-                <span className="text-xl sm:text-2xl">🚗</span>
+                <Car className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600" />
               </div>
               <div className="ml-3 sm:ml-4 min-w-0 flex-1">
                 <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Total Vehículos</p>
@@ -251,7 +255,7 @@ export default function Vehicles() {
           <div className="bg-white rounded-lg shadow p-4 sm:p-6">
             <div className="flex items-center">
               <div className="p-2 bg-green-100 rounded-lg flex-shrink-0">
-                <span className="text-xl sm:text-2xl">✅</span>
+                <CheckCircle className="w-6 h-6 sm:w-8 sm:h-8 text-green-600" />
               </div>
               <div className="ml-3 sm:ml-4 min-w-0 flex-1">
                 <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Activos</p>
@@ -265,7 +269,7 @@ export default function Vehicles() {
           <div className="bg-white rounded-lg shadow p-4 sm:p-6">
             <div className="flex items-center">
               <div className="p-2 bg-yellow-100 rounded-lg flex-shrink-0">
-                <span className="text-xl sm:text-2xl">🔧</span>
+                <Wrench className="w-6 h-6 sm:w-8 sm:h-8 text-yellow-600" />
               </div>
               <div className="ml-3 sm:ml-4 min-w-0 flex-1">
                 <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">En Mantenimiento</p>
@@ -279,7 +283,7 @@ export default function Vehicles() {
           <div className="bg-white rounded-lg shadow p-4 sm:p-6">
             <div className="flex items-center">
               <div className="p-2 bg-red-100 rounded-lg flex-shrink-0">
-                <span className="text-xl sm:text-2xl">❌</span>
+                <XCircle className="w-6 h-6 sm:w-8 sm:h-8 text-red-600" />
               </div>
               <div className="ml-3 sm:ml-4 min-w-0 flex-1">
                 <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Inactivos</p>
@@ -378,7 +382,7 @@ export default function Vehicles() {
               onClick={handleSearch}
               className="flex-1 sm:flex-none px-4 sm:px-6 py-2 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors text-sm sm:text-base flex items-center justify-center space-x-2"
             >
-              <span>🔍</span>
+              <Search className="w-4 h-4" />
               <span>Buscar</span>
             </button>
             {hasActiveFilters && (
@@ -495,7 +499,8 @@ export default function Vehicles() {
                             onClick={() => handleEditVehicle(vehicle)}
                             className="text-green-600 hover:text-green-900"
                           >
-                          ✏️ Editar
+                          <Pencil className="w-4 h-4 inline mr-1" />
+                          Editar
                           </button>
                         )}
                         {isAdmin && (
@@ -503,7 +508,8 @@ export default function Vehicles() {
                             onClick={() => handleDeleteVehicle(vehicle)}
                             className="text-red-600 hover:text-red-900"
                           >
-                            🗑️ Eliminar
+                            <Trash2 className="w-4 h-4 inline mr-1" />
+                            Eliminar
                           </button>
                         )}
                       </div>
@@ -693,7 +699,17 @@ export default function Vehicles() {
                     onClick={() => setShowDocuments(!showDocuments)}
                     className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors text-sm flex items-center space-x-2"
                   >
-                    <span>{showDocuments ? '👁️ Ocultar' : '👁️ Ver'}</span>
+                    {showDocuments ? (
+                      <>
+                        <EyeOff className="w-4 h-4" />
+                        <span>Ocultar</span>
+                      </>
+                    ) : (
+                      <>
+                        <Eye className="w-4 h-4" />
+                        <span>Ver</span>
+                      </>
+                    )}
                     <span>Documentos</span>
                   </button>
                 </div>
@@ -722,7 +738,10 @@ export default function Vehicles() {
 
               {/* Historial del Vehículo */}
               <div className="mt-6 pt-4 border-t border-gray-200">
-                <h4 className="font-medium text-gray-900 mb-4">📋 Historial del Vehículo</h4>
+                <h4 className="font-medium text-gray-900 mb-4 flex items-center gap-2">
+                  <Clipboard className="w-5 h-5" />
+                  Historial del Vehículo
+                </h4>
                 
                 {vehicleHistory.loading ? (
                   <div className="text-center py-4">
@@ -734,7 +753,7 @@ export default function Vehicles() {
                     {/* Historial de Ingresos */}
                     <div>
                       <h5 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
-                        <span className="mr-2">📝</span>
+                        <FileText className="w-4 h-4 mr-2" />
                         Ingresos al Taller ({vehicleHistory.entries.length})
                       </h5>
                       {vehicleHistory.entries.length === 0 ? (
@@ -782,7 +801,7 @@ export default function Vehicles() {
                     {/* Historial de Órdenes de Trabajo */}
                     <div>
                       <h5 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
-                        <span className="mr-2">🔨</span>
+                        <WrenchIcon className="w-4 h-4 mr-2" />
                         Órdenes de Trabajo ({vehicleHistory.workOrders.length})
                       </h5>
                       {vehicleHistory.workOrders.length === 0 ? (

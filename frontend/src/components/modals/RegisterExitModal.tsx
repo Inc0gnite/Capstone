@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { vehicleEntryService } from '../../services/vehicleEntryService'
 import { useAuthStore } from '../../store/authStore'
 import type { VehicleEntry } from '../../../../shared/types'
+import { Car, BarChart, CheckCircle, XCircle, Clock, Clipboard, FileText, X, User, Hash, Calendar } from 'lucide-react'
 
 interface RegisterExitModalProps {
   isOpen: boolean
@@ -32,8 +33,8 @@ export function RegisterExitModal({ isOpen, onClose, onSuccess, entry }: Registe
 
     try {
       setLoading(true)
-      console.log('🚗 Registrando salida para:', entry.entryCode)
-      console.log('📊 Datos de salida:', {
+      console.log('Registrando salida para:', entry.entryCode)
+      console.log('Datos de salida:', {
         entryKm: entry.entryKm,
         exitKm: parseInt(formData.exitKm),
         observations: formData.observations
@@ -44,7 +45,7 @@ export function RegisterExitModal({ isOpen, onClose, onSuccess, entry }: Registe
         observations: formData.observations || undefined
       })
       
-      console.log('✅ Salida registrada exitosamente:', updatedEntry)
+      console.log('Salida registrada exitosamente:', updatedEntry)
       
       // Obtener información del guardia actual
       const { user } = useAuthStore.getState()
@@ -74,7 +75,7 @@ export function RegisterExitModal({ isOpen, onClose, onSuccess, entry }: Registe
       onClose()
       resetForm()
     } catch (error: any) {
-      console.error('❌ Error registrando salida:', error)
+      console.error('Error registrando salida:', error)
       
       // Manejar diferentes tipos de errores con mensajes específicos
       let errorMessage = 'Error al registrar la salida'
@@ -83,9 +84,9 @@ export function RegisterExitModal({ isOpen, onClose, onSuccess, entry }: Registe
         const backendMessage = error.response.data.message
         
         if (backendMessage.includes('Esperando orden')) {
-          errorMessage = '⏳ Esperando orden: El recepcionista debe marcar la orden como lista antes de registrar la salida'
+          errorMessage = 'Esperando orden: El recepcionista debe marcar la orden como lista antes de registrar la salida'
         } else if (backendMessage.includes('ya tiene registrada una salida')) {
-          errorMessage = '❌ Este vehículo ya tiene registrada una salida'
+          errorMessage = 'Este vehículo ya tiene registrada una salida'
         } else {
           errorMessage = backendMessage
         }
@@ -135,22 +136,37 @@ export function RegisterExitModal({ isOpen, onClose, onSuccess, entry }: Registe
           
           {/* Información del Ingreso */}
           <div className="bg-gray-50 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
-            <h4 className="text-sm sm:text-base font-medium text-gray-900 mb-2 sm:mb-3">📋 Información del Ingreso</h4>
+            <h4 className="text-sm sm:text-base font-medium text-gray-900 mb-2 sm:mb-3 flex items-center gap-2">
+              <Clipboard className="w-4 h-4" />
+              Información del Ingreso
+            </h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 md:gap-4 text-xs sm:text-sm">
               <div>
-                <span className="text-gray-600">🚗 Vehículo:</span>
+                <span className="text-gray-600 flex items-center gap-1">
+                  <Car className="w-3 h-3" />
+                  Vehículo:
+                </span>
                 <span className="ml-2 font-medium">{entry.entryCode}</span>
               </div>
               <div>
-                <span className="text-gray-600">👤 Conductor:</span>
+                <span className="text-gray-600 flex items-center gap-1">
+                  <User className="w-3 h-3" />
+                  Conductor:
+                </span>
                 <span className="ml-2 font-medium">{entry.driverName}</span>
               </div>
               <div>
-                <span className="text-gray-600">🆔 Código:</span>
+                <span className="text-gray-600 flex items-center gap-1">
+                  <Hash className="w-3 h-3" />
+                  Código:
+                </span>
                 <span className="ml-2 font-medium">{entry.entryCode}</span>
               </div>
               <div>
-                <span className="text-gray-600">📅 Fecha Ingreso:</span>
+                <span className="text-gray-600 flex items-center gap-1">
+                  <Calendar className="w-3 h-3" />
+                  Fecha Ingreso:
+                </span>
                 <span className="ml-2 font-medium">
                   {new Date(entry.entryDate).toLocaleDateString('es-CL')}
                 </span>
@@ -172,8 +188,9 @@ export function RegisterExitModal({ isOpen, onClose, onSuccess, entry }: Registe
           <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
             {/* Kilometraje de Salida */}
             <div>
-              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
-                🚗 Kilometraje de Salida *
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2 flex items-center gap-2">
+                <Car className="w-4 h-4" />
+                Kilometraje de Salida *
               </label>
               <input
                 id="exitKm"
@@ -199,14 +216,18 @@ export function RegisterExitModal({ isOpen, onClose, onSuccess, entry }: Registe
             {/* Información sobre hora automática */}
             <div className="p-2 sm:p-3 bg-blue-50 border border-blue-200 rounded-md">
               <p className="text-xs sm:text-sm text-blue-800">
-                <strong>🕐 Hora de salida:</strong> Se registrará automáticamente la hora actual del sistema
+                <strong className="flex items-center gap-1">
+                  <Clock className="w-4 h-4" />
+                  Hora de salida:
+                </strong> Se registrará automáticamente la hora actual del sistema
               </p>
             </div>
 
             {/* Observaciones */}
             <div>
-              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
-                📝 Observaciones (Opcional)
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2 flex items-center gap-2">
+                <FileText className="w-4 h-4" />
+                Observaciones (Opcional)
               </label>
               <textarea
                 value={formData.observations}
@@ -224,7 +245,8 @@ export function RegisterExitModal({ isOpen, onClose, onSuccess, entry }: Registe
                 onClick={handleClose}
                 className="w-full sm:w-auto px-3 sm:px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors"
               >
-                ❌ Cancelar
+                <X className="w-4 h-4 inline mr-1" />
+                Cancelar
               </button>
               <button
                 type="submit"
@@ -238,7 +260,7 @@ export function RegisterExitModal({ isOpen, onClose, onSuccess, entry }: Registe
                   </>
                 ) : (
                   <>
-                    <span>✅</span>
+                    <CheckCircle className="w-4 h-4" />
                     <span>Registrar Salida</span>
                   </>
                 )}

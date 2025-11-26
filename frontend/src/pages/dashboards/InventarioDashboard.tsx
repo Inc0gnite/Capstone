@@ -1,6 +1,7 @@
 import { MainLayout } from '../../components/Layout/MainLayout'
 import { CreateSparePartModal } from '../../components/modals/CreateSparePartModal'
 import { useState } from 'react'
+import { Package, AlertTriangle, CircleDot, DollarSign, Wrench, BarChart, Bell } from 'lucide-react'
 
 export default function InventarioDashboard() {
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -28,28 +29,28 @@ export default function InventarioDashboard() {
             title="Total Items"
             value="156"
             change="+12"
-            icon="📦"
+            icon={Package}
             color="blue"
           />
           <StatCard
             title="Stock Bajo"
             value="8"
             change="-2"
-            icon="⚠️"
+            icon={AlertTriangle}
             color="yellow"
           />
           <StatCard
             title="Sin Stock"
             value="2"
             change="+1"
-            icon="🔴"
+            icon={CircleDot}
             color="red"
           />
           <StatCard
             title="Valor Total"
             value="$45M"
             change="+8%"
-            icon="💰"
+            icon={DollarSign}
             color="green"
           />
         </div>
@@ -57,7 +58,7 @@ export default function InventarioDashboard() {
         {/* Alertas Críticas */}
         <div className="bg-red-50 border-2 border-red-200 rounded-lg p-6">
           <div className="flex items-center space-x-3 mb-4">
-            <span className="text-3xl">🚨</span>
+            <Bell className="w-8 h-8 text-red-600" />
             <div>
               <h3 className="text-lg font-semibold text-red-900">
                 Alertas Críticas de Stock
@@ -201,8 +202,8 @@ export default function InventarioDashboard() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <QuickAction icon="➕" label="Registrar Entrada" />
             <QuickAction icon="➖" label="Registrar Salida" />
-            <QuickAction icon="🔧" label="Nuevo Repuesto" />
-            <QuickAction icon="📊" label="Generar Reporte" />
+            <QuickAction icon={Wrench} label="Nuevo Repuesto" />
+            <QuickAction icon={BarChart} label="Generar Reporte" />
           </div>
         </div>
       </div>
@@ -220,7 +221,7 @@ export default function InventarioDashboard() {
   )
 }
 
-function StatCard({ title, value, change, icon, color }: any) {
+function StatCard({ title, value, change, icon: IconComponent, color }: any) {
   const colors: Record<string, string> = {
     blue: 'bg-blue-50 text-blue-600',
     yellow: 'bg-yellow-50 text-yellow-600',
@@ -236,7 +237,11 @@ function StatCard({ title, value, change, icon, color }: any) {
           <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
           <p className="text-sm text-gray-500 mt-1">{change}</p>
         </div>
-        <div className={`text-4xl ${colors[color]} p-3 rounded-lg`}>{icon}</div>
+        {IconComponent && (
+          <div className={`${colors[color]} p-3 rounded-lg`}>
+            <IconComponent className="w-8 h-8" />
+          </div>
+        )}
       </div>
     </div>
   )
@@ -322,16 +327,17 @@ function SparePartRequest({ orderNumber, mechanic, items, status }: any) {
 
 function Movement({ type, item, quantity, reason, time }: any) {
   const typeConfig: Record<string, any> = {
-    entrada: { icon: '➕', color: 'text-green-600' },
-    salida: { icon: '➖', color: 'text-red-600' },
-    ajuste: { icon: '🔧', color: 'text-blue-600' },
+    entrada: { icon: Package, color: 'text-green-600' },
+    salida: { icon: Package, color: 'text-red-600' },
+    ajuste: { icon: Wrench, color: 'text-blue-600' },
   }
 
   const config = typeConfig[type]
+  const IconComponent = config.icon
 
   return (
     <div className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded">
-      <span className={`text-xl ${config.color}`}>{config.icon}</span>
+      {IconComponent && <IconComponent className={`w-5 h-5 ${config.color}`} />}
       <div className="flex-1">
         <p className="text-sm font-medium text-gray-900">
           {item} ({quantity > 0 ? '+' : ''}{quantity})
@@ -343,10 +349,10 @@ function Movement({ type, item, quantity, reason, time }: any) {
   )
 }
 
-function QuickAction({ icon, label }: any) {
+function QuickAction({ icon: IconComponent, label }: any) {
   return (
     <button className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition">
-      <span className="text-3xl mb-2">{icon}</span>
+      {IconComponent && <IconComponent className="w-8 h-8 mb-2 text-gray-600" />}
       <span className="text-sm font-medium text-gray-700">{label}</span>
     </button>
   )

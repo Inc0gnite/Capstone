@@ -3,6 +3,7 @@ import { CreateWorkOrderModal } from '../modals/CreateWorkOrderModal'
 import { AssignMechanicModal } from '../modals/AssignMechanicModal'
 import { vehicleEntryService, VehicleEntry } from '../../services/vehicleEntryService'
 import { vehicleService, Vehicle } from '../../services/vehicleService'
+import { Wrench, Eye, LogOut, AlertTriangle, XCircle, X } from 'lucide-react'
 
 interface PendingVehicleCardProps {
   vehicle: {
@@ -76,11 +77,11 @@ export function PendingVehicleCard({ vehicle, onCreateOrder, workshopId }: Pendi
           const vehicleData = await vehicleService.getById(entryData.vehicleId)
           setVehicleDetails(vehicleData)
         } catch (vehicleError) {
-          console.warn('⚠️ No se pudo cargar información del vehículo:', vehicleError)
+          console.warn('No se pudo cargar información del vehículo:', vehicleError)
         }
       }
     } catch (error) {
-      console.error('❌ Error cargando detalles del ingreso:', error)
+      console.error('Error cargando detalles del ingreso:', error)
       alert('Error al cargar los detalles del ingreso')
     } finally {
       setLoadingDetails(false)
@@ -159,14 +160,16 @@ export function PendingVehicleCard({ vehicle, onCreateOrder, workshopId }: Pendi
             onClick={handleCreateOrder}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm transition-colors"
           >
-            🔨 Crear Orden
+            <Wrench className="w-4 h-4 inline mr-1" />
+            Crear Orden
           </button>
           
           <button
             onClick={handleShowDetails}
             className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium text-sm transition-colors"
           >
-            👁️ Ver Detalles
+            <Eye className="w-4 h-4 inline mr-1" />
+            Ver Detalles
           </button>
         </div>
       </div>
@@ -219,9 +222,9 @@ export function PendingVehicleCard({ vehicle, onCreateOrder, workshopId }: Pendi
                 </div>
                 <button
                   onClick={() => setShowDetailsModal(false)}
-                  className="text-gray-400 hover:text-gray-600 text-2xl font-bold"
+                  className="text-gray-400 hover:text-gray-600"
                 >
-                  ×
+                  <X className="w-6 h-6" />
                 </button>
               </div>
 
@@ -343,7 +346,7 @@ export function PendingVehicleCard({ vehicle, onCreateOrder, workshopId }: Pendi
                           }}
                           className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors flex items-center justify-center space-x-2"
                         >
-                          <span>🔨</span>
+                          <Wrench className="w-4 h-4" />
                           <span>Crear Orden de Trabajo</span>
                         </button>
                         
@@ -356,7 +359,7 @@ export function PendingVehicleCard({ vehicle, onCreateOrder, workshopId }: Pendi
                             }}
                             className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium transition-colors flex items-center justify-center space-x-2"
                           >
-                            <span>🚪</span>
+                            <LogOut className="w-4 h-4" />
                             <span>Registrar Salida</span>
                           </button>
                         )}

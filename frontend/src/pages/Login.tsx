@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { authService } from '../services/authService'
+import { X } from 'lucide-react'
 
 function Login() {
   const [email, setEmail] = useState('')
@@ -23,20 +24,20 @@ function Login() {
     e.preventDefault()
     setError('')
     
-    console.log('🚀 INICIO DEL LOGIN - Email:', email)
-    console.log('🚀 INICIO DEL LOGIN - Password:', password ? '***' : 'VACÍO')
+    console.log('INICIO DEL LOGIN - Email:', email)
+    console.log('INICIO DEL LOGIN - Password:', password ? '***' : 'VACÍO')
 
     try {
-      console.log('📡 LLAMANDO A LOGIN...')
+      console.log('LLAMANDO A LOGIN...')
       await login(email, password)
-      console.log('✅ LOGIN EXITOSO - Continuando con redirección...')
+      console.log('LOGIN EXITOSO - Continuando con redirección...')
       
       // Esperar un momento para que el store se actualice
       setTimeout(() => {
         // Redirigir según el rol del usuario
         const userRole = (useAuthStore.getState().user as any)?.role?.name
-        console.log('🎯 Rol detectado:', userRole)
-        console.log('👤 Usuario completo:', useAuthStore.getState().user)
+        console.log('Rol detectado:', userRole)
+        console.log('Usuario completo:', useAuthStore.getState().user)
         
         let redirectPath = '/dashboard'
         const roleDashboardMap: Record<string, string> = {
@@ -50,17 +51,17 @@ function Login() {
         
         redirectPath = roleDashboardMap[userRole || ''] || '/dashboard'
         
-        console.log('🔄 Redirigiendo a:', redirectPath)
-        console.log('🔍 Mapeo usado:', roleDashboardMap)
+        console.log('Redirigiendo a:', redirectPath)
+        console.log('Mapeo usado:', roleDashboardMap)
         
         // Usar window.location.href para forzar la redirección
         window.location.href = redirectPath
       }, 100)
       
     } catch (error: any) {
-      console.error('❌ ERROR EN LOGIN:', error)
-      console.error('❌ Error response:', error.response)
-      console.error('❌ Error message:', error.message)
+      console.error('ERROR EN LOGIN:', error)
+      console.error('Error response:', error.response)
+      console.error('Error message:', error.message)
       setError(error.response?.data?.error || 'Error al iniciar sesión')
     }
   }
@@ -213,7 +214,7 @@ function Login() {
                 onClick={() => setIsForgotOpen(false)}
                 aria-label="Cerrar"
               >
-                ✕
+                <X className="w-5 h-5" />
               </button>
             </div>
 

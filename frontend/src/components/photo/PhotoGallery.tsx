@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { Camera, AlertTriangle, Car, Truck, Pencil, Trash2 } from 'lucide-react'
 
 export interface Photo {
   id: string
@@ -18,10 +19,10 @@ interface PhotoGalleryProps {
 }
 
 const PHOTO_TYPES = [
-  { value: 'before', label: 'Antes', icon: '📸', color: 'bg-blue-500' },
-  { value: 'damage', label: 'Daños', icon: '⚠️', color: 'bg-red-500' },
-  { value: 'interior', label: 'Interior', icon: '🚗', color: 'bg-green-500' },
-  { value: 'exterior', label: 'Exterior', icon: '🚙', color: 'bg-purple-500' }
+  { value: 'before', label: 'Antes', icon: Camera, color: 'bg-blue-500' },
+  { value: 'damage', label: 'Daños', icon: AlertTriangle, color: 'bg-red-500' },
+  { value: 'interior', label: 'Interior', icon: Car, color: 'bg-green-500' },
+  { value: 'exterior', label: 'Exterior', icon: Truck, color: 'bg-purple-500' }
 ]
 
 export function PhotoGallery({
@@ -107,23 +108,26 @@ export function PhotoGallery({
     <div className="space-y-4">
       {/* Selector de tipo de foto */}
       <div className="flex flex-wrap gap-2">
-        {PHOTO_TYPES.map(type => (
-          <button
-            key={type.value}
-            onClick={() => setSelectedPhotoType(type.value)}
-            className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${
-              selectedPhotoType === type.value
-                ? `${type.color} text-white shadow-lg`
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-          >
-            <span className="text-sm sm:text-base">{type.icon}</span>
-            <span className="hidden sm:inline">{type.label}</span>
-            <span className="text-xs">
-              ({getPhotosByType(type.value).length})
-            </span>
-          </button>
-        ))}
+        {PHOTO_TYPES.map(type => {
+          const IconComponent = type.icon
+          return (
+            <button
+              key={type.value}
+              onClick={() => setSelectedPhotoType(type.value)}
+              className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${
+                selectedPhotoType === type.value
+                  ? `${type.color} text-white shadow-lg`
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              <IconComponent className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span className="hidden sm:inline">{type.label}</span>
+              <span className="text-xs">
+                ({getPhotosByType(type.value).length})
+              </span>
+            </button>
+          )
+        })}
       </div>
 
       {/* Botón para subir foto */}
@@ -132,7 +136,7 @@ export function PhotoGallery({
         onClick={handleUploadButtonClick}
         className="w-full bg-blue-500 hover:bg-blue-600 text-white p-2.5 sm:p-3 rounded-lg flex items-center justify-center gap-2 font-medium transition-colors text-sm sm:text-base"
       >
-        <span className="text-lg sm:text-xl">📸</span>
+        <Camera className="w-5 h-5 sm:w-6 sm:h-6" />
         <span className="hidden sm:inline">Subir Foto - </span>
         <span>{getPhotoTypeInfo(selectedPhotoType).label}</span>
       </button>
@@ -155,10 +159,11 @@ export function PhotoGallery({
         const typePhotos = getPhotosByType(type.value)
         if (typePhotos.length === 0) return null
 
+        const IconComponent = type.icon
         return (
           <div key={type.value} className="space-y-2">
             <h4 className="flex items-center gap-2 text-sm font-medium text-gray-700">
-              <span>{type.icon}</span>
+              <IconComponent className="w-4 h-4" />
               {type.label} ({typePhotos.length})
             </h4>
 
@@ -176,17 +181,17 @@ export function PhotoGallery({
                     <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex gap-1">
                       <button
                         onClick={() => handleEditPhoto(photo)}
-                        className="bg-blue-500 text-white p-1 rounded text-xs"
+                        className="bg-blue-500 text-white p-1.5 rounded hover:bg-blue-600 transition-colors"
                         title="Editar descripción"
                       >
-                        ✏️
+                        <Pencil className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => onDeletePhoto(photo.id)}
-                        className="bg-red-500 text-white p-1 rounded text-xs"
+                        className="bg-red-500 text-white p-1.5 rounded hover:bg-red-600 transition-colors"
                         title="Eliminar foto"
                       >
-                        🗑️
+                        <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                   </div>

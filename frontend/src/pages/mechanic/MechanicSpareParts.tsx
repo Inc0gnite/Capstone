@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { MainLayout } from '../../components/Layout/MainLayout'
 import { sparePartService, SparePart } from '../../services/sparePartService'
 import { useAuthStore } from '../../store/authStore'
+import { AlertTriangle } from 'lucide-react'
 
 // Tipos locales
 interface SparePartFilters {
@@ -106,16 +107,16 @@ export default function MechanicSpareParts() {
 
       const response: PaginatedResponse<SparePart> | any = await sparePartService.getAll(params as any)
       
-      console.log('[MechanicSpareParts] 🔍 Params enviados:', params)
-      console.log('[MechanicSpareParts] 📦 Respuesta recibida:', response)
-      console.log('[MechanicSpareParts] 📦 Tipo respuesta:', typeof response)
-      console.log('[MechanicSpareParts] 📦 Es array?', Array.isArray(response))
+      console.log('[MechanicSpareParts] Params enviados:', params)
+      console.log('[MechanicSpareParts] Respuesta recibida:', response)
+      console.log('[MechanicSpareParts] Tipo respuesta:', typeof response)
+      console.log('[MechanicSpareParts] Es array?', Array.isArray(response))
       if (response && typeof response === 'object') {
-        console.log('[MechanicSpareParts] 📦 Keys:', Object.keys(response))
-        console.log('[MechanicSpareParts] 📦 response.data existe?', 'data' in response)
-        console.log('[MechanicSpareParts] 📦 response.data es array?', Array.isArray(response.data))
-        console.log('[MechanicSpareParts] 📦 response.data length:', response.data?.length)
-        console.log('[MechanicSpareParts] 📦 response.total:', response.total)
+        console.log('[MechanicSpareParts] Keys:', Object.keys(response))
+        console.log('[MechanicSpareParts] response.data existe?', 'data' in response)
+        console.log('[MechanicSpareParts] response.data es array?', Array.isArray(response.data))
+        console.log('[MechanicSpareParts] response.data length:', response.data?.length)
+        console.log('[MechanicSpareParts] response.total:', response.total)
       }
       
       // sendPaginated devuelve { data: [...], page, limit, total, totalPages }
@@ -123,10 +124,10 @@ export default function MechanicSpareParts() {
       const items: SparePart[] = response?.data ?? response?.items ?? response?.spareParts ?? (Array.isArray(response) ? response : [])
       const totalCount = response?.total ?? items.length
 
-      console.log('[MechanicSpareParts] ✅ Items extraídos:', items.length)
-      console.log('[MechanicSpareParts] ✅ Total count:', totalCount)
+      console.log('[MechanicSpareParts] Items extraídos:', items.length)
+      console.log('[MechanicSpareParts] Total count:', totalCount)
       if (items.length > 0) {
-        console.log('[MechanicSpareParts] ✅ Primer item:', items[0])
+        console.log('[MechanicSpareParts] Primer item:', items[0])
       }
 
       setParts(items)
@@ -194,7 +195,7 @@ export default function MechanicSpareParts() {
       <MainLayout>
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
-            <div className="text-red-500 text-6xl mb-4">⚠️</div>
+            <AlertTriangle className="w-16 h-16 mx-auto mb-4 text-red-500" />
             <p className="text-red-600">{error}</p>
           </div>
         </div>

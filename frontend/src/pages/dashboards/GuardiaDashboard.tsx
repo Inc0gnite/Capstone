@@ -9,6 +9,7 @@ import { useAuthStore } from '../../store/authStore'
 import { CreateEntryModal } from '../../components/modals/CreateEntryModal'
 import { CreateEntryModalAdvanced } from '../../components/modals/CreateEntryModalAdvanced'
 import type { VehicleEntry, Vehicle, WorkOrder } from '../../../../shared/types'
+import { RefreshCw, FileText, Factory, CheckCircle, Search, Car, Wrench, Lightbulb, XCircle, BarChart, Zap, Play, Pause, Clock, Clipboard, Package, ArrowRight, AlertTriangle, UserCog } from 'lucide-react'
 
 export default function GuardiaDashboard() {
   const navigate = useNavigate()
@@ -68,7 +69,7 @@ export default function GuardiaDashboard() {
   const loadDashboardData = async () => {
     // Evitar peticiones concurrentes
     if (isLoadingData) {
-      console.log('🔄 Ya hay una petición en curso, omitiendo...')
+      console.log('Ya hay una petición en curso, omitiendo...')
       return
     }
 
@@ -76,7 +77,7 @@ export default function GuardiaDashboard() {
       setIsLoadingData(true)
       setLoadingData(true)
       
-      console.log('🔄 Cargando datos del dashboard...')
+      console.log('Cargando datos del dashboard...')
       // El backend ahora incluye isReadyForExit en getActiveEntries, evitando peticiones adicionales
       const [activeEntries, recentEntries] = await Promise.all([
         vehicleEntryService.getActiveEntries(),
@@ -86,9 +87,9 @@ export default function GuardiaDashboard() {
       // activeEntries ya incluye isReadyForExit desde el backend
       setActiveVehicles(activeEntries as (VehicleEntry & { isReadyForExit?: boolean })[])
       setRecentActivity(recentEntries.data || [])
-      console.log('✅ Datos del dashboard cargados exitosamente')
+      console.log('Datos del dashboard cargados exitosamente')
     } catch (error) {
-      console.error('❌ Error cargando datos del dashboard:', error)
+      console.error('Error cargando datos del dashboard:', error)
     } finally {
       setLoadingData(false)
       setIsLoadingData(false)
@@ -268,7 +269,7 @@ export default function GuardiaDashboard() {
               onClick={handleCreateEntry}
               className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium transition-colors flex items-center space-x-2"
             >
-              <span>📝</span>
+              <FileText className="w-4 h-4" />
               <span>Registrar Ingreso</span>
             </button>
             <button
@@ -276,7 +277,7 @@ export default function GuardiaDashboard() {
               disabled={loading || loadingData}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed font-medium transition-colors flex items-center space-x-2"
             >
-              <span>🔄</span>
+              <RefreshCw className="w-4 h-4" />
               <span>Actualizar Todo</span>
             </button>
             <button
@@ -284,7 +285,7 @@ export default function GuardiaDashboard() {
               disabled={loading || loadingData}
               className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed font-medium transition-colors flex items-center space-x-2"
             >
-              <span>⚡</span>
+              <RefreshCw className="w-4 h-4" />
               <span>Forzar Actualización</span>
             </button>
           </div>
@@ -295,19 +296,19 @@ export default function GuardiaDashboard() {
           <StatCard
             title="Vehículos en Taller"
             value={loading ? "..." : stats.vehiclesInWorkshop.toString()}
-            icon="🏭"
+            icon={Factory}
             color="blue"
           />
           <StatCard
             title="Ingresos Hoy"
             value={loading ? "..." : stats.entriesToday.toString()}
-            icon="📝"
+            icon={FileText}
             color="green"
           />
           <StatCard
             title="Salidas Hoy"
             value={loading ? "..." : stats.exitsToday.toString()}
-            icon="✅"
+            icon={CheckCircle}
             color="purple"
           />
           <div className="bg-white rounded-lg shadow p-6">
@@ -329,7 +330,7 @@ export default function GuardiaDashboard() {
               <p className="text-3xl font-bold text-gray-900">
                 {loading ? "..." : stats.totalEntries.toString()}
               </p>
-              <div className="text-5xl bg-orange-50 text-orange-600 p-4 rounded-lg">📊</div>
+              <BarChart className="w-12 h-12 bg-orange-50 text-orange-600 p-4 rounded-lg" />
             </div>
             <p className="text-xs text-gray-500 mt-2">
               Período: {period === 'diario' ? 'Hoy' : period === 'semanal' ? 'Últimos 7 días' : 'Último mes'}
@@ -358,7 +359,8 @@ export default function GuardiaDashboard() {
               onClick={handleQuickSearch}
               className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors"
             >
-              🔍 Buscar
+              <Search className="w-4 h-4 inline mr-1" />
+              Buscar
             </button>
           </div>
           
@@ -373,7 +375,7 @@ export default function GuardiaDashboard() {
                 return activeEntry ? (
                   <div className="mb-3 p-3 bg-green-50 border border-green-200 rounded-lg">
                     <div className="flex items-center space-x-2">
-                      <span className="text-green-600">🏭</span>
+                      <Factory className="w-5 h-5 text-green-600" />
                       <span className="font-medium text-green-800">Actualmente en el taller</span>
                     </div>
                     <p className="text-sm text-green-700 mt-1">
@@ -439,7 +441,8 @@ export default function GuardiaDashboard() {
               onClick={loadDashboardData}
               className="text-blue-600 hover:text-blue-800 text-sm font-medium"
             >
-              🔄 Actualizar
+              <RefreshCw className="w-4 h-4 inline mr-1" />
+              Actualizar
             </button>
           </div>
           <div className="space-y-6">
@@ -450,7 +453,7 @@ export default function GuardiaDashboard() {
               </div>
             ) : activeVehicles.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
-                <div className="text-4xl mb-2">🚗</div>
+                <Car className="w-12 h-12 mx-auto mb-2 text-gray-400" />
                 <p>No hay vehículos en el taller actualmente</p>
                 <p className="text-sm mt-2 text-gray-400">
                   Los vehículos aparecerán aquí cuando ingresen al taller
@@ -460,18 +463,23 @@ export default function GuardiaDashboard() {
                     onClick={handleForceRefresh}
                     className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium mr-2"
                   >
-                    ⚡ Forzar Actualización
+                    <Zap className="w-4 h-4 inline mr-1" />
+                    Forzar Actualización
                   </button>
                   <button
                     onClick={loadDashboardData}
                     className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 text-sm font-medium"
                   >
-                    🔄 Verificar Datos
+                    <RefreshCw className="w-4 h-4 inline mr-1" />
+                    Verificar Datos
                   </button>
                 </div>
                 <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-left">
                   <p className="text-sm text-yellow-800">
-                    <strong>💡 Consejo:</strong> Si acabas de crear un ingreso y no aparece aquí, 
+                    <strong className="flex items-center gap-1">
+                      <Lightbulb className="w-4 h-4" />
+                      Consejo:
+                    </strong> Si acabas de crear un ingreso y no aparece aquí, 
                     verifica que el vehículo no haya registrado salida.
                   </p>
                 </div>
@@ -481,7 +489,7 @@ export default function GuardiaDashboard() {
                 {/* Vehículos Listos para Salida */}
                 <div>
                   <div className="flex items-center space-x-2 mb-3">
-                    <span className="text-2xl">✅</span>
+                    <CheckCircle className="w-6 h-6 text-green-600" />
                     <h4 className="text-md font-semibold text-green-700">
                       Listos para Salida
                     </h4>
@@ -518,7 +526,7 @@ export default function GuardiaDashboard() {
                 {/* Vehículos En Proceso */}
                 <div>
                   <div className="flex items-center space-x-2 mb-3">
-                    <span className="text-2xl">🔧</span>
+                    <Wrench className="w-6 h-6" />
                     <h4 className="text-md font-semibold text-yellow-700">
                       En Proceso
                     </h4>
@@ -560,7 +568,8 @@ export default function GuardiaDashboard() {
               onClick={loadDashboardData}
               className="text-blue-600 hover:text-blue-800 text-sm font-medium"
             >
-              🔄 Actualizar
+              <RefreshCw className="w-4 h-4 inline mr-1" />
+              Actualizar
             </button>
           </div>
           <div className="space-y-3">
@@ -571,7 +580,7 @@ export default function GuardiaDashboard() {
               </div>
             ) : recentActivity.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
-                <div className="text-4xl mb-2">📝</div>
+                <FileText className="w-10 h-10 mx-auto mb-2 text-gray-400" />
                 <p>No hay actividad registrada hoy</p>
               </div>
             ) : (
@@ -593,7 +602,7 @@ export default function GuardiaDashboard() {
         title="Registrar Nuevo Vehículo"
       >
         <div className="flex items-center space-x-2">
-          <span className="text-2xl">🚗</span>
+          <Car className="w-6 h-6" />
           <span className="font-medium">Nuevo Vehículo</span>
         </div>
       </button>
@@ -605,7 +614,7 @@ export default function GuardiaDashboard() {
         title="Registrar Salida de Vehículo"
       >
         <div className="flex items-center space-x-2">
-          <span className="text-2xl">✅</span>
+          <CheckCircle className="w-6 h-6" />
           <span className="font-medium">Registrar Salida</span>
         </div>
       </button>
@@ -631,7 +640,7 @@ export default function GuardiaDashboard() {
   )
 }
 
-function StatCard({ title, value, icon, color }: any) {
+function StatCard({ title, value, icon: IconComponent, color }: any) {
   const colors: Record<string, string> = {
     blue: 'bg-blue-50 text-blue-600',
     green: 'bg-green-50 text-green-600',
@@ -645,7 +654,11 @@ function StatCard({ title, value, icon, color }: any) {
           <p className="text-sm font-medium text-gray-600">{title}</p>
           <p className="text-3xl font-bold text-gray-900 mt-2">{value}</p>
         </div>
-        <div className={`text-5xl ${colors[color]} p-4 rounded-lg`}>{icon}</div>
+        {IconComponent && (
+          <div className={`${colors[color]} p-4 rounded-lg`}>
+            <IconComponent className="w-10 h-10" />
+          </div>
+        )}
       </div>
     </div>
   )
@@ -668,9 +681,9 @@ function VehicleInWorkshop({ entry, onClick, isReadyForExit }: {
       return { label: 'Completado', color: 'bg-green-100 text-green-800', borderColor: 'border-green-500' }
     }
     if (isReadyForExit) {
-      return { label: '✅ Listo para Salida', color: 'bg-green-100 text-green-800', borderColor: 'border-green-500' }
+      return { label: 'Listo para Salida', color: 'bg-green-100 text-green-800', borderColor: 'border-green-500', icon: CheckCircle }
     }
-    return { label: '🔧 En Proceso', color: 'bg-yellow-100 text-yellow-800', borderColor: 'border-yellow-500' }
+    return { label: 'En Proceso', color: 'bg-yellow-100 text-yellow-800', borderColor: 'border-yellow-500', icon: Wrench }
   }
 
   const statusInfo = getStatusInfo()
@@ -688,7 +701,7 @@ function VehicleInWorkshop({ entry, onClick, isReadyForExit }: {
         <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
           isReadyForExit ? 'bg-green-600' : 'bg-yellow-600'
         }`}>
-          <span className="text-white font-bold text-lg">🚗</span>
+          <Car className="w-6 h-6 text-white" />
         </div>
         <div>
           <p className="font-bold text-gray-900 text-lg">
@@ -701,17 +714,23 @@ function VehicleInWorkshop({ entry, onClick, isReadyForExit }: {
         </div>
       </div>
       <div className="text-right">
-        <span className={`px-3 py-1 rounded-full text-sm font-medium ${statusInfo.color}`}>
+        <span className={`px-3 py-1 rounded-full text-sm font-medium ${statusInfo.color} flex items-center gap-1`}>
+          {statusInfo.icon && (() => {
+            const IconComponent = statusInfo.icon
+            return IconComponent ? <IconComponent className="w-3 h-3" /> : null
+          })()}
           {statusInfo.label}
         </span>
         {isReadyForExit && (
           <p className="text-xs text-green-700 mt-1 font-semibold">
-            ✅ Puede registrar salida
+            <CheckCircle className="w-3 h-3 inline mr-1" />
+            Puede registrar salida
           </p>
         )}
         {!isReadyForExit && (
           <p className="text-xs text-yellow-700 mt-1 font-medium">
-            ⚠️ Esperando órdenes completadas
+            <AlertTriangle className="w-3 h-3 inline mr-1" />
+            Esperando órdenes completadas
           </p>
         )}
         <p className="text-xs text-gray-500 mt-1">
@@ -734,14 +753,14 @@ function ActivityLog({ entry }: { entry: VehicleEntry }) {
     if (entry.exitDate) {
       return { 
         action: 'Salida', 
-        icon: '✅', 
+        icon: CheckCircle, 
         color: 'text-green-600',
         borderColor: 'border-green-400'
       }
     }
     return { 
       action: 'Ingreso', 
-      icon: '➡️', 
+      icon: ArrowRight, 
       color: 'text-blue-600',
       borderColor: 'border-blue-400'
     }
@@ -751,7 +770,10 @@ function ActivityLog({ entry }: { entry: VehicleEntry }) {
 
   return (
     <div className={`flex items-center space-x-4 p-3 border-l-4 ${actionInfo.borderColor}`}>
-      <span className={`text-2xl ${actionInfo.color}`}>{actionInfo.icon}</span>
+      {(() => {
+        const IconComponent = actionInfo.icon
+        return IconComponent ? <IconComponent className={`w-6 h-6 ${actionInfo.color}`} /> : null
+      })()}
       <div className="flex-1">
         <p className="font-medium text-gray-900">
           {actionInfo.action}: {entry.entryCode || 'Sin código'}

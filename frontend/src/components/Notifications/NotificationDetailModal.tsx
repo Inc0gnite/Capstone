@@ -1,6 +1,11 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { Notification } from '../../../../shared/types'
+import { 
+  Car, CheckCircle, TrafficLight, Wrench, Pause, XCircle, 
+  Play, RefreshCw, Package, Mail, AlertTriangle, Circle, 
+  Bell, X
+} from 'lucide-react'
 
 interface NotificationDetailModalProps {
   isOpen: boolean
@@ -40,23 +45,23 @@ export function NotificationDetailModal({
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
-      case 'vehicle_entry': return '🚗'
-      case 'vehicle_exit': return '✅'
-      case 'vehicle_ready_for_exit': return '🚦'
-      case 'work_order_assigned': return '🔧'
-      case 'work_order_completed': return '✅'
-      case 'work_order_paused': return '⏸️'
-      case 'work_order_cancelled': return '❌'
-      case 'work_order_started': return '▶️'
-      case 'work_order_reassigned': return '🔄'
-      case 'spare_part_requested': return '📦'
-      case 'spare_part_delivered': return '📬'
-      case 'low_stock': return '⚠️'
-      case 'critical_stock': return '🔴'
-      case 'success': return '✅'
-      case 'warning': return '⚠️'
-      case 'error': return '❌'
-      default: return '🔔'
+      case 'vehicle_entry': return Car
+      case 'vehicle_exit': return CheckCircle
+      case 'vehicle_ready_for_exit': return TrafficLight
+      case 'work_order_assigned': return Wrench
+      case 'work_order_completed': return CheckCircle
+      case 'work_order_paused': return Pause
+      case 'work_order_cancelled': return XCircle
+      case 'work_order_started': return Play
+      case 'work_order_reassigned': return RefreshCw
+      case 'spare_part_requested': return Package
+      case 'spare_part_delivered': return Mail
+      case 'low_stock': return AlertTriangle
+      case 'critical_stock': return Circle
+      case 'success': return CheckCircle
+      case 'warning': return AlertTriangle
+      case 'error': return XCircle
+      default: return Bell
     }
   }
 
@@ -158,7 +163,10 @@ export function NotificationDetailModal({
         <div className={`px-6 py-4 border-b border-gray-200 ${getNotificationColor(notification.type)}`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <span className="text-3xl">{getNotificationIcon(notification.type)}</span>
+              {(() => {
+                const IconComponent = getNotificationIcon(notification.type)
+                return <IconComponent className="w-8 h-8" />
+              })()}
               <div>
                 <h2 className="text-xl font-bold text-gray-900">{notification.title}</h2>
                 <p className="text-sm text-gray-600 mt-1">
@@ -168,9 +176,9 @@ export function NotificationDetailModal({
             </div>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors text-2xl"
+              className="text-gray-400 hover:text-gray-600 transition-colors"
             >
-              ×
+              <X className="w-6 h-6" />
             </button>
           </div>
         </div>

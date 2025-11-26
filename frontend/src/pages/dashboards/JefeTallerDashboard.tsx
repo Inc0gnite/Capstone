@@ -8,6 +8,7 @@ import { useAuthStore } from '../../store/authStore'
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { sortWorkOrders } from '../../utils/workOrderSorting'
+import { Clipboard, Wrench, CheckCircle, AlertTriangle, Info, UserCog, Clock, Circle } from 'lucide-react'
 
 export default function JefeTallerDashboard() {
   const { user } = useAuthStore()
@@ -125,7 +126,7 @@ export default function JefeTallerDashboard() {
             to="/spare-part-requests"
             className="px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-medium transition-colors flex items-center space-x-2 shadow-md"
           >
-            <span>📋</span>
+            <Clipboard className="w-5 h-5" />
             <span>
               Solicitudes de Repuestos
               {pendingRequestsCount > 0 && ` (${pendingRequestsCount})`}
@@ -149,28 +150,28 @@ export default function JefeTallerDashboard() {
               title="Órdenes Activas"
               value={stats?.activeWorkOrders || 0}
               change={`Total: ${stats?.totalWorkOrders || 0}`}
-              icon="🔨"
+              icon={Wrench}
               color="blue"
             />
             <StatCard
               title="Mecánicos Trabajando"
               value={`${mechanicsPerformance.length}/${mechanicCapacity.length}`}
               change={`${mechanicCapacity.length > 0 ? Math.round((mechanicsPerformance.length / mechanicCapacity.length) * 100) : 0}% activos`}
-              icon="👷"
+              icon={UserCog}
               color="green"
             />
             <StatCard
               title="Completadas Hoy"
               value={stats?.completedToday || 0}
               change="Hoy"
-              icon="✅"
+              icon={CheckCircle}
               color="purple"
             />
             <StatCard
               title="Órdenes Pendientes"
               value={stats?.pendingWorkOrders || 0}
               change="Esperando asignación"
-              icon="⏳"
+              icon={Clock}
               color="yellow"
             />
           </div>
@@ -308,7 +309,7 @@ export default function JefeTallerDashboard() {
   )
 }
 
-function StatCard({ title, value, change, icon, color }: any) {
+function StatCard({ title, value, change, icon: IconComponent, color }: any) {
   const colors: Record<string, string> = {
     blue: 'bg-blue-50 text-blue-600',
     green: 'bg-green-50 text-green-600',
@@ -324,7 +325,11 @@ function StatCard({ title, value, change, icon, color }: any) {
           <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
           <p className="text-sm text-gray-500 mt-1">{change}</p>
         </div>
-        <div className={`text-4xl ${colors[color]} p-3 rounded-lg`}>{icon}</div>
+        {IconComponent && (
+          <div className={`${colors[color]} p-3 rounded-lg`}>
+            <IconComponent className="w-8 h-8" />
+          </div>
+        )}
       </div>
     </div>
   )
@@ -402,8 +407,14 @@ function MechanicPerformance({ name, efficiency, tasksCompleted, tasksActive }: 
         ></div>
       </div>
       <div className="flex justify-between text-xs text-gray-600">
-        <span>✅ {tasksCompleted}</span>
-        <span>🔨 {tasksActive} activas</span>
+        <span className="flex items-center gap-1">
+          <CheckCircle className="w-3 h-3" />
+          {tasksCompleted}
+        </span>
+        <span className="flex items-center gap-1">
+          <Wrench className="w-3 h-3" />
+          {tasksActive} activas
+        </span>
       </div>
     </div>
   )
@@ -411,17 +422,18 @@ function MechanicPerformance({ name, efficiency, tasksCompleted, tasksActive }: 
 
 function Alert({ type, message, time }: any) {
   const typeConfig: Record<string, any> = {
-    crítico: { icon: '🔴', color: 'bg-red-50 border-red-200' },
-    advertencia: { icon: '⚠️', color: 'bg-yellow-50 border-yellow-200' },
-    info: { icon: 'ℹ️', color: 'bg-blue-50 border-blue-200' },
+    crítico: { icon: Circle, color: 'bg-red-50 border-red-200' },
+    advertencia: { icon: AlertTriangle, color: 'bg-yellow-50 border-yellow-200' },
+    info: { icon: Info, color: 'bg-blue-50 border-blue-200' },
   }
 
   const config = typeConfig[type]
+  const IconComponent = config.icon
 
   return (
     <div className={`p-3 border rounded-lg ${config.color}`}>
       <div className="flex items-start space-x-2">
-        <span className="text-xl">{config.icon}</span>
+        <IconComponent className="w-5 h-5 text-gray-600 mt-0.5" />
         <div className="flex-1">
           <p className="text-sm text-gray-800">{message}</p>
           <p className="text-xs text-gray-500 mt-1">{time}</p>

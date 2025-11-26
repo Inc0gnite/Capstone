@@ -27,7 +27,7 @@ export default function TeamPerformance() {
         setMechanicCapacity(cap.mechanics || [])
         setMechanicsPerformance(perf || [])
       } catch (err: any) {
-        console.error('❌ Error cargando equipo:', err)
+        console.error('Error cargando equipo:', err)
         setError('No fue posible cargar el rendimiento del equipo.')
       } finally {
         setLoading(false)

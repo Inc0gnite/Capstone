@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useNotifications } from '../../hooks/useNotifications'
 import { NotificationDetailModal } from './NotificationDetailModal'
+import { Bell, CheckCircle, AlertTriangle, XCircle, X } from 'lucide-react'
 
 export function NotificationDropdown() {
   const [isOpen, setIsOpen] = useState(false)
@@ -50,10 +51,10 @@ export function NotificationDropdown() {
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
-      case 'success': return '✅'
-      case 'warning': return '⚠️'
-      case 'error': return '❌'
-      default: return '🔔'
+      case 'success': return CheckCircle
+      case 'warning': return AlertTriangle
+      case 'error': return XCircle
+      default: return Bell
     }
   }
 
@@ -80,7 +81,7 @@ export function NotificationDropdown() {
         className="relative p-2 text-gray-400 hover:text-gray-500 transition-colors"
       >
         <span className="sr-only">Notificaciones</span>
-        <span className="text-xl">🔔</span>
+        <Bell className="w-5 h-5" />
         {unreadCount > 0 && (
           <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
             {unreadCount > 9 ? '9+' : unreadCount}
@@ -113,11 +114,13 @@ export function NotificationDropdown() {
               </div>
             ) : notifications.length === 0 ? (
               <div className="px-4 py-8 text-center text-gray-500">
-                <div className="text-4xl mb-2">🔔</div>
+                <Bell className="w-12 h-12 mx-auto mb-2 text-gray-400" />
                 <p>No hay notificaciones</p>
               </div>
             ) : (
-              notifications.map((notification) => (
+              notifications.map((notification) => {
+                const IconComponent = getNotificationIcon(notification.type)
+                return (
                 <div
                   key={notification.id}
                   onClick={() => handleNotificationClick(notification)}
@@ -126,8 +129,8 @@ export function NotificationDropdown() {
                   }`}
                 >
                   <div className="flex items-start space-x-3">
-                    <div className={`text-lg ${getNotificationColor(notification.type)}`}>
-                      {getNotificationIcon(notification.type)}
+                    <div className={getNotificationColor(notification.type)}>
+                      <IconComponent className="w-5 h-5" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
@@ -179,11 +182,12 @@ export function NotificationDropdown() {
                       }}
                       className="text-gray-400 hover:text-red-500 transition-colors"
                     >
-                      ✕
+                      <X className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
-              ))
+              )
+              })
             )}
           </div>
 

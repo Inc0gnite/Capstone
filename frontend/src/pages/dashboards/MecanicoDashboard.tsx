@@ -5,6 +5,7 @@ import { workOrderService, WorkOrder } from '../../services/workOrderService'
 import { useEffect, useState } from 'react'
 import { sortWorkOrders } from '../../utils/workOrderSorting'
 import { Link } from 'react-router-dom'
+import { AlertTriangle, Wrench, CheckCircle, BarChart, Clipboard, Clock, Target } from 'lucide-react'
 
 interface MechanicStats {
   pending: number
@@ -130,7 +131,7 @@ export default function MecanicoDashboard() {
       <MainLayout>
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
-            <div className="text-red-500 text-6xl mb-4">⚠️</div>
+            <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-4" />
             <p className="text-red-600">{error}</p>
           </div>
         </div>
@@ -152,25 +153,25 @@ export default function MecanicoDashboard() {
           <StatCard
             title="Pendientes"
             value={stats.pending.toString()}
-            icon="⏳"
+            icon={Clock}
             color="yellow"
           />
           <StatCard
             title="En Progreso"
             value={stats.inProgress.toString()}
-            icon="🔨"
+            icon={Wrench}
             color="blue"
           />
           <StatCard
             title="Completadas Hoy"
             value={stats.completedToday.toString()}
-            icon="✅"
+            icon={CheckCircle}
             color="green"
           />
           <StatCard
             title="Total Mes"
             value={stats.totalMonth.toString()}
-            icon="📊"
+            icon={BarChart}
             color="purple"
           />
         </div>
@@ -182,7 +183,7 @@ export default function MecanicoDashboard() {
             className="bg-white rounded-lg shadow p-6 hover:shadow-md transition-shadow group"
           >
             <div className="flex items-center space-x-4">
-              <div className="text-4xl">📋</div>
+              <Clipboard className="w-10 h-10 text-blue-600" />
               <div className="flex-1">
                 <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600">
                   Mis Órdenes
@@ -200,7 +201,7 @@ export default function MecanicoDashboard() {
             className="bg-white rounded-lg shadow p-6 hover:shadow-md transition-shadow group"
           >
             <div className="flex items-center space-x-4">
-              <div className="text-4xl">🔧</div>
+              <Wrench className="w-10 h-10 text-blue-600" />
               <div className="flex-1">
                 <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600">
                   Repuestos
@@ -274,7 +275,7 @@ export default function MecanicoDashboard() {
             </div>
           ) : (
             <div className="text-center py-8">
-              <div className="text-gray-400 text-6xl mb-4">✅</div>
+              <CheckCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
               <p className="text-gray-600">No tienes órdenes en progreso</p>
               <p className="text-sm text-gray-500 mt-2">Todas tus órdenes están completadas o pendientes</p>
             </div>
@@ -310,7 +311,7 @@ export default function MecanicoDashboard() {
                         {getPriorityText(order.priority)}
                       </span>
                     </div>
-                    <span className="text-xs text-gray-500">⏳</span>
+                    <Clock className="w-4 h-4 text-gray-500" />
                   </div>
                   
                   <div className="space-y-2 mb-3 text-sm">
@@ -345,7 +346,7 @@ export default function MecanicoDashboard() {
             </div>
           ) : (
             <div className="text-center py-8">
-              <div className="text-gray-400 text-6xl mb-4">🎯</div>
+              <Target className="w-16 h-16 text-gray-400 mx-auto mb-4" />
               <p className="text-gray-600">No tienes órdenes pendientes</p>
               <p className="text-sm text-gray-500 mt-2">¡Excelente trabajo!</p>
             </div>
@@ -379,7 +380,7 @@ export default function MecanicoDashboard() {
             </div>
           ) : (
             <div className="text-center py-8">
-              <div className="text-gray-400 text-6xl mb-4">📋</div>
+              <Clipboard className="w-16 h-16 text-gray-400 mx-auto mb-4" />
               <p className="text-gray-600">No hay trabajos completados</p>
               <p className="text-sm text-gray-500 mt-2">Los trabajos completados aparecerán aquí</p>
             </div>
@@ -409,7 +410,7 @@ function formatCompletedAt(completedAt: string): string {
   }
 }
 
-function StatCard({ title, value, icon, color }: any) {
+function StatCard({ title, value, icon: IconComponent, color }: any) {
   const colors: Record<string, string> = {
     yellow: 'bg-yellow-50 text-yellow-600',
     blue: 'bg-blue-50 text-blue-600',
@@ -424,7 +425,11 @@ function StatCard({ title, value, icon, color }: any) {
           <p className="text-sm font-medium text-gray-600">{title}</p>
           <p className="text-3xl font-bold text-gray-900 mt-2">{value}</p>
         </div>
-        <div className={`text-4xl ${colors[color]} p-3 rounded-lg`}>{icon}</div>
+        {IconComponent && (
+          <div className={`${colors[color]} p-3 rounded-lg`}>
+            <IconComponent className="w-8 h-8" />
+          </div>
+        )}
       </div>
     </div>
   )
@@ -434,7 +439,7 @@ function CompletedWork({ orderNumber, vehicle, vehicleType, completedAt, duratio
   return (
     <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200 hover:bg-green-100 transition-colors">
       <div className="flex items-center space-x-3">
-        <span className="text-2xl">✅</span>
+        <CheckCircle className="w-6 h-6 text-green-600" />
         <div>
           <p className="font-medium text-gray-900">{orderNumber} - {vehicle}</p>
           <p className="text-xs text-gray-600">

@@ -11,9 +11,10 @@ import { SearchVehicles } from '../../components/recepcionista/SearchVehicles'
 import { AvailableMechanicsList } from '../../components/recepcionista/AvailableMechanicsList'
 import { CreateWorkOrderFromVehicleModal } from '../../components/modals/CreateWorkOrderFromVehicleModal'
 import { useAuthStore } from '../../store/authStore'
+import { Home, FileText, BarChart, Wrench, CheckCircle, Search, Car, XCircle, RefreshCw, Clock } from 'lucide-react'
 
 export default function RecepcionistaDashboard() {
-  console.log('🏠 RecepcionistaDashboard cargado correctamente')
+  console.log('RecepcionistaDashboard cargado correctamente')
   const navigate = useNavigate()
   const [showCreateModal, setShowCreateModal] = useState(false)
   const { user } = useAuthStore()
@@ -43,9 +44,9 @@ export default function RecepcionistaDashboard() {
     let debounceTimer: NodeJS.Timeout | null = null
     
     const handleOrderMarkedReady = (event: any) => {
-      console.log('✅ Evento order-marked-ready recibido en recepcionista, actualizando dashboard...')
+      console.log('Evento order-marked-ready recibido en recepcionista, actualizando dashboard...')
       if (event.detail?.vehicle) {
-        console.log('📊 Orden marcada como lista para:', event.detail.vehicle.plate)
+        console.log('Orden marcada como lista para:', event.detail.vehicle.plate)
       }
       // Debounce: esperar 500ms antes de recargar para agrupar eventos
       if (debounceTimer) {
@@ -57,9 +58,9 @@ export default function RecepcionistaDashboard() {
     }
 
     const handleExitRegistered = (event: any) => {
-      console.log('🚪 Evento exit-registered recibido en recepcionista, actualizando dashboard...')
+      console.log('Evento exit-registered recibido en recepcionista, actualizando dashboard...')
       if (event.detail?.vehicle) {
-        console.log('📊 Salida registrada para:', event.detail.vehicle.plate)
+        console.log('Salida registrada para:', event.detail.vehicle.plate)
       }
       // Debounce: esperar 500ms antes de recargar para agrupar eventos
       if (debounceTimer) {
@@ -124,15 +125,21 @@ export default function RecepcionistaDashboard() {
               onClick={handleCreateOrder}
               className="px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors text-sm sm:text-base"
             >
-              <span className="sm:hidden">📝</span>
-              <span className="hidden sm:inline">📝 Nueva Orden</span>
+              <FileText className="w-4 h-4 sm:hidden" />
+              <span className="hidden sm:inline flex items-center gap-2">
+                <FileText className="w-4 h-4" />
+                Nueva Orden
+              </span>
             </button>
             <button
               onClick={handleDataUpdate}
               className="px-3 sm:px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 font-medium transition-colors text-sm sm:text-base"
             >
-              <span className="sm:hidden">🔄</span>
-              <span className="hidden sm:inline">🔄 Actualizar</span>
+              <RefreshCw className="w-4 h-4 sm:hidden" />
+              <span className="hidden sm:inline flex items-center gap-2">
+                <RefreshCw className="w-4 h-4" />
+                Actualizar
+              </span>
             </button>
           </div>
         </div>
@@ -149,31 +156,31 @@ export default function RecepcionistaDashboard() {
           <StatCard
             title="Ingresos Hoy"
             value={(stats.ingresosHoy || 0).toString()}
-            icon="📝"
+            icon={FileText}
             color="blue"
           />
           <StatCard
             title="Total Ingresos"
             value={(stats.totalVehiculosIngresados || 0).toString()}
-            icon="📊"
+            icon={BarChart}
             color="orange"
           />
           <StatCard
             title="Órdenes Creadas"
             value={(stats.ordenesCreadas || 0).toString()}
-            icon="🔨"
+            icon={Wrench}
             color="green"
           />
           <StatCard
             title="En Espera"
             value={(stats.enEspera || 0).toString()}
-            icon="⏳"
+            icon={Clock}
             color="yellow"
           />
           <StatCard
             title="Listas para Salida"
             value={(stats.listasParaSalida || 0).toString()}
-            icon="✅"
+            icon={CheckCircle}
             color="purple"
           />
         </div>
@@ -185,7 +192,7 @@ export default function RecepcionistaDashboard() {
             onClick={() => navigate('/vehicles')}
             className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg shadow-lg p-4 sm:p-6 lg:p-8 text-center transition transform hover:scale-105"
           >
-            <div className="text-4xl sm:text-6xl mb-2 sm:mb-4">🔍</div>
+            <Search className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-2 sm:mb-4" />
             <h3 className="text-lg sm:text-xl lg:text-2xl font-bold mb-1 sm:mb-2">Validar Vehículos</h3>
             <p className="text-blue-100 text-sm sm:text-base">Revisar vehículos y gestionar salidas</p>
           </button>
@@ -194,7 +201,7 @@ export default function RecepcionistaDashboard() {
             onClick={() => navigate('/work-orders')}
             className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white rounded-lg shadow-lg p-4 sm:p-6 lg:p-8 text-center transition transform hover:scale-105"
           >
-            <div className="text-4xl sm:text-6xl mb-2 sm:mb-4">🔨</div>
+            <Wrench className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-2 sm:mb-4" />
             <h3 className="text-lg sm:text-xl lg:text-2xl font-bold mb-1 sm:mb-2">Gestionar Órdenes</h3>
             <p className="text-purple-100 text-sm sm:text-base">Generar órdenes de trabajo</p>
           </button>
@@ -224,7 +231,7 @@ export default function RecepcionistaDashboard() {
             </div>
           ) : (
             <div className="text-center py-8 text-gray-500">
-              <div className="text-4xl mb-2">✅</div>
+              <CheckCircle className="w-12 h-12 mx-auto mb-2 text-green-400" />
               <p>No hay vehículos pendientes de orden</p>
             </div>
           )}
@@ -252,7 +259,7 @@ export default function RecepcionistaDashboard() {
               </div>
             ) : (
               <div className="text-center py-8 text-gray-500">
-                <div className="text-4xl mb-2">🔨</div>
+                <Wrench className="w-12 h-12 mx-auto mb-2 text-blue-400" />
                 <p>No hay órdenes en proceso</p>
               </div>
             )}
@@ -276,7 +283,7 @@ export default function RecepcionistaDashboard() {
               </div>
             ) : (
               <div className="text-center py-8 text-gray-500">
-                <div className="text-4xl mb-2">🚗</div>
+                <Car className="w-12 h-12 mx-auto mb-2 text-gray-400" />
                 <p>No hay vehículos listos para salida</p>
               </div>
             )}
@@ -303,7 +310,7 @@ export default function RecepcionistaDashboard() {
               </div>
             ) : (
               <div className="text-center py-8 text-gray-500">
-                <div className="text-4xl mb-2">❌</div>
+                <XCircle className="w-12 h-12 mx-auto mb-2 text-red-400" />
                 <p>No hay órdenes canceladas</p>
               </div>
             )}
@@ -337,18 +344,28 @@ export default function RecepcionistaDashboard() {
   )
 }
 
-function StatCard({ title, value, icon, color }: any) {
+function StatCard({ title, value, icon: IconComponent, color }: any) {
   const colors: Record<string, string> = {
     blue: 'bg-blue-50 text-blue-600',
     green: 'bg-green-50 text-green-600',
     yellow: 'bg-yellow-50 text-yellow-600',
     purple: 'bg-purple-50 text-purple-600',
+    orange: 'bg-orange-50 text-orange-600',
   }
 
   return (
     <div className="bg-white rounded-lg shadow p-4 sm:p-6">
-        <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">{title}</p>
-        <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mt-2">{value}</p>
+      <div className="flex items-center justify-between">
+        <div className="flex-1 min-w-0">
+          <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">{title}</p>
+          <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mt-2">{value}</p>
+        </div>
+        {IconComponent && (
+          <div className={`${colors[color] || colors.blue} p-2 sm:p-3 rounded-lg flex-shrink-0 ml-2`}>
+            <IconComponent className="w-6 h-6 sm:w-8 sm:h-8" />
+          </div>
+        )}
+      </div>
     </div>
   )
 }

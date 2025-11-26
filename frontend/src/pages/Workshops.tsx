@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { MainLayout } from '../components/Layout/MainLayout'
 import { workshopService, type Workshop } from '../services/workshopService'
 import { regionService } from '../services/regionService'
+import { XCircle, RefreshCw } from 'lucide-react'
 
 interface Region {
   id: string
@@ -53,7 +54,7 @@ export default function Workshops() {
         setWorkshops(wsRes?.data || [])
         setRegions(regionsRes?.data || [])
       } catch (err: any) {
-        console.error('❌ Error cargando talleres:', err)
+        console.error('Error cargando talleres:', err)
         setError('No fue posible cargar los talleres.')
       } finally {
         setLoading(false)
@@ -99,7 +100,7 @@ export default function Workshops() {
         prev.map((w) => (w.id === workshop.id ? { ...w, isActive: !w.isActive } : w))
       )
     } catch (err) {
-      console.error('❌ Error cambiando estado:', err)
+      console.error('Error cambiando estado:', err)
       alert('No fue posible actualizar el estado del taller')
     } finally {
       setMutatingId('')
@@ -137,7 +138,7 @@ export default function Workshops() {
       )
       setShowEdit(false)
     } catch (err: any) {
-      console.error('❌ Error actualizando taller:', err)
+      console.error('Error actualizando taller:', err)
       alert(err?.response?.data?.error || err?.message || 'No fue posible actualizar el taller')
     } finally {
       setMutatingId('')
@@ -158,10 +159,11 @@ export default function Workshops() {
             </button>
             <button
               onClick={reload}
-              className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm font-medium"
+              className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm font-medium flex items-center gap-1"
               title="Actualizar datos"
             >
-              🔄 Actualizar
+              <RefreshCw className="w-4 h-4" />
+              Actualizar
             </button>
           </div>
         </div>

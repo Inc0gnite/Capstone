@@ -2,6 +2,10 @@ import { ReactNode, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import { NotificationDropdown } from '../Notifications/NotificationDropdown'
+import { 
+  Home, Users, Car, FileText, Wrench, Factory, BarChart, 
+  Package, LogOut, Clipboard
+} from 'lucide-react'
 
 interface MainLayoutProps {
   children: ReactNode
@@ -27,44 +31,44 @@ export function MainLayout({ children }: MainLayoutProps) {
 
     // Elementos comunes solo para roles que no son Recepcionista ni Jefe de Taller
     const commonItems = (roleName !== 'Recepcionista' && roleName !== 'Jefe de Taller') ? [
-      { name: 'Inicio', href: '/dashboard', icon: '🏠' },
+      { name: 'Inicio', href: '/dashboard', icon: Home },
     ] : []
 
     const roleItems: Record<string, any[]> = {
       Administrador: [
-        { name: 'Usuarios', href: '/users', icon: '👥' },
-        { name: 'Vehículos', href: '/vehicles', icon: '🚗' },
-        { name: 'Ingresos', href: '/entries', icon: '📝' },
-        { name: 'Órdenes', href: '/work-orders', icon: '🔨' },
-        { name: 'Inventario', href: '/inventory', icon: '🔧' },
-        { name: 'Talleres', href: '/workshops', icon: '🏭' },
-        { name: 'Reportes', href: '/reports', icon: '📊' },
+        { name: 'Usuarios', href: '/users', icon: Users },
+        { name: 'Vehículos', href: '/vehicles', icon: Car },
+        { name: 'Ingresos', href: '/entries', icon: FileText },
+        { name: 'Órdenes', href: '/work-orders', icon: Wrench },
+        { name: 'Inventario', href: '/inventory', icon: Wrench },
+        { name: 'Talleres', href: '/workshops', icon: Factory },
+        { name: 'Reportes', href: '/reports', icon: BarChart },
       ],
       Guardia: [
-        { name: 'Ingresos', href: '/entries', icon: '📝' },
-        { name: 'Vehículos', href: '/vehicles', icon: '🚗' },
+        { name: 'Ingresos', href: '/entries', icon: FileText },
+        { name: 'Vehículos', href: '/vehicles', icon: Car },
       ],
       Recepcionista: [
-        { name: 'Dashboard', href: '/dashboard/recepcionista', icon: '📊' },
-        { name: 'Órdenes', href: '/work-orders', icon: '🔨' },
-        { name: 'Vehículos', href: '/vehicles', icon: '🚗' },
+        { name: 'Dashboard', href: '/dashboard/recepcionista', icon: BarChart },
+        { name: 'Órdenes', href: '/work-orders', icon: Wrench },
+        { name: 'Vehículos', href: '/vehicles', icon: Car },
       ],
       Mecánico: [
-        { name: 'Mis Órdenes', href: '/mechanic/orders', icon: '🔨' },
-        { name: 'Repuestos', href: '/mechanic/spare-parts', icon: '🔧' },
-        { name: 'Inventario', href: '/inventory', icon: '📦' },
+        { name: 'Mis Órdenes', href: '/mechanic/orders', icon: Wrench },
+        { name: 'Repuestos', href: '/mechanic/spare-parts', icon: Wrench },
+        { name: 'Inventario', href: '/inventory', icon: Package },
       ],
       'Jefe de Taller': [
-        { name: 'Inicio', href: '/dashboard/jefe-taller', icon: '🏠' },
-        { name: 'Órdenes', href: '/work-orders', icon: '🔨' },
-        { name: 'Inventario', href: '/inventory', icon: '🔧' },
-        { name: 'Vehículos', href: '/vehicles', icon: '🚗' },
-        { name: 'Reportes', href: '/reports', icon: '📊' },
+        { name: 'Inicio', href: '/dashboard/jefe-taller', icon: Home },
+        { name: 'Órdenes', href: '/work-orders', icon: Wrench },
+        { name: 'Inventario', href: '/inventory', icon: Wrench },
+        { name: 'Vehículos', href: '/vehicles', icon: Car },
+        { name: 'Reportes', href: '/reports', icon: BarChart },
       ],
       'Encargado de Inventario': [
-        { name: 'Inventario', href: '/inventory', icon: '🔧' },
-        { name: 'Movimientos', href: '/movements', icon: '📦' },
-        { name: 'Órdenes', href: '/work-orders', icon: '🔨' },
+        { name: 'Inventario', href: '/inventory', icon: Wrench },
+        { name: 'Movimientos', href: '/movements', icon: Package },
+        { name: 'Órdenes', href: '/work-orders', icon: Wrench },
       ],
     }
 
@@ -128,11 +132,11 @@ export function MainLayout({ children }: MainLayoutProps) {
                 
                 <button
                   onClick={handleLogout}
-                  className="px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition"
+                  className="px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition flex items-center gap-1"
                   aria-label="Cerrar sesión"
                 >
                   <span className="hidden sm:inline">Salir</span>
-                  <span className="sm:hidden">🚪</span>
+                  <LogOut className="w-4 h-4 sm:hidden" />
                 </button>
               </div>
             </div>
@@ -157,17 +161,20 @@ export function MainLayout({ children }: MainLayoutProps) {
           lg:top-16 lg:h-[calc(100vh-4rem)]
         `}>
           <nav className="p-3 sm:p-4 space-y-1 h-full overflow-y-auto">
-            {navItems.map((item) => (
-              <a
-                key={item.name}
-                href={item.href}
-                className="flex items-center space-x-3 px-3 py-2.5 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition text-sm sm:text-base"
-                onClick={() => setSidebarOpen(false)} // Cerrar sidebar al hacer clic en móvil
-              >
-                <span className="text-lg sm:text-xl">{item.icon}</span>
-                <span className="font-medium">{item.name}</span>
-              </a>
-            ))}
+            {navItems.map((item) => {
+              const IconComponent = item.icon
+              return (
+                <a
+                  key={item.name}
+                  href={item.href}
+                  className="flex items-center space-x-3 px-3 py-2.5 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition text-sm sm:text-base"
+                  onClick={() => setSidebarOpen(false)} // Cerrar sidebar al hacer clic en móvil
+                >
+                  <IconComponent className="w-5 h-5" />
+                  <span className="font-medium">{item.name}</span>
+                </a>
+              )
+            })}
           </nav>
         </aside>
 

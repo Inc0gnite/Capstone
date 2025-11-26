@@ -3,6 +3,7 @@ import { MainLayout } from '../components/Layout/MainLayout'
 import { notificationService } from '../services/notificationService'
 import { NotificationDetailModal } from '../components/Notifications/NotificationDetailModal'
 import type { Notification } from '../../../shared/types'
+import { CheckCircle, AlertTriangle, XCircle, Bell } from 'lucide-react'
 
 export default function Notifications() {
   const [notifications, setNotifications] = useState<Notification[]>([])
@@ -122,10 +123,10 @@ export default function Notifications() {
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
-      case 'success': return '✅'
-      case 'warning': return '⚠️'
-      case 'error': return '❌'
-      default: return '🔔'
+      case 'success': return <CheckCircle size={20} />
+      case 'warning': return <AlertTriangle size={20} />
+      case 'error': return <XCircle size={20} />
+      default: return <Bell size={20} />
     }
   }
 
@@ -231,7 +232,7 @@ export default function Notifications() {
           </div>
         ) : filteredNotifications.length === 0 ? (
           <div className="text-center py-12 bg-white rounded-lg shadow">
-            <div className="text-6xl mb-4">🔔</div>
+            <Bell className="w-16 h-16 mx-auto mb-4 text-gray-400" />
             <p className="text-gray-600 text-lg">
               {filter === 'unread' 
                 ? 'No tienes notificaciones sin leer'

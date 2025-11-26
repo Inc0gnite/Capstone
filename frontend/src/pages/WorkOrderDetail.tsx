@@ -13,6 +13,7 @@ import { sparePartService } from '../services/sparePartService'
 import { useAuthStore } from '../store/authStore'
 import photoService, { VehicleEntryPhoto } from '../services/photoService'
 import { DocumentUpload } from '../components/DocumentUpload'
+import { RefreshCw, CheckCircle, Pause, XCircle, AlertTriangle, Wrench, Clock, Circle, Search, Clipboard, Wrench as WrenchIcon, Settings, Play, Car, Package, Camera, UserCog, FileText, Calendar } from 'lucide-react'
 
 type DisplayPhoto = {
   id: string
@@ -64,16 +65,16 @@ export default function WorkOrderDetail() {
       setLoading(true)
       setError(null)
       
-      console.log('🔄 Cargando orden de trabajo:', id)
+      console.log('Cargando orden de trabajo:', id)
       const order = await workOrderService.getById(id)
-      console.log('✅ Orden cargada:', order)
-      console.log('📅 Fechas de la orden:', {
+      console.log('Orden cargada:', order)
+      console.log('Fechas de la orden:', {
         createdAt: order.createdAt,
         startedAt: order.startedAt,
         updatedAt: order.updatedAt,
         completedAt: order.completedAt
       })
-      console.log('⏸️ Pausas de la orden:', order.pauses)
+      console.log('Pausas de la orden:', order.pauses)
       setWorkOrder(order)
 
       if (order.entryId) {
@@ -81,15 +82,15 @@ export default function WorkOrderDetail() {
           const photos = await photoService.getEntryPhotos(order.entryId)
           setEntryPhotos(photos)
         } catch (photoError) {
-          console.error('❌ Error cargando fotos de ingreso:', photoError)
+          console.error('Error cargando fotos de ingreso:', photoError)
           setEntryPhotos([])
         }
       } else {
         setEntryPhotos([])
       }
     } catch (err: any) {
-      console.error('❌ Error cargando orden de trabajo:', err)
-      console.error('❌ Error response:', err.response)
+      console.error('Error cargando orden de trabajo:', err)
+      console.error('Error response:', err.response)
       
       // Mostrar mensaje de error más específico
       const errorMessage = err.message || err.response?.data?.message || 'Error cargando orden de trabajo'
@@ -248,7 +249,7 @@ export default function WorkOrderDetail() {
 
     try {
       setError(null)
-      console.log('🔄 Cambiando estado de orden:', {
+      console.log('Cambiando estado de orden:', {
         orderId: workOrder.id,
         newStatus,
         reason,
@@ -256,15 +257,15 @@ export default function WorkOrderDetail() {
       })
       
       const result = await workOrderService.changeStatus(workOrder.id, newStatus, reason)
-      console.log('✅ Estado cambiado exitosamente:', result)
+      console.log('Estado cambiado exitosamente:', result)
       
       // Si el estado cambió a completado, actualizar progreso al 100%
       if (newStatus === 'completado') {
         try {
           await workOrderService.update(workOrder.id, { progress: 100 })
-          console.log('✅ Progreso actualizado al 100%')
+          console.log('Progreso actualizado al 100%')
         } catch (progressError) {
-          console.warn('⚠️ No se pudo actualizar el progreso:', progressError)
+          console.warn('No se pudo actualizar el progreso:', progressError)
         }
       }
       
@@ -284,16 +285,16 @@ export default function WorkOrderDetail() {
         }))
       }
     } catch (err: any) {
-      console.error('❌ Error cambiando estado:', err)
-      console.error('❌ Error response:', err.response)
-      console.error('❌ Error data:', err.response?.data)
+      console.error('Error cambiando estado:', err)
+      console.error('Error response:', err.response)
+      console.error('Error data:', err.response?.data)
       
       // Manejo específico para error de mecánico no asignado
       // El backend puede devolver 'error' o 'message'
       const errorMessage = err.response?.data?.error || err.response?.data?.message || err.message || 'Error cambiando estado'
       
       if (errorMessage.includes('mecánico asignado') || errorMessage.includes('sin mecánico')) {
-        setError('⚠️ No se puede iniciar la orden sin un mecánico asignado. Por favor, asigna un mecánico antes de iniciar.')
+        setError('No se puede iniciar la orden sin un mecánico asignado. Por favor, asigna un mecánico antes de iniciar.')
       } else {
         setError(errorMessage)
       }
@@ -304,32 +305,32 @@ export default function WorkOrderDetail() {
   }
 
   const getStatusConfig = (status: string) => {
-    const configs: Record<string, { label: string; color: string; bgColor: string; icon: string }> = {
-      pendiente: { label: 'Pendiente', color: 'text-gray-800', bgColor: 'bg-gray-100', icon: '⏳' },
-      en_progreso: { label: 'En Progreso', color: 'text-blue-800', bgColor: 'bg-blue-100', icon: '🔨' },
-      pausado: { label: 'Pausado', color: 'text-orange-800', bgColor: 'bg-orange-100', icon: '⏸️' },
-      completado: { label: 'Completado', color: 'text-green-800', bgColor: 'bg-green-100', icon: '✅' },
-      cancelado: { label: 'Cancelado', color: 'text-red-800', bgColor: 'bg-red-100', icon: '❌' }
+    const configs: Record<string, { label: string; color: string; bgColor: string; icon: any }> = {
+      pendiente: { label: 'Pendiente', color: 'text-gray-800', bgColor: 'bg-gray-100', icon: Clock },
+      en_progreso: { label: 'En Progreso', color: 'text-blue-800', bgColor: 'bg-blue-100', icon: Wrench },
+      pausado: { label: 'Pausado', color: 'text-orange-800', bgColor: 'bg-orange-100', icon: Pause },
+      completado: { label: 'Completado', color: 'text-green-800', bgColor: 'bg-green-100', icon: CheckCircle },
+      cancelado: { label: 'Cancelado', color: 'text-red-800', bgColor: 'bg-red-100', icon: XCircle }
     }
     return configs[status] || configs.pendiente
   }
 
   const getPriorityConfig = (priority: string) => {
-    const configs: Record<string, { label: string; color: string; bgColor: string; icon: string }> = {
-      baja: { label: 'Baja', color: 'text-gray-800', bgColor: 'bg-gray-100', icon: '🟢' },
-      normal: { label: 'Normal', color: 'text-blue-800', bgColor: 'bg-blue-100', icon: '🔵' },
-      alta: { label: 'Alta', color: 'text-orange-800', bgColor: 'bg-orange-100', icon: '🟠' },
-      urgente: { label: 'Urgente', color: 'text-red-800', bgColor: 'bg-red-100', icon: '🔴' }
+    const configs: Record<string, { label: string; color: string; bgColor: string; icon: any }> = {
+      baja: { label: 'Baja', color: 'text-gray-800', bgColor: 'bg-gray-100', icon: Circle },
+      normal: { label: 'Normal', color: 'text-blue-800', bgColor: 'bg-blue-100', icon: Circle },
+      alta: { label: 'Alta', color: 'text-orange-800', bgColor: 'bg-orange-100', icon: Circle },
+      urgente: { label: 'Urgente', color: 'text-red-800', bgColor: 'bg-red-100', icon: Circle }
     }
     return configs[priority] || configs.normal
   }
 
   const getWorkTypeConfig = (workType: string) => {
-    const configs: Record<string, { label: string; icon: string }> = {
-      mantenimiento: { label: 'Mantenimiento', icon: '🔧' },
-      reparacion: { label: 'Reparación', icon: '🛠️' },
-      revision: { label: 'Revisión', icon: '🔍' },
-      otro: { label: 'Otro', icon: '📋' }
+    const configs: Record<string, { label: string; icon: any }> = {
+      mantenimiento: { label: 'Mantenimiento', icon: WrenchIcon },
+      reparacion: { label: 'Reparación', icon: Settings },
+      revision: { label: 'Revisión', icon: Search },
+      otro: { label: 'Otro', icon: Clipboard }
     }
     return configs[workType] || configs.otro
   }
@@ -377,7 +378,7 @@ export default function WorkOrderDetail() {
     return (
       <MainLayout>
         <div className="text-center py-8">
-          <div className="text-4xl mb-4">❌</div>
+          <XCircle className="w-16 h-16 mx-auto mb-4 text-red-500" />
           <h2 className="text-xl font-bold text-gray-900 mb-2">Error</h2>
           <p className="text-gray-600 mb-4">{error || 'Orden de trabajo no encontrada'}</p>
           <button
@@ -450,7 +451,10 @@ export default function WorkOrderDetail() {
             
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
               <span className={`inline-flex items-center justify-center px-3 py-2 rounded-full text-sm font-medium ${statusConfig.bgColor} ${statusConfig.color}`}>
-                <span className="mr-2">{statusConfig.icon}</span>
+                {(() => {
+                  const IconComponent = statusConfig.icon
+                  return IconComponent ? <IconComponent className="w-4 h-4 mr-2" /> : null
+                })()}
                 {statusConfig.label}
               </span>
               {/* Botón para roles de gestión (Admin/Recepcionista) */}
@@ -470,7 +474,8 @@ export default function WorkOrderDetail() {
                       onClick={() => handleStatusChange('en_progreso')}
                       className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium transition-colors text-sm sm:text-base whitespace-nowrap"
                     >
-                      ▶️ Comenzar
+                      <Play className="w-4 h-4 inline mr-1" />
+                      Comenzar
                     </button>
                   )}
                   {workOrder.currentStatus === 'en_progreso' && (
@@ -479,7 +484,8 @@ export default function WorkOrderDetail() {
                         onClick={() => handleStatusChange('pausado')}
                         className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-medium transition-colors text-sm sm:text-base whitespace-nowrap"
                       >
-                        ⏸️ Pausar
+                        <Pause className="w-4 h-4 inline mr-1" />
+                        Pausar
                       </button>
                       <button
                         onClick={() => handleStatusChange('completado')}
@@ -490,7 +496,17 @@ export default function WorkOrderDetail() {
                             : 'bg-gray-400 text-gray-200 cursor-not-allowed'
                         }`}
                       >
-                        {checklistCompleted ? '✅ Finalizar' : '⏳ Finalizar (Faltan tareas)'}
+                        {checklistCompleted ? (
+                          <>
+                            <CheckCircle className="w-4 h-4 inline mr-1" />
+                            Finalizar
+                          </>
+                        ) : (
+                          <>
+                            <Clock className="w-4 h-4 inline mr-1" />
+                            Finalizar (Faltan tareas)
+                          </>
+                        )}
                       </button>
                     </>
                   )}
@@ -538,7 +554,10 @@ export default function WorkOrderDetail() {
                   <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
                     <label className="block text-xs sm:text-sm font-medium text-gray-500 mb-1.5 sm:mb-2">Tipo de Trabajo</label>
                     <div className="flex items-center space-x-2">
-                      <span className="text-base sm:text-lg">{workTypeConfig.icon}</span>
+                      {(() => {
+                        const IconComponent = workTypeConfig.icon
+                        return IconComponent ? <IconComponent className="w-4 h-4 sm:w-5 sm:h-5" /> : null
+                      })()}
                       <span className="text-sm sm:text-base text-gray-900 font-medium capitalize">{workTypeConfig.label}</span>
                     </div>
                   </div>
@@ -546,7 +565,10 @@ export default function WorkOrderDetail() {
                   <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
                     <label className="block text-xs sm:text-sm font-medium text-gray-500 mb-1.5 sm:mb-2">Prioridad</label>
                     <div className="flex items-center space-x-2">
-                      <span className="text-base sm:text-lg">{priorityConfig.icon}</span>
+                      {(() => {
+                        const IconComponent = priorityConfig.icon
+                        return IconComponent ? <IconComponent className="w-4 h-4 sm:w-5 sm:h-5" /> : null
+                      })()}
                       <span className={`px-2.5 py-1 rounded text-xs sm:text-sm font-medium ${priorityConfig.bgColor} ${priorityConfig.color}`}>
                         {priorityConfig.label}
                       </span>
@@ -559,7 +581,7 @@ export default function WorkOrderDetail() {
                     <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
                       <label className="block text-xs sm:text-sm font-medium text-gray-500 mb-1.5 sm:mb-2">Horas Estimadas</label>
                       <div className="flex items-center space-x-2">
-                        <span className="text-base sm:text-lg">⏱️</span>
+                        <Clock className="w-5 h-5 sm:w-6 sm:h-6" />
                         <span className="text-sm sm:text-base text-gray-900 font-medium">{workOrder.estimatedHours}h</span>
                       </div>
                     </div>
@@ -569,7 +591,7 @@ export default function WorkOrderDetail() {
                     <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
                       <label className="block text-xs sm:text-sm font-medium text-gray-500 mb-1.5 sm:mb-2">Horas Totales</label>
                       <div className="flex items-center space-x-2">
-                        <span className="text-base sm:text-lg">⏰</span>
+                        <Clock className="w-5 h-5 sm:w-6 sm:h-6" />
                         <span className="text-sm sm:text-base text-gray-900 font-medium">{workOrder.totalHours}h</span>
                       </div>
                     </div>
@@ -578,7 +600,7 @@ export default function WorkOrderDetail() {
                   <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
                     <label className="block text-xs sm:text-sm font-medium text-gray-500 mb-1.5 sm:mb-2">Última Actualización</label>
                     <div className="flex items-center space-x-2">
-                      <span className="text-base sm:text-lg">🔄</span>
+                      <RefreshCw className="w-5 h-5 sm:w-6 sm:h-6" />
                       <span className="text-xs sm:text-sm text-gray-900">{formatDate(workOrder.updatedAt)}</span>
                     </div>
                   </div>
@@ -600,7 +622,7 @@ export default function WorkOrderDetail() {
             {/* Información del Vehículo */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
               <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 sm:mb-6 flex items-center pb-3 sm:pb-4 border-b border-gray-200">
-                <span className="mr-2 text-lg sm:text-xl">🚗</span>
+                <Car className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
                 Información del Vehículo
               </h3>
               
@@ -638,7 +660,7 @@ export default function WorkOrderDetail() {
               {workOrder.entry && (
                 <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-200">
                   <h4 className="text-sm sm:text-base font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center">
-                    <span className="mr-2">📋</span>
+                    <Clipboard className="w-4 h-4 mr-2" />
                     Información del Ingreso
                   </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
@@ -660,13 +682,14 @@ export default function WorkOrderDetail() {
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-4 sm:mb-6 pb-4 sm:pb-6 border-b border-gray-200">
                   <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
-                    <span className="mr-2 text-lg sm:text-xl">👷</span>
+                    <UserCog className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
                     Mecánico Asignado
                   </h3>
                   
                   <MechanicInfoDropdown mechanic={workOrder.assignedTo}>
                     <button className="px-3 py-1.5 bg-green-100 text-green-700 rounded-lg text-xs sm:text-sm hover:bg-green-200 transition-colors font-medium">
-                      👨‍🔧 Ver Mecánico
+                      <UserCog className="w-4 h-4 inline mr-1" />
+                      Ver Mecánico
                     </button>
                   </MechanicInfoDropdown>
                 </div>
@@ -691,7 +714,7 @@ export default function WorkOrderDetail() {
             {/* Repuestos Solicitados */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
               <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 sm:mb-6 flex items-center pb-3 sm:pb-4 border-b border-gray-200">
-                <span className="mr-2 text-lg sm:text-xl">📦</span>
+                <Package className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
                 Repuestos Solicitados
                 {workOrder.spareParts && workOrder.spareParts.length > 0 && (
                   <span className="ml-2 text-xs sm:text-sm font-normal text-gray-500">({workOrder.spareParts.length})</span>
@@ -702,15 +725,15 @@ export default function WorkOrderDetail() {
                 <div className="space-y-3">
                   {workOrder.spareParts.map((sparePartRequest) => {
                     const getStatusConfig = (status: string) => {
-                      const configs: Record<string, { label: string; color: string; bgColor: string; icon: string }> = {
-                        solicitado: { label: 'Solicitado', color: 'text-yellow-800', bgColor: 'bg-yellow-100', icon: '⏳' },
-                        usado: { label: 'Usado', color: 'text-blue-800', bgColor: 'bg-blue-100', icon: '✅' },
-                        sobrante: { label: 'Sobrante', color: 'text-purple-800', bgColor: 'bg-purple-100', icon: '🔄' },
+                      const configs: Record<string, { label: string; color: string; bgColor: string; icon: any }> = {
+                        solicitado: { label: 'Solicitado', color: 'text-yellow-800', bgColor: 'bg-yellow-100', icon: Clock },
+                        usado: { label: 'Usado', color: 'text-blue-800', bgColor: 'bg-blue-100', icon: CheckCircle },
+                        sobrante: { label: 'Sobrante', color: 'text-purple-800', bgColor: 'bg-purple-100', icon: RefreshCw },
                         // Mantener compatibilidad con estados antiguos
-                        entregado: { label: 'Entregado', color: 'text-green-800', bgColor: 'bg-green-100', icon: '✅' },
-                        cancelado: { label: 'Cancelado', color: 'text-red-800', bgColor: 'bg-red-100', icon: '❌' },
+                        entregado: { label: 'Entregado', color: 'text-green-800', bgColor: 'bg-green-100', icon: CheckCircle },
+                        cancelado: { label: 'Cancelado', color: 'text-red-800', bgColor: 'bg-red-100', icon: XCircle },
                       }
-                      return configs[status] || { label: status, color: 'text-gray-800', bgColor: 'bg-gray-100', icon: '📋' }
+                      return configs[status] || { label: status, color: 'text-gray-800', bgColor: 'bg-gray-100', icon: Clipboard }
                     }
                     
                     const statusConfig = getStatusConfig(sparePartRequest.status)
@@ -738,7 +761,10 @@ export default function WorkOrderDetail() {
                             </div>
                           </div>
                           <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${statusConfig.bgColor} ${statusConfig.color}`}>
-                            <span className="mr-1">{statusConfig.icon}</span>
+                            {(() => {
+                              const IconComponent = statusConfig.icon
+                              return IconComponent ? <IconComponent className="w-4 h-4 mr-1" /> : null
+                            })()}
                             {statusConfig.label}
                           </span>
                         </div>
@@ -773,7 +799,8 @@ export default function WorkOrderDetail() {
                         {isSurplus && (
                           <div className="mt-3 pt-3 border-t border-purple-200 bg-purple-50 rounded-lg p-3">
                             <p className="text-sm text-purple-700 font-medium">
-                              🔄 Este repuesto puede ser devuelto al inventario
+                              <RefreshCw className="w-4 h-4 inline mr-1" />
+                              Este repuesto puede ser devuelto al inventario
                             </p>
                           </div>
                         )}
@@ -796,7 +823,8 @@ export default function WorkOrderDetail() {
                       onClick={() => setShowRequestSparePartsModal(true)}
                       className="mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors text-sm"
                     >
-                      📦 Solicitar Repuesto
+                      <Package className="w-4 h-4 inline mr-1" />
+                      Solicitar Repuesto
                     </button>
                   )}
                 </div>
@@ -807,7 +835,7 @@ export default function WorkOrderDetail() {
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-4 sm:mb-6 pb-3 sm:pb-4 border-b border-gray-200">
                 <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
-                  <span className="mr-2 text-lg sm:text-xl">📸</span>
+                  <Camera className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
                   Fotos del Proceso
                   {hasPhotos && (
                     <span className="ml-2 text-sm font-normal text-gray-500">({allPhotos.length})</span>
@@ -893,7 +921,10 @@ export default function WorkOrderDetail() {
               
               <div className="text-center mb-4 sm:mb-6">
                 <div className={`inline-flex items-center px-3 sm:px-4 py-2 rounded-full text-sm sm:text-base font-medium ${statusConfig.bgColor} ${statusConfig.color}`}>
-                  <span className="mr-2 text-lg sm:text-xl">{statusConfig.icon}</span>
+                  {(() => {
+                    const IconComponent = statusConfig.icon
+                    return IconComponent ? <IconComponent className="w-5 h-5 sm:w-6 sm:h-6 mr-2" /> : null
+                  })()}
                   {statusConfig.label}
                 </div>
               </div>
@@ -907,7 +938,8 @@ export default function WorkOrderDetail() {
                         onClick={() => handleStatusChange('en_progreso')}
                         className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors"
                       >
-                        ▶️ Iniciar Trabajo
+                        <Play className="w-4 h-4 inline mr-1" />
+                        Iniciar Trabajo
                       </button>
                     )}
                     
@@ -917,7 +949,8 @@ export default function WorkOrderDetail() {
                           onClick={() => handleStatusChange('pausado')}
                           className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-medium transition-colors"
                         >
-                          ⏸️ Pausar
+                          <Pause className="w-4 h-4 inline mr-1" />
+                        Pausar
                         </button>
                         <button
                           onClick={() => handleStatusChange('completado')}
@@ -928,7 +961,17 @@ export default function WorkOrderDetail() {
                               : 'bg-gray-400 text-gray-200 rounded-lg cursor-not-allowed'
                           }`}
                         >
-                          {checklistCompleted ? '✅ Completar' : '⏳ Completar (Faltan tareas)'}
+                          {checklistCompleted ? (
+                            <>
+                              <CheckCircle className="w-4 h-4 inline mr-1" />
+                              Completar
+                            </>
+                          ) : (
+                            <>
+                              <Clock className="w-4 h-4 inline mr-1" />
+                              Completar (Faltan tareas)
+                            </>
+                          )}
                         </button>
                       </>
                     )}
@@ -938,7 +981,8 @@ export default function WorkOrderDetail() {
                         onClick={() => handleStatusChange('en_progreso')}
                         className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors"
                       >
-                        ▶️ Reanudar
+                        <Play className="w-4 h-4 inline mr-1" />
+                        Reanudar
                       </button>
                     )}
                   </>
@@ -952,7 +996,8 @@ export default function WorkOrderDetail() {
                         onClick={() => handleStatusChange('en_progreso')}
                         className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium transition-colors"
                       >
-                        ▶️ Comenzar
+                        <Play className="w-4 h-4 inline mr-1" />
+                        Comenzar
                       </button>
                     )}
                     
@@ -962,7 +1007,8 @@ export default function WorkOrderDetail() {
                           onClick={() => handleStatusChange('pausado')}
                           className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-medium transition-colors"
                         >
-                          ⏸️ Pausar
+                          <Pause className="w-4 h-4 inline mr-1" />
+                        Pausar
                         </button>
                         <button
                           onClick={() => handleStatusChange('completado')}
@@ -973,7 +1019,17 @@ export default function WorkOrderDetail() {
                               : 'bg-gray-400 text-gray-200 cursor-not-allowed'
                           }`}
                         >
-                          {checklistCompleted ? '✅ Finalizar' : '⏳ Finalizar (Faltan tareas)'}
+                          {checklistCompleted ? (
+                            <>
+                              <CheckCircle className="w-4 h-4 inline mr-1" />
+                              Finalizar
+                            </>
+                          ) : (
+                            <>
+                              <Clock className="w-4 h-4 inline mr-1" />
+                              Finalizar (Faltan tareas)
+                            </>
+                          )}
                         </button>
                       </>
                     )}
@@ -983,7 +1039,8 @@ export default function WorkOrderDetail() {
                         onClick={() => handleStatusChange('en_progreso')}
                         className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium transition-colors"
                       >
-                        ▶️ Reanudar
+                        <Play className="w-4 h-4 inline mr-1" />
+                        Reanudar
                       </button>
                     )}
                   </>
@@ -995,7 +1052,7 @@ export default function WorkOrderDetail() {
                     onClick={() => setShowRequestSparePartsModal(true)}
                     className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium transition-colors flex items-center justify-center space-x-2"
                   >
-                    <span>📦</span>
+                    <Package className="w-4 h-4" />
                     <span>Solicitar Repuestos</span>
                   </button>
                 )}
@@ -1026,7 +1083,7 @@ export default function WorkOrderDetail() {
                 {workOrder.createdAt && (
                   <div className="flex items-center space-x-3">
                     <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <span className="text-blue-600 text-sm sm:text-base">📅</span>
+                      <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm sm:text-base font-medium text-gray-900">Creado</p>
@@ -1039,7 +1096,7 @@ export default function WorkOrderDetail() {
                 {workOrder.updatedAt && (
                   <div className="flex items-center space-x-3">
                     <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <span className="text-gray-600 text-sm sm:text-base">🔄</span>
+                      <RefreshCw className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm sm:text-base font-medium text-gray-900">Última Actualización</p>
@@ -1052,7 +1109,7 @@ export default function WorkOrderDetail() {
                 {workOrder.completedAt && (
                   <div className="flex items-center space-x-3">
                     <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <span className="text-green-600 text-sm sm:text-base">✅</span>
+                      <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm sm:text-base font-medium text-gray-900">Completado</p>
@@ -1075,7 +1132,7 @@ export default function WorkOrderDetail() {
                       onClick={handleAssignMechanic}
                       className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors flex items-center justify-center space-x-2"
                     >
-                      <span>👨‍🔧</span>
+                      <UserCog className="w-4 h-4" />
                       <span>Asignar Mecánico</span>
                     </button>
                   )}
@@ -1089,7 +1146,7 @@ export default function WorkOrderDetail() {
                         onClick={handleAssignMechanic}
                         className="w-full px-4 py-2 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 font-medium transition-colors flex items-center justify-center space-x-2"
                       >
-                        <span>🔄</span>
+                        <RefreshCw className="w-4 h-4" />
                         <span>Reasignar</span>
                       </button>
 
@@ -1098,7 +1155,7 @@ export default function WorkOrderDetail() {
                         onClick={handleExchangeMechanic}
                         className="w-full px-4 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 font-medium transition-colors flex items-center justify-center space-x-2"
                       >
-                        <span>🔄</span>
+                        <RefreshCw className="w-4 h-4" />
                         <span>Intercambiar</span>
                       </button>
                     </>
@@ -1111,12 +1168,12 @@ export default function WorkOrderDetail() {
                       onClick={handleExportWord}
                       className="w-full px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 font-medium transition-colors flex items-center justify-center space-x-2"
                     >
-                      <span>📝</span>
+                      <FileText className="w-4 h-4" />
                       <span>Exportar Documento</span>
                     </button>
                   ) : (
                     <div className="w-full px-4 py-2 bg-gray-100 text-gray-500 rounded-lg font-medium flex items-center justify-center space-x-2 cursor-not-allowed">
-                      <span>📝</span>
+                      <FileText className="w-4 h-4" />
                       <span>Exportar Documento (Solo para órdenes completadas)</span>
                     </div>
                   )}
@@ -1162,7 +1219,8 @@ export default function WorkOrderDetail() {
                 </select>
                 {!workOrder.assignedTo && (
                   <p className="mt-2 text-sm text-red-600">
-                    ⚠️ No se puede iniciar una orden sin mecánico asignado. Por favor, asigna un mecánico primero.
+                    <AlertTriangle className="w-4 h-4 inline mr-1" />
+                    No se puede iniciar una orden sin mecánico asignado. Por favor, asigna un mecánico primero.
                   </p>
                 )}
               </div>

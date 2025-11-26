@@ -4,6 +4,7 @@ import { MainLayout } from '../components/Layout/MainLayout'
 import { vehicleEntryService, VehicleEntry } from '../services/vehicleEntryService'
 import { vehicleService, Vehicle } from '../services/vehicleService'
 import { DocumentUpload } from '../components/DocumentUpload'
+import { RefreshCw, CheckCircle, AlertTriangle, XCircle, Eye, EyeOff, Camera, Clipboard, LogOut } from 'lucide-react'
 
 export default function EntryDetail() {
   const { id } = useParams<{ id: string }>()
@@ -27,9 +28,9 @@ export default function EntryDetail() {
       setLoading(true)
       setError(null)
 
-      console.log('🔄 Cargando detalles del ingreso:', id)
+      console.log('Cargando detalles del ingreso:', id)
       const entryData = await vehicleEntryService.getById(id)
-      console.log('✅ Ingreso cargado:', entryData)
+      console.log('Ingreso cargado:', entryData)
       setEntry(entryData)
 
       // Cargar información del vehículo si está disponible
@@ -38,11 +39,11 @@ export default function EntryDetail() {
           const vehicleData = await vehicleService.getById(entryData.vehicleId)
           setVehicle(vehicleData)
         } catch (vehicleError) {
-          console.warn('⚠️ No se pudo cargar información del vehículo:', vehicleError)
+          console.warn('No se pudo cargar información del vehículo:', vehicleError)
         }
       }
     } catch (err: any) {
-      console.error('❌ Error cargando detalles del ingreso:', err)
+      console.error('Error cargando detalles del ingreso:', err)
       setError(err.response?.data?.message || 'Error cargando detalles del ingreso')
     } finally {
       setLoading(false)
@@ -246,7 +247,17 @@ export default function EntryDetail() {
                   onClick={() => setShowDocuments(!showDocuments)}
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors text-sm flex items-center space-x-2"
                 >
-                  <span>{showDocuments ? '👁️ Ocultar' : '👁️ Ver'}</span>
+                  {showDocuments ? (
+                    <>
+                      <EyeOff className="w-4 h-4" />
+                      <span>Ocultar</span>
+                    </>
+                  ) : (
+                    <>
+                      <Eye className="w-4 h-4" />
+                      <span>Ver</span>
+                    </>
+                  )}
                   <span>Documentos</span>
                 </button>
               </div>
@@ -277,7 +288,7 @@ export default function EntryDetail() {
             {entry.photos && entry.photos.length > 0 && (
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
                 <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 flex items-center">
-                  <span className="mr-2 text-xl sm:text-2xl">📸</span>
+                  <Camera className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
                   Fotografías del Vehículo ({entry.photos.length})
                 </h3>
                 
@@ -309,7 +320,8 @@ export default function EntryDetail() {
                         />
                         <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 flex items-center justify-center">
                           <span className="opacity-0 group-hover:opacity-100 text-white text-sm font-medium">
-                            👁️ Ver
+                            <Eye className="w-4 h-4" />
+                            Ver
                           </span>
                         </div>
                         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent p-2">
@@ -365,7 +377,7 @@ export default function EntryDetail() {
                   onClick={() => navigate('/entries')}
                   className="w-full px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 font-medium transition-colors flex items-center justify-center space-x-2"
                 >
-                  <span>📋</span>
+                  <Clipboard className="w-4 h-4" />
                   <span>Ver Todos los Ingresos</span>
                 </button>
 
@@ -374,7 +386,7 @@ export default function EntryDetail() {
                     onClick={() => navigate(`/entries?action=exit&vehicleId=${entry.vehicleId}`)}
                     className="w-full px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 font-medium transition-colors flex items-center justify-center space-x-2"
                   >
-                    <span>🚪</span>
+                    <LogOut className="w-4 h-4" />
                     <span>Registrar Salida</span>
                   </button>
                 )}
