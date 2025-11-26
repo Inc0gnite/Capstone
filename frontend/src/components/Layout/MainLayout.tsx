@@ -84,7 +84,7 @@ export function MainLayout({ children }: MainLayoutProps) {
         <div className="px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo y Botón Hamburger */}
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-3 flex-1">
               {/* Botón hamburger para móvil */}
               <button
                 onClick={toggleSidebar}
@@ -108,8 +108,17 @@ export function MainLayout({ children }: MainLayoutProps) {
               </div>
             </div>
 
+            {/* Taller - Centro */}
+            {(user as any)?.workshop && (
+              <div className="hidden md:flex items-center justify-center flex-1">
+                <p className="text-sm font-medium text-blue-600">
+                  {(user as any).workshop.name}
+                </p>
+              </div>
+            )}
+
             {/* User Menu */}
-            <div className="flex items-center space-x-2 sm:space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4 flex-1 justify-end">
               {/* Notificaciones - Disponible para todos los usuarios */}
               <NotificationDropdown />
 
