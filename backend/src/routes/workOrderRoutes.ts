@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import workOrderController from '../controllers/workOrderController'
 import { authenticate } from '../middlewares/auth'
-import { authorize } from '../middlewares/rbac'
+import { authorize, injectWorkshopFilter } from '../middlewares/rbac'
 import { validateBody, validatePagination } from '../middlewares/validation'
 import { auditLog } from '../middlewares/audit'
 
@@ -9,6 +9,8 @@ const router = Router()
 
 // Todas las rutas requieren autenticación
 router.use(authenticate)
+// Inyectar filtro de taller automáticamente
+router.use(injectWorkshopFilter())
 
 /**
  * GET /api/work-orders/stats

@@ -187,14 +187,18 @@ export class VehicleEntryService {
     const entryCode = await generateEntryCode()
     console.log('✅ Código de ingreso generado:', entryCode)
 
-    // Verificar que el taller existe
+    // Verificar que el taller existe y está activo
     console.log('🔍 Verificando taller:', workshopId)
     const workshop = await prisma.workshop.findUnique({ where: { id: workshopId } })
     if (!workshop) {
       console.log('❌ Taller no encontrado:', workshopId)
       throw new Error('Taller no encontrado')
     }
-    console.log('✅ Taller encontrado:', workshop.name)
+    if (!workshop.isActive) {
+      console.log('❌ Taller inactivo:', workshopId)
+      throw new Error('El taller no está activo')
+    }
+    console.log('✅ Taller encontrado y activo:', workshop.name)
 
     // Crear ingreso con transacción
     const entry = await prisma.$transaction(async (tx) => {

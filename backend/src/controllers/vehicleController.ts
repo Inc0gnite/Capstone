@@ -36,11 +36,29 @@ export class VehicleController {
   /**
    * GET /api/vehicles/:id
    * Obtener vehículo por ID
+   * Los usuarios no-admin solo ven entradas y órdenes de su taller
    */
   async getById(req: Request, res: Response) {
     try {
       const { id } = req.params
       const vehicle = await vehicleService.getById(id)
+      
+      // Si no es Admin, filtrar entradas y órdenes por taller
+      if (req.user && req.user.roleName !== 'Administrador' && req.user.workshopId) {
+        // Filtrar entradas por taller
+        if (vehicle.entries) {
+          vehicle.entries = vehicle.entries.filter((entry: any) => 
+            entry.workshopId === req.user!.workshopId
+          )
+        }
+        // Filtrar órdenes por taller
+        if (vehicle.workOrders) {
+          vehicle.workOrders = vehicle.workOrders.filter((order: any) => 
+            order.workshopId === req.user!.workshopId
+          )
+        }
+      }
+      
       return sendSuccess(res, vehicle)
     } catch (error: any) {
       return sendError(res, error.message, 404)

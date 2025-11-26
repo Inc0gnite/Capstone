@@ -42,6 +42,14 @@ export class VehicleEntryController {
     try {
       const { id } = req.params
       const entry = await vehicleEntryService.getById(id)
+      
+      // Validar que el recurso pertenezca al taller del usuario (excepto Admin)
+      if (req.user && req.user.roleName !== 'Administrador' && req.user.workshopId) {
+        if (entry.workshopId !== req.user.workshopId) {
+          return sendError(res, 'No tiene acceso a este ingreso. Pertenece a otro taller.', 403)
+        }
+      }
+      
       return sendSuccess(res, entry)
     } catch (error: any) {
       return sendError(res, error.message, 404)
@@ -54,6 +62,15 @@ export class VehicleEntryController {
    */
   async create(req: Request, res: Response) {
     try {
+      // Validar que el usuario tenga taller asignado (excepto Admin)
+      if (req.user && req.user.roleName !== 'Administrador') {
+        if (!req.user.workshopId) {
+          return sendError(res, 'Usuario no tiene taller asignado. Contacte al administrador.', 403)
+        }
+        // Asegurar que el workshopId sea del usuario
+        req.body.workshopId = req.user.workshopId
+      }
+      
       const data = {
         ...req.body,
         createdById: req.user!.userId,
@@ -72,6 +89,17 @@ export class VehicleEntryController {
   async update(req: Request, res: Response) {
     try {
       const { id } = req.params
+      
+      // Validar que el recurso pertenezca al taller del usuario (excepto Admin)
+      if (req.user && req.user.roleName !== 'Administrador' && req.user.workshopId) {
+        const existingEntry = await vehicleEntryService.getById(id)
+        if (existingEntry.workshopId !== req.user.workshopId) {
+          return sendError(res, 'No puede modificar ingresos de otro taller', 403)
+        }
+        // Prevenir cambio de taller
+        delete req.body.workshopId
+      }
+      
       const data = req.body
       const entry = await vehicleEntryService.update(id, data)
       return sendSuccess(res, entry, 'Ingreso actualizado exitosamente')
@@ -87,6 +115,15 @@ export class VehicleEntryController {
   async isReadyForExit(req: Request, res: Response) {
     try {
       const { id } = req.params
+      
+      // Validar que el recurso pertenezca al taller del usuario (excepto Admin)
+      if (req.user && req.user.roleName !== 'Administrador' && req.user.workshopId) {
+        const entry = await vehicleEntryService.getById(id)
+        if (entry.workshopId !== req.user.workshopId) {
+          return sendError(res, 'No tiene acceso a este ingreso', 403)
+        }
+      }
+      
       const isReady = await vehicleEntryService.isReadyForExit(id)
       return sendSuccess(res, { isReady })
     } catch (error: any) {
@@ -107,6 +144,14 @@ export class VehicleEntryController {
         return sendError(res, 'Kilometraje de salida requerido', 400)
       }
 
+      // Validar que el recurso pertenezca al taller del usuario (excepto Admin)
+      if (req.user && req.user.roleName !== 'Administrador' && req.user.workshopId) {
+        const entry = await vehicleEntryService.getById(id)
+        if (entry.workshopId !== req.user.workshopId) {
+          return sendError(res, 'No puede registrar salida de vehículos de otro taller', 403)
+        }
+      }
+
       const entry = await vehicleEntryService.registerExit(id, exitKm, exitTime)
       return sendSuccess(res, entry, 'Salida registrada exitosamente')
     } catch (error: any) {
@@ -121,6 +166,15 @@ export class VehicleEntryController {
   async updateKeyControl(req: Request, res: Response) {
     try {
       const { id } = req.params
+      
+      // Validar que el recurso pertenezca al taller del usuario (excepto Admin)
+      if (req.user && req.user.roleName !== 'Administrador' && req.user.workshopId) {
+        const entry = await vehicleEntryService.getById(id)
+        if (entry.workshopId !== req.user.workshopId) {
+          return sendError(res, 'No puede modificar el control de llaves de otro taller', 403)
+        }
+      }
+      
       const data = req.body
       const keyControl = await vehicleEntryService.updateKeyControl(id, data)
       return sendSuccess(res, keyControl, 'Control de llaves actualizado')

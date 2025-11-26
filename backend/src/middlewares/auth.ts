@@ -11,6 +11,8 @@ declare global {
         userId: string
         email: string
         roleId: string
+        workshopId?: string | null
+        roleName?: string
       }
     }
   }
@@ -42,6 +44,10 @@ export async function authenticate(
     // Verificar que el usuario existe y está activo
     const user = await prisma.user.findUnique({
       where: { id: payload.userId },
+      include: {
+        role: true,
+        workshop: true,
+      },
     })
 
     if (!user || !user.isActive) {
@@ -49,8 +55,12 @@ export async function authenticate(
       return
     }
 
-    // Agregar información del usuario al request
-    req.user = payload
+    // Agregar información del usuario al request (incluyendo workshopId y roleName)
+    req.user = {
+      ...payload,
+      workshopId: user.workshopId,
+      roleName: user.role.name,
+    }
 
     next()
   } catch (error: any) {
@@ -73,7 +83,25 @@ export async function optionalAuth(
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.substring(7)
       const payload = verifyToken(token)
-      req.user = payload
+      
+      // Obtener información completa del usuario
+      const user = await prisma.user.findUnique({
+        where: { id: payload.userId },
+        include: {
+          role: true,
+          workshop: true,
+        },
+      })
+
+      if (user && user.isActive) {
+        req.user = {
+          ...payload,
+          workshopId: user.workshopId,
+          roleName: user.role.name,
+        }
+      } else {
+        req.user = payload
+      }
     }
 
     next()

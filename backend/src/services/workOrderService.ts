@@ -234,6 +234,32 @@ export class WorkOrderService {
       createdById
     })
 
+    // Validar que el taller existe y está activo
+    const workshop = await prisma.workshop.findUnique({
+      where: { id: workshopId },
+    })
+
+    if (!workshop) {
+      throw new Error('Taller no encontrado')
+    }
+
+    if (!workshop.isActive) {
+      throw new Error('El taller no está activo')
+    }
+
+    // Validar que la entrada pertenece al mismo taller
+    const entry = await prisma.vehicleEntry.findUnique({
+      where: { id: entryId },
+    })
+
+    if (!entry) {
+      throw new Error('Entrada de vehículo no encontrada')
+    }
+
+    if (entry.workshopId !== workshopId) {
+      throw new Error('La entrada de vehículo no pertenece al taller especificado')
+    }
+
     // Validar capacidad del mecánico por horas estimadas si está asignado
     if (assignedToId) {
       await this.validateMechanicCapacity(assignedToId, workshopId, estimatedHours)

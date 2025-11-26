@@ -9,6 +9,7 @@ export class UserController {
   /**
    * GET /api/users
    * Obtener todos los usuarios
+   * Los usuarios no-admin solo ven usuarios de su taller
    */
   async getAll(req: Request, res: Response) {
     try {
@@ -16,8 +17,28 @@ export class UserController {
       const limit = parseInt(req.query.limit as string) || 10
       const search = (req.query.search as string) || ''
 
-      const result = await userService.getAll(page, limit, search)
+      // Si no es Admin, filtrar por taller del usuario
+      if (req.user && req.user.roleName !== 'Administrador' && req.user.workshopId) {
+        const users = await userService.getByWorkshop(req.user.workshopId)
+        // Aplicar búsqueda manualmente si es necesario
+        let filteredUsers = users
+        if (search) {
+          const searchLower = search.toLowerCase()
+          filteredUsers = users.filter(u =>
+            `${u.firstName} ${u.lastName}`.toLowerCase().includes(searchLower) ||
+            u.email.toLowerCase().includes(searchLower) ||
+            u.rut.toLowerCase().includes(searchLower)
+          )
+        }
+        // Paginación manual
+        const start = (page - 1) * limit
+        const end = start + limit
+        const paginatedUsers = filteredUsers.slice(start, end)
+        
+        return sendPaginated(res, paginatedUsers, page, limit, filteredUsers.length)
+      }
 
+      const result = await userService.getAll(page, limit, search)
       return sendPaginated(res, result.users, page, limit, result.total)
     } catch (error: any) {
       return sendError(res, error.message, 500)
@@ -34,6 +55,13 @@ export class UserController {
 
       const user = await userService.getById(id)
 
+      // Validar que el usuario pertenezca al taller del usuario autenticado (excepto Admin)
+      if (req.user && req.user.roleName !== 'Administrador' && req.user.workshopId) {
+        if (user.workshopId !== req.user.workshopId) {
+          return sendError(res, 'No tiene acceso a este usuario. Pertenece a otro taller.', 403)
+        }
+      }
+
       return sendSuccess(res, user)
     } catch (error: any) {
       return sendError(res, error.message, 404)
@@ -46,6 +74,11 @@ export class UserController {
    */
   async create(req: Request, res: Response) {
     try {
+      // Si no es Admin, forzar que el usuario creado pertenezca al mismo taller
+      if (req.user && req.user.roleName !== 'Administrador' && req.user.workshopId) {
+        req.body.workshopId = req.user.workshopId
+      }
+
       const data = req.body
 
       const user = await userService.create(data)
@@ -63,8 +96,18 @@ export class UserController {
   async update(req: Request, res: Response) {
     try {
       const { id } = req.params
-      const data = req.body
+      
+      // Validar que el usuario pertenezca al taller del usuario autenticado (excepto Admin)
+      if (req.user && req.user.roleName !== 'Administrador' && req.user.workshopId) {
+        const existingUser = await userService.getById(id)
+        if (existingUser.workshopId !== req.user.workshopId) {
+          return sendError(res, 'No puede modificar usuarios de otro taller', 403)
+        }
+        // Prevenir cambio de taller
+        delete req.body.workshopId
+      }
 
+      const data = req.body
       const user = await userService.update(id, data)
 
       return sendSuccess(res, user, 'Usuario actualizado exitosamente')
@@ -80,6 +123,14 @@ export class UserController {
   async delete(req: Request, res: Response) {
     try {
       const { id } = req.params
+
+      // Validar que el usuario pertenezca al taller del usuario autenticado (excepto Admin)
+      if (req.user && req.user.roleName !== 'Administrador' && req.user.workshopId) {
+        const existingUser = await userService.getById(id)
+        if (existingUser.workshopId !== req.user.workshopId) {
+          return sendError(res, 'No puede eliminar usuarios de otro taller', 403)
+        }
+      }
 
       const result = await userService.delete(id)
 
@@ -112,6 +163,13 @@ export class UserController {
   async getByWorkshop(req: Request, res: Response) {
     try {
       const { workshopId } = req.params
+
+      // Validar que el usuario solo pueda ver usuarios de su taller (excepto Admin)
+      if (req.user && req.user.roleName !== 'Administrador' && req.user.workshopId) {
+        if (workshopId !== req.user.workshopId) {
+          return sendError(res, 'No tiene acceso a usuarios de otro taller', 403)
+        }
+      }
 
       const users = await userService.getByWorkshop(workshopId)
 

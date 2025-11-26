@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import userController from '../controllers/userController'
 import { authenticate } from '../middlewares/auth'
-import { authorize, requireAdmin } from '../middlewares/rbac'
+import { authorize, requireAdmin, injectWorkshopFilter } from '../middlewares/rbac'
 import {
   validateBody,
   validateEmailField,
@@ -15,6 +15,8 @@ const router = Router()
 
 // Todas las rutas requieren autenticación
 router.use(authenticate)
+// Inyectar filtro de taller automáticamente
+router.use(injectWorkshopFilter())
 
 /**
  * GET /api/users

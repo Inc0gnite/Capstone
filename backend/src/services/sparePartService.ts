@@ -242,6 +242,21 @@ export class SparePartService {
       throw new Error('Ya existe un repuesto con ese código')
     }
 
+    // Validar que el taller existe y está activo
+    if (data.workshopId) {
+      const workshop = await prisma.workshop.findUnique({
+        where: { id: data.workshopId },
+      })
+
+      if (!workshop) {
+        throw new Error('Taller no encontrado')
+      }
+
+      if (!workshop.isActive) {
+        throw new Error('El taller no está activo')
+      }
+    }
+
     const sparePart = await prisma.sparePart.create({
       data: {
         code: code.toUpperCase(),

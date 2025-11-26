@@ -62,6 +62,14 @@ export class SparePartController {
     try {
       const { id } = req.params
       const sparePart = await sparePartService.getById(id)
+      
+      // Validar que el recurso pertenezca al taller del usuario (excepto Admin)
+      if (req.user && req.user.roleName !== 'Administrador' && req.user.workshopId) {
+        if (sparePart.workshopId && sparePart.workshopId !== req.user.workshopId) {
+          return sendError(res, 'No tiene acceso a este repuesto. Pertenece a otro taller.', 403)
+        }
+      }
+      
       return sendSuccess(res, sparePart)
     } catch (error: any) {
       return sendError(res, error.message, 404)
@@ -73,6 +81,15 @@ export class SparePartController {
    */
   async create(req: Request, res: Response) {
     try {
+      // Validar que el usuario tenga taller asignado (excepto Admin)
+      if (req.user && req.user.roleName !== 'Administrador') {
+        if (!req.user.workshopId) {
+          return sendError(res, 'Usuario no tiene taller asignado. Contacte al administrador.', 403)
+        }
+        // Asegurar que el workshopId sea del usuario
+        req.body.workshopId = req.body.workshopId || req.user.workshopId
+      }
+      
       const data = req.body
       const sparePart = await sparePartService.create(data)
       return sendSuccess(res, sparePart, 'Repuesto creado exitosamente', 201)
@@ -87,6 +104,17 @@ export class SparePartController {
   async update(req: Request, res: Response) {
     try {
       const { id } = req.params
+      
+      // Validar que el recurso pertenezca al taller del usuario (excepto Admin)
+      if (req.user && req.user.roleName !== 'Administrador' && req.user.workshopId) {
+        const existingPart = await sparePartService.getById(id)
+        if (existingPart.workshopId && existingPart.workshopId !== req.user.workshopId) {
+          return sendError(res, 'No puede modificar repuestos de otro taller', 403)
+        }
+        // Prevenir cambio de taller
+        delete req.body.workshopId
+      }
+      
       const data = req.body
       const sparePart = await sparePartService.update(id, data)
       return sendSuccess(res, sparePart, 'Repuesto actualizado exitosamente')
@@ -105,6 +133,14 @@ export class SparePartController {
 
       if (!quantity || !movementType || !reason) {
         return sendError(res, 'Cantidad, tipo de movimiento y razón son requeridos', 400)
+      }
+
+      // Validar que el recurso pertenezca al taller del usuario (excepto Admin)
+      if (req.user && req.user.roleName !== 'Administrador' && req.user.workshopId) {
+        const sparePart = await sparePartService.getById(id)
+        if (sparePart.workshopId && sparePart.workshopId !== req.user.workshopId) {
+          return sendError(res, 'No puede ajustar stock de repuestos de otro taller', 403)
+        }
       }
 
       const sparePart = await sparePartService.adjustStock(

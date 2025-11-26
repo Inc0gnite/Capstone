@@ -90,6 +90,60 @@ export function requireRole(...roleNames: string[]) {
 export const requireAdmin = requireRole('Administrador')
 
 /**
+ * Middleware para inyectar automáticamente el workshopId del usuario
+ * Fuerza que los usuarios solo vean/modifiquen recursos de su taller
+ * (excepto Administradores que pueden ver todos los talleres)
+ */
+export function injectWorkshopFilter() {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user) {
+        return next() // Si no está autenticado, dejar pasar (otro middleware lo manejará)
+      }
+
+      // Administradores pueden ver todos los talleres
+      if (req.user.roleName === 'Administrador') {
+        return next()
+      }
+
+      // Si el usuario no tiene taller asignado, bloquear acceso
+      if (!req.user.workshopId) {
+        return sendError(
+          res,
+          'Usuario no tiene taller asignado. Contacte al administrador.',
+          403
+        )
+      }
+
+      // Inyectar workshopId en query params (para GET requests)
+      if (req.query) {
+        req.query.workshopId = req.user.workshopId
+      }
+
+      // Para operaciones de creación/actualización, validar o inyectar workshopId en body
+      if (req.body && (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH')) {
+        // Si el body tiene workshopId, validar que coincida
+        if (req.body.workshopId && req.body.workshopId !== req.user.workshopId) {
+          return sendError(
+            res,
+            'No puede realizar operaciones en otro taller',
+            403
+          )
+        }
+        // Si no tiene workshopId, inyectarlo automáticamente
+        if (!req.body.workshopId) {
+          req.body.workshopId = req.user.workshopId
+        }
+      }
+
+      next()
+    } catch (error: any) {
+      return sendError(res, error.message || 'Error al filtrar por taller', 500)
+    }
+  }
+}
+
+/**
  * Middleware para verificar si el usuario puede acceder a un taller específico
  */
 export function requireWorkshopAccess(workshopIdParam = 'workshopId') {
@@ -99,26 +153,16 @@ export function requireWorkshopAccess(workshopIdParam = 'workshopId') {
         return sendError(res, 'Usuario no autenticado', 401)
       }
 
-      // Obtener usuario con su taller
-      const user = await prisma.user.findUnique({
-        where: { id: req.user.userId },
-        include: { role: true },
-      })
-
-      if (!user) {
-        return sendError(res, 'Usuario no encontrado', 404)
-      }
-
       // Admin puede acceder a cualquier taller
-      if (user.role.name === 'Administrador') {
+      if (req.user.roleName === 'Administrador') {
         return next()
       }
 
       // Verificar si el taller coincide
       const requestedWorkshopId =
-        req.params[workshopIdParam] || req.body[workshopIdParam]
+        req.params[workshopIdParam] || req.body[workshopIdParam] || req.query[workshopIdParam]
 
-      if (user.workshopId !== requestedWorkshopId) {
+      if (req.user.workshopId !== requestedWorkshopId) {
         return sendError(
           res,
           'No tiene acceso a este taller',
@@ -129,6 +173,52 @@ export function requireWorkshopAccess(workshopIdParam = 'workshopId') {
       next()
     } catch (error: any) {
       return sendError(res, error.message || 'Error al verificar acceso', 500)
+    }
+  }
+}
+
+/**
+ * Middleware para validar que un recurso pertenece al taller del usuario
+ * Útil para validar acceso a recursos específicos por ID
+ */
+export function validateResourceWorkshop(resourceService: {
+  getById: (id: string) => Promise<{ workshopId: string } | null>
+}) {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user) {
+        return sendError(res, 'Usuario no autenticado', 401)
+      }
+
+      // Admin puede acceder a cualquier recurso
+      if (req.user.roleName === 'Administrador') {
+        return next()
+      }
+
+      // Obtener el ID del recurso desde params
+      const resourceId = req.params.id
+      if (!resourceId) {
+        return next() // Si no hay ID, dejar pasar
+      }
+
+      // Obtener el recurso y verificar su taller
+      const resource = await resourceService.getById(resourceId)
+      if (!resource) {
+        return sendError(res, 'Recurso no encontrado', 404)
+      }
+
+      // Validar que el recurso pertenezca al taller del usuario
+      if (resource.workshopId !== req.user.workshopId) {
+        return sendError(
+          res,
+          'No tiene acceso a este recurso. Pertenece a otro taller.',
+          403
+        )
+      }
+
+      next()
+    } catch (error: any) {
+      return sendError(res, error.message || 'Error al validar acceso al recurso', 500)
     }
   }
 }

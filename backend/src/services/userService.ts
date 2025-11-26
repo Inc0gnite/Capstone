@@ -116,6 +116,13 @@ export class UserService {
     // Convertir workshopId vacío a undefined
     const finalWorkshopId = workshopId && workshopId.trim() !== '' ? workshopId : undefined
     
+    // Validar que usuarios no-admin tengan taller asignado
+    if (role.name !== 'Administrador') {
+      if (!finalWorkshopId) {
+        throw new Error('Los usuarios no-administradores deben tener un taller asignado')
+      }
+    }
+    
     if (finalWorkshopId) {
       const workshop = await prisma.workshop.findUnique({
         where: { id: finalWorkshopId },
@@ -123,6 +130,10 @@ export class UserService {
 
       if (!workshop) {
         throw new Error('Taller no encontrado')
+      }
+
+      if (!workshop.isActive) {
+        throw new Error('El taller no está activo')
       }
     }
 
@@ -177,8 +188,52 @@ export class UserService {
     if (lastName) updateData.lastName = lastName
     if (email) updateData.email = email
     if (phone !== undefined) updateData.phone = phone
-    if (roleId) updateData.roleId = roleId
-    if (workshopId !== undefined) updateData.workshopId = workshopId
+    if (roleId) {
+      updateData.roleId = roleId
+      // Si se cambia el rol, validar que usuarios no-admin tengan taller
+      const newRole = await prisma.role.findUnique({
+        where: { id: roleId },
+      })
+      if (newRole && newRole.name !== 'Administrador') {
+        const finalWorkshopId = workshopId && workshopId.trim() !== '' ? workshopId : existingUser.workshopId
+        if (!finalWorkshopId) {
+          throw new Error('Los usuarios no-administradores deben tener un taller asignado')
+        }
+        // Validar que el taller existe y está activo
+        const workshop = await prisma.workshop.findUnique({
+          where: { id: finalWorkshopId },
+        })
+        if (!workshop) {
+          throw new Error('Taller no encontrado')
+        }
+        if (!workshop.isActive) {
+          throw new Error('El taller no está activo')
+        }
+      }
+    }
+    if (workshopId !== undefined) {
+      const finalWorkshopId = workshopId && workshopId.trim() !== '' ? workshopId : null
+      if (finalWorkshopId) {
+        // Validar que el taller existe y está activo
+        const workshop = await prisma.workshop.findUnique({
+          where: { id: finalWorkshopId },
+        })
+        if (!workshop) {
+          throw new Error('Taller no encontrado')
+        }
+        if (!workshop.isActive) {
+          throw new Error('El taller no está activo')
+        }
+      }
+      // Validar que usuarios no-admin tengan taller
+      const userRole = await prisma.role.findUnique({
+        where: { id: existingUser.roleId },
+      })
+      if (userRole && userRole.name !== 'Administrador' && !finalWorkshopId) {
+        throw new Error('Los usuarios no-administradores deben tener un taller asignado')
+      }
+      updateData.workshopId = finalWorkshopId
+    }
     if (password) {
       updateData.password = await hashPassword(password)
     }

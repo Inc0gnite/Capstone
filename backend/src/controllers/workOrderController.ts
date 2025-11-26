@@ -42,6 +42,14 @@ export class WorkOrderController {
     try {
       const { id } = req.params
       const workOrder = await workOrderService.getById(id)
+      
+      // Validar que el recurso pertenezca al taller del usuario (excepto Admin)
+      if (req.user && req.user.roleName !== 'Administrador' && req.user.workshopId) {
+        if (workOrder.workshopId !== req.user.workshopId) {
+          return sendError(res, 'No tiene acceso a esta orden. Pertenece a otro taller.', 403)
+        }
+      }
+      
       return sendSuccess(res, workOrder)
     } catch (error: any) {
       return sendError(res, error.message, 404)
@@ -56,6 +64,15 @@ export class WorkOrderController {
     try {
       console.log('🔨 WorkOrderController.create llamado con:', req.body)
       console.log('👤 Usuario autenticado:', req.user)
+      
+      // Validar que el usuario tenga taller asignado (excepto Admin)
+      if (req.user && req.user.roleName !== 'Administrador') {
+        if (!req.user.workshopId) {
+          return sendError(res, 'Usuario no tiene taller asignado. Contacte al administrador.', 403)
+        }
+        // Asegurar que el workshopId sea del usuario
+        req.body.workshopId = req.user.workshopId
+      }
       
       const data = {
         ...req.body,
@@ -81,6 +98,17 @@ export class WorkOrderController {
   async update(req: Request, res: Response) {
     try {
       const { id } = req.params
+      
+      // Validar que el recurso pertenezca al taller del usuario (excepto Admin)
+      if (req.user && req.user.roleName !== 'Administrador' && req.user.workshopId) {
+        const existingOrder = await workOrderService.getById(id)
+        if (existingOrder.workshopId !== req.user.workshopId) {
+          return sendError(res, 'No puede modificar órdenes de otro taller', 403)
+        }
+        // Prevenir cambio de taller
+        delete req.body.workshopId
+      }
+      
       const data = req.body
       const workOrder = await workOrderService.update(id, data)
       return sendSuccess(res, workOrder, 'Orden actualizada exitosamente')
@@ -100,6 +128,14 @@ export class WorkOrderController {
 
       if (!status) {
         return sendError(res, 'Estado requerido', 400)
+      }
+
+      // Validar que el recurso pertenezca al taller del usuario (excepto Admin)
+      if (req.user && req.user.roleName !== 'Administrador' && req.user.workshopId) {
+        const workOrder = await workOrderService.getById(id)
+        if (workOrder.workshopId !== req.user.workshopId) {
+          return sendError(res, 'No puede cambiar el estado de órdenes de otro taller', 403)
+        }
       }
 
       const workOrder = await workOrderService.changeStatus(
@@ -128,6 +164,14 @@ export class WorkOrderController {
         return sendError(res, 'Razón de pausa requerida', 400)
       }
 
+      // Validar que el recurso pertenezca al taller del usuario (excepto Admin)
+      if (req.user && req.user.roleName !== 'Administrador' && req.user.workshopId) {
+        const workOrder = await workOrderService.getById(id)
+        if (workOrder.workshopId !== req.user.workshopId) {
+          return sendError(res, 'No puede pausar órdenes de otro taller', 403)
+        }
+      }
+
       const workOrder = await workOrderService.pause(id, reason, observations)
       return sendSuccess(res, workOrder, 'Orden pausada exitosamente')
     } catch (error: any) {
@@ -143,6 +187,15 @@ export class WorkOrderController {
     try {
       const { id } = req.params
       const { observations } = req.body
+      
+      // Validar que el recurso pertenezca al taller del usuario (excepto Admin)
+      if (req.user && req.user.roleName !== 'Administrador' && req.user.workshopId) {
+        const workOrder = await workOrderService.getById(id)
+        if (workOrder.workshopId !== req.user.workshopId) {
+          return sendError(res, 'No puede reanudar órdenes de otro taller', 403)
+        }
+      }
+      
       const workOrder = await workOrderService.resume(id, req.user!.userId, observations)
       return sendSuccess(res, workOrder, 'Orden reanudada exitosamente')
     } catch (error: any) {
@@ -163,6 +216,14 @@ export class WorkOrderController {
         return sendError(res, 'URL de la foto requerida', 400)
       }
 
+      // Validar que el recurso pertenezca al taller del usuario (excepto Admin)
+      if (req.user && req.user.roleName !== 'Administrador' && req.user.workshopId) {
+        const workOrder = await workOrderService.getById(id)
+        if (workOrder.workshopId !== req.user.workshopId) {
+          return sendError(res, 'No puede agregar fotos a órdenes de otro taller', 403)
+        }
+      }
+
       const photo = await workOrderService.addPhoto(id, url, description, photoType)
       return sendSuccess(res, photo, 'Foto agregada exitosamente', 201)
     } catch (error: any) {
@@ -181,6 +242,14 @@ export class WorkOrderController {
 
       if (!mechanicId) {
         return sendError(res, 'ID del mecánico es requerido', 400)
+      }
+
+      // Validar que el recurso pertenezca al taller del usuario (excepto Admin)
+      if (req.user && req.user.roleName !== 'Administrador' && req.user.workshopId) {
+        const workOrder = await workOrderService.getById(id)
+        if (workOrder.workshopId !== req.user.workshopId) {
+          return sendError(res, 'No puede asignar mecánicos a órdenes de otro taller', 403)
+        }
       }
 
       const result = await workOrderService.assignMechanic(id, mechanicId)
