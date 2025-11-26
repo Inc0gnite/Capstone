@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { Notification } from '../../../../shared/types'
 import { 
-  Car, CheckCircle, TrafficLight, Wrench, Pause, XCircle, 
+  Car, CheckCircle, Wrench, Pause, XCircle, 
   Play, RefreshCw, Package, Mail, AlertTriangle, Circle, 
   Bell, X
 } from 'lucide-react'
@@ -47,7 +47,7 @@ export function NotificationDetailModal({
     switch (type) {
       case 'vehicle_entry': return Car
       case 'vehicle_exit': return CheckCircle
-      case 'vehicle_ready_for_exit': return TrafficLight
+      case 'vehicle_ready_for_exit': return CheckCircle
       case 'work_order_assigned': return Wrench
       case 'work_order_completed': return CheckCircle
       case 'work_order_paused': return Pause
