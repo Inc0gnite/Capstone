@@ -235,100 +235,65 @@ export function CreateEntryModalAdvanced({ isOpen, onClose, onSuccess }: CreateE
   const handleVehicleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    // Protección contra submit doble
-    if (loading) {
-      console.log('⏸️ Ya hay una operación en curso, omitiendo submit...')
-      return
-    }
-    
+    // Validar campos obligatorios del vehículo
     if (!vehicleData.licensePlate || !vehicleData.brand || !vehicleData.regionId) {
       alert('Por favor completa todos los campos obligatorios del vehículo')
       return
     }
 
+    // Validar que la patente no exista ya (solo validación, no crear)
     try {
-      setLoading(true)
-      console.log('🚗 Creando vehículo con datos:', vehicleData)
-      console.log('🏛️ Región seleccionada:', vehicleData.regionId)
-      console.log('📋 Regiones disponibles:', regions)
-      console.log('👤 Región del usuario:', user?.workshop?.regionId)
-      
-      // Determinar la región final a usar - Priorizar región del usuario
-      let finalRegionId = user?.workshop?.regionId || vehicleData.regionId
-      
-      // Si no tenemos región del usuario, usar la región seleccionada
-      if (!finalRegionId && vehicleData.regionId) {
-        finalRegionId = vehicleData.regionId
-      }
-      
-      // Si aún no tenemos región válida, usar la primera región disponible del backend
-      if (!finalRegionId && regions.length > 0) {
-        finalRegionId = regions[0].id
-        console.log('🔄 Usando primera región disponible del backend:', finalRegionId)
-      }
-      
-      console.log('✅ Región final seleccionada:', finalRegionId)
-      
-      // Preparar datos del vehículo (asegurar que model sea string vacío si no se proporciona)
-      let finalVIN = vehicleData.vin
-      if (!finalVIN || finalVIN.trim() === '') {
-        // Generar VIN si no está presente
-        const existingVINs = vehicles
-          .map(v => v.vin)
-          .filter((vin): vin is string => vin !== undefined && vin.trim() !== '')
-        finalVIN = await generateUniqueVIN(existingVINs)
-      }
-      
-      const vehicleCreateData = {
-        licensePlate: vehicleData.licensePlate,
-        vehicleType: vehicleData.vehicleType,
-        brand: vehicleData.brand,
-        model: vehicleData.model || '', // Asegurar que model sea string
-        year: vehicleData.year,
-        vin: finalVIN, // Usar VIN generado o existente
-        fleetNumber: vehicleData.fleetNumber || '', // Asegurar que fleetNumber sea string
-        regionId: finalRegionId // Usar región válida
-      }
-      
-      console.log('📤 Datos finales para crear vehículo:', vehicleCreateData)
-      
-      // Validación final de región
-      if (!finalRegionId) {
-        console.error('❌ No se pudo determinar una región válida')
-        alert('Error: No se pudo determinar una región válida. Por favor, contacta al administrador.')
+      const existingVehicle = await vehicleService.getByLicensePlate(vehicleData.licensePlate)
+      if (existingVehicle) {
+        alert(`❌ Error: Ya existe un vehículo con la patente ${vehicleData.licensePlate}.\n\n💡 Sugerencia: Intenta con una patente diferente como ${vehicleData.licensePlate}1 o ${vehicleData.licensePlate}A`)
         return
       }
-      
-      // Crear el vehículo
-      const newVehicle = await vehicleService.create(vehicleCreateData)
-      console.log('Vehículo creado:', newVehicle)
-      
-      // Guardar el vehículo creado
-      setCreatedVehicle(newVehicle)
-      
-      // Actualizar la lista de vehículos
-      await loadVehicles()
-      
-      // Pasar al siguiente paso
-      setStep('driver')
     } catch (error: any) {
-      console.error('Error creando vehículo:', error)
-      const errorMessage = error.response?.data?.error || error.response?.data?.message || error.message || 'Error desconocido'
-      
-      if (errorMessage.includes('Ya existe un vehículo con esa patente')) {
-        alert(`❌ Error: Ya existe un vehículo con la patente ${vehicleData.licensePlate}.\n\n💡 Sugerencia: Intenta con una patente diferente como ${vehicleData.licensePlate}1 o ${vehicleData.licensePlate}A`)
-      } else if (errorMessage.includes('Región no encontrada')) {
-        alert('Error: La región seleccionada no es válida. Por favor, contacta al administrador del sistema.')
-        console.error('❌ Error de región:', {
-          regionId: vehicleData.regionId,
-          availableRegions: regions.map(r => ({ id: r.id, code: r.code, name: r.name }))
-        })
-      } else {
-        alert('Error al crear el vehículo: ' + errorMessage)
+      // Si no existe, continuar (esto es lo esperado)
+      // Si hay otro error, lo manejaremos más adelante
+      if (error.response?.status !== 404) {
+        console.error('Error verificando patente:', error)
       }
-    } finally {
-      setLoading(false)
     }
+
+    // Determinar la región final a usar - Priorizar región del usuario
+    let finalRegionId = user?.workshop?.regionId || vehicleData.regionId
+    
+    // Si no tenemos región del usuario, usar la región seleccionada
+    if (!finalRegionId && vehicleData.regionId) {
+      finalRegionId = vehicleData.regionId
+    }
+    
+    // Si aún no tenemos región válida, usar la primera región disponible del backend
+    if (!finalRegionId && regions.length > 0) {
+      finalRegionId = regions[0].id
+      console.log('🔄 Usando primera región disponible del backend:', finalRegionId)
+    }
+    
+    // Validación final de región
+    if (!finalRegionId) {
+      console.error('❌ No se pudo determinar una región válida')
+      alert('Error: No se pudo determinar una región válida. Por favor, contacta al administrador.')
+      return
+    }
+
+    // Preparar datos del vehículo (asegurar que model sea string vacío si no se proporciona)
+    let finalVIN = vehicleData.vin
+    if (!finalVIN || finalVIN.trim() === '') {
+      // Generar VIN si no está presente
+      const existingVINs = vehicles
+        .map(v => v.vin)
+        .filter((vin): vin is string => vin !== undefined && vin.trim() !== '')
+      finalVIN = await generateUniqueVIN(existingVINs)
+      setVehicleData({ ...vehicleData, vin: finalVIN })
+    }
+    
+    // NO crear el vehículo todavía, solo validar y pasar al siguiente paso
+    // El vehículo se creará junto con el ingreso en handleEntrySubmit
+    console.log('✅ Validación del vehículo completada, pasando al siguiente paso')
+    
+    // Pasar al siguiente paso sin crear el vehículo
+    setStep('driver')
   }
 
   const handleDriverSubmit = async (e: React.FormEvent) => {
@@ -356,22 +321,74 @@ export function CreateEntryModalAdvanced({ isOpen, onClose, onSuccess }: CreateE
       return
     }
 
+    let newVehicle: any = null
+
     try {
       setLoading(true)
-      console.log('Creando ingreso con datos:', { vehicleData, driverData, entryData })
+      console.log('🚗 Creando vehículo e ingreso con datos:', { vehicleData, driverData, entryData })
       
-      // Usar el workshopId del usuario actual directamente
+      // PASO 1: Crear el vehículo primero (si no existe ya)
+      if (!createdVehicle) {
+        console.log('🚗 Creando vehículo...')
+        
+        // Determinar la región final a usar - Priorizar región del usuario
+        let finalRegionId = user?.workshop?.regionId || vehicleData.regionId
+        
+        // Si no tenemos región del usuario, usar la región seleccionada
+        if (!finalRegionId && vehicleData.regionId) {
+          finalRegionId = vehicleData.regionId
+        }
+        
+        // Si aún no tenemos región válida, usar la primera región disponible del backend
+        if (!finalRegionId && regions.length > 0) {
+          finalRegionId = regions[0].id
+          console.log('🔄 Usando primera región disponible del backend:', finalRegionId)
+        }
+        
+        // Preparar datos del vehículo
+        let finalVIN = vehicleData.vin
+        if (!finalVIN || finalVIN.trim() === '') {
+          // Generar VIN si no está presente
+          const existingVINs = vehicles
+            .map(v => v.vin)
+            .filter((vin): vin is string => vin !== undefined && vin.trim() !== '')
+          finalVIN = await generateUniqueVIN(existingVINs)
+        }
+        
+        const vehicleCreateData = {
+          licensePlate: vehicleData.licensePlate,
+          vehicleType: vehicleData.vehicleType,
+          brand: vehicleData.brand,
+          model: vehicleData.model || '',
+          year: vehicleData.year,
+          vin: finalVIN,
+          fleetNumber: vehicleData.fleetNumber || '',
+          regionId: finalRegionId
+        }
+        
+        console.log('📤 Datos finales para crear vehículo:', vehicleCreateData)
+        
+        // Validación final de región
+        if (!finalRegionId) {
+          throw new Error('No se pudo determinar una región válida. Por favor, contacta al administrador.')
+        }
+        
+        // Crear el vehículo
+        newVehicle = await vehicleService.create(vehicleCreateData)
+        console.log('✅ Vehículo creado:', newVehicle)
+        setCreatedVehicle(newVehicle)
+      } else {
+        // Si el vehículo ya existe (caso legacy), usarlo
+        newVehicle = createdVehicle
+        console.log('✅ Usando vehículo existente:', newVehicle)
+      }
+      
+      // PASO 2: Crear el ingreso con el vehículo creado
       const workshopId = user?.workshopId || user?.workshop?.id
       console.log('🏭 Workshop ID del usuario:', workshopId)
       
-      // Usar el vehículo recién creado
-      const vehicle = createdVehicle
-      if (!vehicle) {
-        throw new Error('No se pudo encontrar el vehículo creado')
-      }
-      
       const entryDataToSend = {
-        vehicleId: vehicle.id,
+        vehicleId: newVehicle.id,
         workshopId: workshopId,
         driverRut: driverData.rut,
         driverName: driverData.name,
@@ -387,9 +404,9 @@ export function CreateEntryModalAdvanced({ isOpen, onClose, onSuccess }: CreateE
       console.log('📤 Datos finales para crear ingreso:', entryDataToSend)
       
       const createdEntry = await vehicleEntryService.create(entryDataToSend)
+      console.log('✅ Ingreso creado:', createdEntry)
       
-      // Si llegamos aquí, el ingreso se creó exitosamente
-      // El vehículo ya no necesita ser eliminado en caso de error
+      // Si llegamos aquí, todo se creó exitosamente
       setCreatedVehicle(null)
       
       // Emitir evento para actualizar estadísticas
@@ -414,19 +431,19 @@ export function CreateEntryModalAdvanced({ isOpen, onClose, onSuccess }: CreateE
       onClose()
       resetForm()
     } catch (error: any) {
-      console.error('❌ Error creando ingreso:', error)
+      console.error('❌ Error creando vehículo o ingreso:', error)
       
       // ROLLBACK: Eliminar el vehículo creado si falla el ingreso
       // Esto asegura que no queden datos huérfanos en el sistema
-      if (createdVehicle) {
+      if (newVehicle) {
         try {
-          console.log('🔄 Iniciando rollback: eliminando vehículo creado debido a error en ingreso...')
+          console.log('🔄 Iniciando rollback: eliminando vehículo creado debido a error...')
           console.log('📋 Vehículo a eliminar:', {
-            id: createdVehicle.id,
-            licensePlate: createdVehicle.licensePlate
+            id: newVehicle.id,
+            licensePlate: newVehicle.licensePlate
           })
           
-          await vehicleService.delete(createdVehicle.id)
+          await vehicleService.delete(newVehicle.id)
           console.log('✅ Rollback exitoso: vehículo eliminado correctamente')
           
           // Limpiar el vehículo creado del estado
@@ -445,15 +462,22 @@ export function CreateEntryModalAdvanced({ isOpen, onClose, onSuccess }: CreateE
           const originalErrorMessage = error.response?.data?.error || error.response?.data?.message || error.message || 'Error desconocido'
           
           if (deleteError.response?.status === 403) {
-            alert(`❌ Error al crear el ingreso: ${originalErrorMessage}\n\n⚠️ CRÍTICO: El vehículo fue creado pero no se pudo eliminar automáticamente (sin permisos).\n\n📋 Vehículo huérfano creado:\n- Patente: ${createdVehicle.licensePlate}\n- ID: ${createdVehicle.id}\n\n🚨 Contacta al administrador INMEDIATAMENTE para eliminar este vehículo huérfano.`)
+            alert(`❌ Error al crear el ingreso: ${originalErrorMessage}\n\n⚠️ CRÍTICO: El vehículo fue creado pero no se pudo eliminar automáticamente (sin permisos).\n\n📋 Vehículo huérfano creado:\n- Patente: ${newVehicle.licensePlate}\n- ID: ${newVehicle.id}\n\n🚨 Contacta al administrador INMEDIATAMENTE para eliminar este vehículo huérfano.`)
           } else {
-            alert(`❌ Error al crear el ingreso: ${originalErrorMessage}\n\n⚠️ CRÍTICO: El vehículo fue creado pero no se pudo eliminar automáticamente.\n\n📋 Vehículo huérfano creado:\n- Patente: ${createdVehicle.licensePlate}\n- ID: ${createdVehicle.id}\n\n🚨 Contacta al administrador INMEDIATAMENTE para resolver este problema.`)
+            alert(`❌ Error al crear el ingreso: ${originalErrorMessage}\n\n⚠️ CRÍTICO: El vehículo fue creado pero no se pudo eliminar automáticamente.\n\n📋 Vehículo huérfano creado:\n- Patente: ${newVehicle.licensePlate}\n- ID: ${newVehicle.id}\n\n🚨 Contacta al administrador INMEDIATAMENTE para resolver este problema.`)
           }
         }
       } else {
         // Si no hay vehículo creado, solo mostrar el error
         const errorMessage = error.response?.data?.error || error.response?.data?.message || error.message || 'Error desconocido'
-        alert(`❌ Error al crear el ingreso: ${errorMessage}`)
+        
+        if (errorMessage.includes('Ya existe un vehículo con esa patente')) {
+          alert(`❌ Error: Ya existe un vehículo con la patente ${vehicleData.licensePlate}.\n\n💡 Sugerencia: Intenta con una patente diferente como ${vehicleData.licensePlate}1 o ${vehicleData.licensePlate}A`)
+        } else if (errorMessage.includes('Región no encontrada')) {
+          alert('Error: La región seleccionada no es válida. Por favor, contacta al administrador del sistema.')
+        } else {
+          alert(`❌ Error al crear el vehículo o ingreso: ${errorMessage}`)
+        }
       }
     } finally {
       setLoading(false)
@@ -489,9 +513,17 @@ export function CreateEntryModalAdvanced({ isOpen, onClose, onSuccess }: CreateE
           console.error('❌ Error eliminando vehículo al cerrar:', error)
           alert('⚠️ El vehículo fue creado pero no se pudo eliminar automáticamente. Contacta al administrador.')
         })
-    } else if (hasUnsavedPhotos) {
-      // Si no hay vehículo pero hay fotos, advertir
-      const confirmMessage = `¿Estás seguro de cerrar?\n\n⚠️ ADVERTENCIA: Tienes ${photos.length} ${photos.length === 1 ? 'foto' : 'fotos'} sin guardar que se perderán al cerrar.`
+    } else if (hasUnsavedPhotos || step !== 'vehicle') {
+      // Si hay fotos o si ya pasó del paso 1, advertir
+      let confirmMessage = '¿Estás seguro de cerrar?'
+      
+      if (hasUnsavedPhotos) {
+        confirmMessage += `\n\n⚠️ ADVERTENCIA: Tienes ${photos.length} ${photos.length === 1 ? 'foto' : 'fotos'} sin guardar que se perderán al cerrar.`
+      }
+      
+      if (step !== 'vehicle') {
+        confirmMessage += '\n\n⚠️ ADVERTENCIA: Los datos ingresados se perderán al cerrar.'
+      }
       
       if (!confirm(confirmMessage)) {
         return // El usuario canceló el cierre
