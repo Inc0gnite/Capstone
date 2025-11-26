@@ -18,38 +18,34 @@ interface CreateEntryModalProps {
   onSuccess: () => void
 }
 
-// Lista de marcas de vehículos comunes
+// Lista de marcas de vehículos disponibles en Chile
 const VEHICLE_BRANDS = [
   'Toyota',
-  'Ford',
   'Chevrolet',
   'Nissan',
-  'Volkswagen',
+  'Ford',
   'Hyundai',
   'Kia',
-  'Mazda',
   'Suzuki',
+  'Mazda',
   'Mitsubishi',
-  'Honda',
-  'Isuzu',
-  'Mercedes-Benz',
-  'BMW',
-  'Audi',
   'Peugeot',
   'Renault',
   'Fiat',
   'Citroën',
-  'Jeep',
-  'Dodge',
-  'Ram',
-  'GMC',
-  'Volvo',
+  'Volkswagen',
+  'Honda',
+  'Isuzu',
+  'Mercedes-Benz',
   'Scania',
   'Iveco',
+  'Volvo',
   'MAN',
-  'Freightliner',
-  'Kenworth',
-  'Peterbilt',
+  'JAC',
+  'Great Wall',
+  'Chery',
+  'BYD',
+  'Geely',
   'Otro'
 ]
 
