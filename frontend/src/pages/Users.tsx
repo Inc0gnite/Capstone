@@ -4,7 +4,7 @@ import { userService, type User } from '../services/userService'
 import { workOrderService } from '../services/workOrderService'
 import { roleService, type Role } from '../services/roleService'
 import { workshopService, type Workshop } from '../services/workshopService'
-import { XCircle, RefreshCw, Eye, EyeOff } from 'lucide-react'
+import { XCircle, RefreshCw, Eye, EyeOff, RotateCcw } from 'lucide-react'
 
 export default function Users() {
   const [users, setUsers] = useState<User[]>([])
