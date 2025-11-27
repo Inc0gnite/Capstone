@@ -327,7 +327,28 @@ export class UserService {
       data: { isActive: false },
     })
 
-    return { message: 'Usuario eliminado exitosamente' }
+    return { message: 'Usuario desactivado exitosamente' }
+  }
+
+  /**
+   * Eliminar usuario permanentemente (hard delete)
+   * Solo el administrador supremo puede usar este método
+   */
+  async permanentDelete(id: string) {
+    const user = await prisma.user.findUnique({
+      where: { id },
+    })
+
+    if (!user) {
+      throw new Error('Usuario no encontrado')
+    }
+
+    // Hard delete - eliminar completamente de la base de datos
+    await prisma.user.delete({
+      where: { id },
+    })
+
+    return { message: 'Usuario eliminado permanentemente' }
   }
 
   /**

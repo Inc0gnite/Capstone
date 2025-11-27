@@ -4,14 +4,19 @@ import { userService, type User } from '../services/userService'
 import { workOrderService } from '../services/workOrderService'
 import { roleService, type Role } from '../services/roleService'
 import { workshopService, type Workshop } from '../services/workshopService'
+import { useAuthStore } from '../store/authStore'
 import { XCircle, RefreshCw, Eye, EyeOff, RotateCcw } from 'lucide-react'
 import { RUTField } from '../components/forms/RUTField'
 
 export default function Users() {
+  const { user } = useAuthStore()
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
+  
+  // Verificar si el usuario actual es el administrador supremo
+  const isSuperAdmin = user?.email?.toLowerCase() === 'admin@pepsico.cl'
   const [roles, setRoles] = useState<Role[]>([])
   const [selectedRole, setSelectedRole] = useState<string>('')
   const [mutatingId, setMutatingId] = useState<string>('')
@@ -306,6 +311,30 @@ export default function Users() {
                             className="px-3 py-1 rounded text-sm font-medium bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
                           >
                             {mutatingId === u.id ? '...' : 'Desactivar'}
+                          </button>
+                        )}
+                        {isSuperAdmin && (
+                          <button
+                            onClick={async () => {
+                              if (confirm('⚠️ ADVERTENCIA: Esta acción eliminará permanentemente al usuario de la base de datos. Esta acción NO se puede deshacer.\n\n¿Está seguro de que desea eliminar permanentemente a este usuario?')) {
+                                try {
+                                  setMutatingId(u.id)
+                                  await userService.permanentDelete(u.id)
+                                  // Eliminar completamente de la lista
+                                  setUsers(prev => prev.filter(user => user.id !== u.id))
+                                } catch (error: any) {
+                                  console.error('Error eliminando usuario:', error)
+                                  alert(error?.response?.data?.error || error?.message || 'Error al eliminar el usuario')
+                                } finally {
+                                  setMutatingId('')
+                                }
+                              }
+                            }}
+                            disabled={mutatingId === u.id}
+                            className="px-3 py-1 rounded text-sm font-medium bg-red-800 text-white hover:bg-red-900 disabled:opacity-50"
+                            title="Eliminar permanentemente (solo administrador supremo)"
+                          >
+                            {mutatingId === u.id ? '...' : 'Eliminar'}
                           </button>
                         )}
                       </td>

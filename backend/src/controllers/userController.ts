@@ -189,6 +189,38 @@ export class UserController {
   }
 
   /**
+   * DELETE /api/users/:id/permanent
+   * Eliminar usuario permanentemente (hard delete)
+   * Solo el administrador supremo puede eliminar usuarios permanentemente
+   */
+  async permanentDelete(req: Request, res: Response) {
+    try {
+      // Verificar que solo el administrador supremo puede eliminar permanentemente
+      if (!req.user) {
+        return sendError(res, 'Usuario no autenticado', 401)
+      }
+
+      const isSupremeAdmin = req.user.email && isSuperAdminEmail(req.user.email)
+      
+      if (!isSupremeAdmin) {
+        return sendError(
+          res,
+          'Solo el administrador supremo puede eliminar usuarios permanentemente',
+          403
+        )
+      }
+
+      const { id } = req.params
+
+      const result = await userService.permanentDelete(id)
+
+      return sendSuccess(res, result, 'Usuario eliminado permanentemente')
+    } catch (error: any) {
+      return sendError(res, error.message, 400)
+    }
+  }
+
+  /**
    * GET /api/users/workshop/:workshopId
    * Obtener usuarios por taller
    */

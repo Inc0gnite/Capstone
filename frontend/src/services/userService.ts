@@ -43,6 +43,11 @@ export const userService = {
     const response = await api.delete(`/users/${id}`)
     return response.data
   },
+
+  async permanentDelete(id: string) {
+    const response = await api.delete(`/users/${id}/permanent`)
+    return response.data
+  },
 }
 
 

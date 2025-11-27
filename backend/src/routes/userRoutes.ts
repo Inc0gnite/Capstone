@@ -90,6 +90,18 @@ router.post(
 )
 
 /**
+ * DELETE /api/users/:id/permanent
+ * Eliminar usuario permanentemente (hard delete)
+ * Solo el administrador supremo puede usar este endpoint
+ */
+router.delete(
+  '/:id/permanent',
+  requireAdmin,
+  auditLog('permanent_delete', 'users'),
+  userController.permanentDelete
+)
+
+/**
  * GET /api/users/workshop/:workshopId
  * Obtener usuarios por taller
  */
