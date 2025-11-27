@@ -273,32 +273,41 @@ export default function Users() {
                         >
                           Editar
                         </button>
-                        <button
-                          onClick={async () => {
-                            if (confirm('¿Eliminar este usuario?')) {
-                              try {
-                                setMutatingId(u.id)
-                                // Si es mecánico, validar que no tenga tareas activas asignadas
-                                if ((u.role?.name || '').toLowerCase() === 'mecánico') {
-                                  const res = await workOrderService.getAll({ assignedToId: u.id })
-                                  const orders = res.data || []
-                                  const hasActive = orders.some((o: any) => ['pendiente', 'en_progreso', 'pausado'].includes(o.currentStatus))
-                                  if (hasActive) {
-                                    alert('No se puede eliminar: el mecánico tiene tareas asignadas.');
-                                    return
+                        {u.isActive && (
+                          <button
+                            onClick={async () => {
+                              if (confirm('¿Desactivar este usuario? El usuario no podrá acceder al sistema pero sus datos se mantendrán.')) {
+                                try {
+                                  setMutatingId(u.id)
+                                  // Si es mecánico, validar que no tenga tareas activas asignadas
+                                  if ((u.role?.name || '').toLowerCase() === 'mecánico') {
+                                    const res = await workOrderService.getAll({ assignedToId: u.id })
+                                    const orders = res.data || []
+                                    const hasActive = orders.some((o: any) => ['pendiente', 'en_progreso', 'pausado'].includes(o.currentStatus))
+                                    if (hasActive) {
+                                      alert('No se puede desactivar: el mecánico tiene tareas asignadas.')
+                                      return
+                                    }
                                   }
+                                  await userService.remove(u.id)
+                                  // Actualizar el estado del usuario en lugar de eliminarlo de la lista
+                                  setUsers(prev => prev.map(user => 
+                                    user.id === u.id ? { ...user, isActive: false } : user
+                                  ))
+                                } catch (error: any) {
+                                  console.error('Error desactivando usuario:', error)
+                                  alert(error?.response?.data?.error || error?.message || 'Error al desactivar el usuario')
+                                } finally {
+                                  setMutatingId('')
                                 }
-                                await userService.remove(u.id)
-                                setUsers(prev => prev.filter(x => x.id !== u.id))
-                              } finally {
-                                setMutatingId('')
                               }
-                            }
-                          }}
-                          className="px-3 py-1 rounded text-sm font-medium bg-red-600 text-white hover:bg-red-700"
-                        >
-                          Eliminar
-                        </button>
+                            }}
+                            disabled={mutatingId === u.id}
+                            className="px-3 py-1 rounded text-sm font-medium bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
+                          >
+                            {mutatingId === u.id ? '...' : 'Desactivar'}
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))
