@@ -393,9 +393,9 @@ export function CreateEntryModalAdvanced({ isOpen, onClose, onSuccess }: CreateE
           vehicleType: vehicleData.vehicleType,
           brand: vehicleData.brand,
           model: vehicleData.model || '',
-          year: vehicleData.year,
-          vin: finalVIN,
-          fleetNumber: vehicleData.fleetNumber || '',
+          year: parseInt(vehicleData.year.toString(), 10), // Asegurar que sea número
+          vin: finalVIN || undefined, // Convertir string vacío a undefined
+          fleetNumber: vehicleData.fleetNumber && vehicleData.fleetNumber.trim() !== '' ? vehicleData.fleetNumber : undefined, // Convertir string vacío a undefined
           regionId: finalRegionId
         }
         
