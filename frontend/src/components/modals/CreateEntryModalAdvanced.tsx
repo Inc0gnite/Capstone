@@ -511,32 +511,55 @@ export function CreateEntryModalAdvanced({ isOpen, onClose, onSuccess }: CreateE
       // Subir fotos si hay alguna (opcional, no bloquea el proceso)
       if (photos.length > 0 && createdEntry?.id) {
         try {
-          console.log('📸 Subiendo fotos del ingreso...', photos.length)
+          console.log('📸 Subiendo fotos del ingreso...', photos.length, 'fotos')
+          console.log('📸 ID del ingreso:', createdEntry.id)
+          console.log('📸 Fotos a subir:', photos.map(p => ({ id: p.id, type: p.photoType, hasUrl: !!p.url })))
+          
           // Subir cada foto al backend
-          const photoPromises = photos.map(async (photo) => {
+          const photoPromises = photos.map(async (photo, index) => {
             try {
-              await photoService.addEntryPhoto(
+              console.log(`📤 Subiendo foto ${index + 1}/${photos.length}...`)
+              const result = await photoService.addEntryPhoto(
                 createdEntry.id,
                 photo.url,
                 photo.photoType || 'before',
                 photo.description
               )
-              console.log('✅ Foto subida:', photo.id)
-            } catch (photoError) {
+              console.log('✅ Foto subida exitosamente:', result.id, result.url.substring(0, 50) + '...')
+              return result
+            } catch (photoError: any) {
               console.error('⚠️ Error subiendo foto individual:', photoError)
+              console.error('⚠️ Detalles del error:', {
+                message: photoError.message,
+                response: photoError.response?.data,
+                status: photoError.response?.status
+              })
               // Continuar con las demás fotos aunque una falle
+              throw photoError
             }
           })
           
           // Esperar a que todas las fotos se suban (en background, no bloquea)
-          Promise.all(photoPromises).then(() => {
-            console.log('✅ Todas las fotos subidas')
+          Promise.all(photoPromises).then((results) => {
+            console.log('✅ Todas las fotos subidas exitosamente:', results.length)
+            // Emitir evento para refrescar la página de detalle si está abierta
+            window.dispatchEvent(new CustomEvent('entry-photos-uploaded', { 
+              detail: { entryId: createdEntry.id, photoCount: results.length } 
+            }))
           }).catch((error) => {
             console.error('⚠️ Algunas fotos no se pudieron subir:', error)
           })
         } catch (photoError) {
           console.error('⚠️ Error subiendo fotos (no crítico):', photoError)
           // No fallar el proceso si las fotos no se suben
+        }
+      } else {
+        console.log('ℹ️ No hay fotos para subir o el ingreso no tiene ID')
+        if (photos.length === 0) {
+          console.log('ℹ️ Array de fotos está vacío')
+        }
+        if (!createdEntry?.id) {
+          console.log('ℹ️ El ingreso creado no tiene ID:', createdEntry)
         }
       }
       
