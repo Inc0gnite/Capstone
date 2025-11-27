@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express'
 import { sendError } from '../utils/response'
 import prisma from '../config/database'
+import { isSuperAdminUser } from '../utils/admin'
 
 /**
  * Middleware para verificar permisos basados en roles (RBAC)
@@ -102,7 +103,48 @@ export function injectWorkshopFilter() {
       }
 
       // Administradores pueden ver todos los talleres
+      // Pero solo el administrador supremo puede operar sin restricciones de taller
       if (req.user.roleName === 'Administrador') {
+        // Si es administrador supremo, no aplicar filtros de taller
+        // Necesitamos obtener el nombre completo del usuario para verificar
+        try {
+          const user = await prisma.user.findUnique({
+            where: { id: req.user.userId },
+            select: { firstName: true, lastName: true },
+          })
+          
+          if (user && isSuperAdminUser(user)) {
+            // Administrador supremo: sin restricciones
+            return next()
+          }
+        } catch (error) {
+          // Si hay error al obtener el usuario, continuar con validación normal
+        }
+        
+        // Administradores regulares: aplicar filtros de taller si tienen uno asignado
+        if (req.user.workshopId) {
+          // Inyectar workshopId en query params (para GET requests)
+          if (req.query) {
+            req.query.workshopId = req.user.workshopId
+          }
+          
+          // Para operaciones de creación/actualización, validar o inyectar workshopId en body
+          if (req.body && (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH')) {
+            // Si el body tiene workshopId, validar que coincida
+            if (req.body.workshopId && req.body.workshopId !== req.user.workshopId) {
+              return sendError(
+                res,
+                'No puede realizar operaciones en otro taller',
+                403
+              )
+            }
+            // Si no tiene workshopId, inyectarlo automáticamente
+            if (!req.body.workshopId) {
+              req.body.workshopId = req.user.workshopId
+            }
+          }
+        }
+        
         return next()
       }
 

@@ -1,6 +1,7 @@
 import prisma from '../config/database'
 import { hashPassword } from '../utils/auth'
 import { formatRUT } from '../utils/validation'
+import { isSuperAdmin } from '../utils/admin'
 import type { RegisterRequest } from '../types'
 
 /**
@@ -116,8 +117,18 @@ export class UserService {
     // Convertir workshopId vacío a undefined
     const finalWorkshopId = workshopId && workshopId.trim() !== '' ? workshopId : undefined
     
-    // Validar que usuarios no-admin tengan taller asignado
-    if (role.name !== 'Administrador') {
+    // Validar taller según el rol
+    if (role.name === 'Administrador') {
+      // Si es administrador, verificar si es el administrador supremo
+      const isSupremeAdmin = isSuperAdmin(firstName, lastName)
+      
+      // Solo el administrador supremo puede no tener taller
+      // Todos los demás administradores deben tener taller asignado
+      if (!isSupremeAdmin && !finalWorkshopId) {
+        throw new Error('Los administradores (excepto el administrador supremo) deben tener un taller asignado')
+      }
+    } else {
+      // Usuarios no-admin siempre deben tener taller
       if (!finalWorkshopId) {
         throw new Error('Los usuarios no-administradores deben tener un taller asignado')
       }
@@ -190,24 +201,41 @@ export class UserService {
     if (phone !== undefined) updateData.phone = phone
     if (roleId) {
       updateData.roleId = roleId
-      // Si se cambia el rol, validar que usuarios no-admin tengan taller
+      // Si se cambia el rol, validar taller según el nuevo rol
       const newRole = await prisma.role.findUnique({
         where: { id: roleId },
       })
-      if (newRole && newRole.name !== 'Administrador') {
+      if (newRole) {
         const finalWorkshopId = workshopId && workshopId.trim() !== '' ? workshopId : existingUser.workshopId
-        if (!finalWorkshopId) {
-          throw new Error('Los usuarios no-administradores deben tener un taller asignado')
+        const updatedFirstName = firstName || existingUser.firstName
+        const updatedLastName = lastName || existingUser.lastName
+        
+        if (newRole.name === 'Administrador') {
+          // Si es administrador, verificar si es el administrador supremo
+          const isSupremeAdmin = isSuperAdmin(updatedFirstName, updatedLastName)
+          
+          // Solo el administrador supremo puede no tener taller
+          if (!isSupremeAdmin && !finalWorkshopId) {
+            throw new Error('Los administradores (excepto el administrador supremo) deben tener un taller asignado')
+          }
+        } else {
+          // Usuarios no-admin siempre deben tener taller
+          if (!finalWorkshopId) {
+            throw new Error('Los usuarios no-administradores deben tener un taller asignado')
+          }
         }
-        // Validar que el taller existe y está activo
-        const workshop = await prisma.workshop.findUnique({
-          where: { id: finalWorkshopId },
-        })
-        if (!workshop) {
-          throw new Error('Taller no encontrado')
-        }
-        if (!workshop.isActive) {
-          throw new Error('El taller no está activo')
+        
+        // Validar que el taller existe y está activo (si se proporciona)
+        if (finalWorkshopId) {
+          const workshop = await prisma.workshop.findUnique({
+            where: { id: finalWorkshopId },
+          })
+          if (!workshop) {
+            throw new Error('Taller no encontrado')
+          }
+          if (!workshop.isActive) {
+            throw new Error('El taller no está activo')
+          }
         }
       }
     }
@@ -225,12 +253,28 @@ export class UserService {
           throw new Error('El taller no está activo')
         }
       }
-      // Validar que usuarios no-admin tengan taller
+      // Validar taller según el rol del usuario
       const userRole = await prisma.role.findUnique({
         where: { id: existingUser.roleId },
       })
-      if (userRole && userRole.name !== 'Administrador' && !finalWorkshopId) {
-        throw new Error('Los usuarios no-administradores deben tener un taller asignado')
+      if (userRole) {
+        const updatedFirstName = firstName || existingUser.firstName
+        const updatedLastName = lastName || existingUser.lastName
+        
+        if (userRole.name === 'Administrador') {
+          // Si es administrador, verificar si es el administrador supremo
+          const isSupremeAdmin = isSuperAdmin(updatedFirstName, updatedLastName)
+          
+          // Solo el administrador supremo puede no tener taller
+          if (!isSupremeAdmin && !finalWorkshopId) {
+            throw new Error('Los administradores (excepto el administrador supremo) deben tener un taller asignado')
+          }
+        } else {
+          // Usuarios no-admin siempre deben tener taller
+          if (!finalWorkshopId) {
+            throw new Error('Los usuarios no-administradores deben tener un taller asignado')
+          }
+        }
       }
       updateData.workshopId = finalWorkshopId
     }
