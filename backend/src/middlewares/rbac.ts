@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express'
 import { sendError } from '../utils/response'
 import prisma from '../config/database'
-import { isSuperAdminUser } from '../utils/admin'
+import { isSuperAdminEmail } from '../utils/admin'
 
 /**
  * Middleware para verificar permisos basados en roles (RBAC)
@@ -105,20 +105,12 @@ export function injectWorkshopFilter() {
       // Administradores pueden ver todos los talleres
       // Pero solo el administrador supremo puede operar sin restricciones de taller
       if (req.user.roleName === 'Administrador') {
-        // Si es administrador supremo, no aplicar filtros de taller
-        // Necesitamos obtener el nombre completo del usuario para verificar
-        try {
-          const user = await prisma.user.findUnique({
-            where: { id: req.user.userId },
-            select: { firstName: true, lastName: true },
-          })
-          
-          if (user && isSuperAdminUser(user)) {
-            // Administrador supremo: sin restricciones
-            return next()
-          }
-        } catch (error) {
-          // Si hay error al obtener el usuario, continuar con validación normal
+        // Verificar si es administrador supremo por email (más rápido y confiable)
+        const isSupremeAdmin = req.user.email && isSuperAdminEmail(req.user.email)
+        
+        if (isSupremeAdmin) {
+          // Administrador supremo: sin restricciones
+          return next()
         }
         
         // Administradores regulares: aplicar filtros de taller si tienen uno asignado

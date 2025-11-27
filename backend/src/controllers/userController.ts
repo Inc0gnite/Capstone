@@ -102,19 +102,30 @@ export class UserController {
   /**
    * PUT /api/users/:id
    * Actualizar usuario
+   * - Administradores regulares solo pueden actualizar usuarios de su taller
+   * - Administrador supremo puede actualizar cualquier usuario
    */
   async update(req: Request, res: Response) {
     try {
       const { id } = req.params
       
-      // Validar que el usuario pertenezca al taller del usuario autenticado (excepto Admin)
-      if (req.user && req.user.roleName !== 'Administrador' && req.user.workshopId) {
+      // Verificar si es administrador supremo
+      const isSupremeAdmin = req.user?.email && isSuperAdminEmail(req.user.email)
+      
+      // Validar que el usuario pertenezca al taller del usuario autenticado (excepto Admin supremo)
+      if (req.user && !isSupremeAdmin && req.user.roleName !== 'Administrador' && req.user.workshopId) {
         const existingUser = await userService.getById(id)
         if (existingUser.workshopId !== req.user.workshopId) {
           return sendError(res, 'No puede modificar usuarios de otro taller', 403)
         }
         // Prevenir cambio de taller
         delete req.body.workshopId
+      } else if (req.user && !isSupremeAdmin && req.user.roleName === 'Administrador' && req.user.workshopId) {
+        // Administrador regular: solo puede actualizar usuarios de su taller
+        const existingUser = await userService.getById(id)
+        if (existingUser.workshopId !== req.user.workshopId) {
+          return sendError(res, 'No puede modificar usuarios de otro taller', 403)
+        }
       }
 
       const data = req.body
@@ -129,13 +140,24 @@ export class UserController {
   /**
    * DELETE /api/users/:id
    * Eliminar usuario (soft delete)
+   * - Administradores regulares solo pueden eliminar usuarios de su taller
+   * - Administrador supremo puede eliminar cualquier usuario
    */
   async delete(req: Request, res: Response) {
     try {
       const { id } = req.params
 
-      // Validar que el usuario pertenezca al taller del usuario autenticado (excepto Admin)
-      if (req.user && req.user.roleName !== 'Administrador' && req.user.workshopId) {
+      // Verificar si es administrador supremo
+      const isSupremeAdmin = req.user?.email && isSuperAdminEmail(req.user.email)
+
+      // Validar que el usuario pertenezca al taller del usuario autenticado (excepto Admin supremo)
+      if (req.user && !isSupremeAdmin && req.user.roleName !== 'Administrador' && req.user.workshopId) {
+        const existingUser = await userService.getById(id)
+        if (existingUser.workshopId !== req.user.workshopId) {
+          return sendError(res, 'No puede eliminar usuarios de otro taller', 403)
+        }
+      } else if (req.user && !isSupremeAdmin && req.user.roleName === 'Administrador' && req.user.workshopId) {
+        // Administrador regular: solo puede eliminar usuarios de su taller
         const existingUser = await userService.getById(id)
         if (existingUser.workshopId !== req.user.workshopId) {
           return sendError(res, 'No puede eliminar usuarios de otro taller', 403)
