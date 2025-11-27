@@ -194,15 +194,25 @@ export class VehicleService {
     }
     console.log('✅ Región encontrada:', region.name)
 
+    // Validar que el año sea un número válido
+    const yearNum = typeof year === 'string' ? parseInt(year, 10) : year
+    if (isNaN(yearNum) || yearNum < 1900 || yearNum > new Date().getFullYear() + 1) {
+      throw new Error(`Año inválido: ${year}. Debe ser un número entre 1900 y ${new Date().getFullYear() + 1}`)
+    }
+
+    // Convertir valores vacíos a undefined para campos opcionales
+    const finalVIN = vin && vin.trim() !== '' ? vin : undefined
+    const finalFleetNumber = fleetNumber && fleetNumber.trim() !== '' ? fleetNumber : undefined
+
     // Crear vehículo
     console.log('🚗 Creando vehículo con datos:', {
       licensePlate: licensePlate.toUpperCase(),
       vehicleType,
       brand,
       model,
-      year,
-      vin,
-      fleetNumber,
+      year: yearNum,
+      vin: finalVIN,
+      fleetNumber: finalFleetNumber,
       regionId,
     })
     
@@ -212,9 +222,9 @@ export class VehicleService {
         vehicleType,
         brand,
         model,
-        year,
-        vin,
-        fleetNumber,
+        year: yearNum,
+        vin: finalVIN,
+        fleetNumber: finalFleetNumber,
         regionId,
       },
       include: {
