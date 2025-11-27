@@ -46,9 +46,25 @@ export function RUTField({
   const input2Ref = useRef<HTMLInputElement>(null)
   const input3Ref = useRef<HTMLInputElement>(null)
   const input4Ref = useRef<HTMLInputElement>(null)
+  
+  // Ref para rastrear si el cambio viene del usuario o del prop
+  const isUserChange = useRef(false)
+  const lastSyncedValue = useRef(value)
 
-  // Parsear el valor inicial - siempre sincronizar con el prop value
+  // Parsear el valor inicial - sincronizar con el prop value solo si cambió externamente
   useEffect(() => {
+    // Si el cambio viene del usuario, no sincronizar desde el prop
+    if (isUserChange.current) {
+      isUserChange.current = false
+      return
+    }
+    
+    // Solo sincronizar si el valor realmente cambió
+    if (value === lastSyncedValue.current) {
+      return
+    }
+    
+    lastSyncedValue.current = value
     const clean = value ? value.replace(/\./g, '').replace(/-/g, '') : ''
     
     // Si el valor limpio tiene al menos 8 caracteres, parsearlo
@@ -89,10 +105,14 @@ export function RUTField({
     // Solo actualizar si el RUT completo tiene 9 caracteres y es diferente al valor actual
     if (fullRUT.length === 9 && fullRUT !== currentClean) {
       const formatted = `${part1}.${part2}.${part3}-${part4}`
+      isUserChange.current = true
+      lastSyncedValue.current = formatted
       onChange(formatted)
     } 
     // Si todas las partes están vacías pero el valor no, limpiar
     else if (fullRUT.length === 0 && currentClean.length > 0) {
+      isUserChange.current = true
+      lastSyncedValue.current = ''
       onChange('')
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

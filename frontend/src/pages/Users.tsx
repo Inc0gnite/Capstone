@@ -23,6 +23,7 @@ export default function Users() {
   const [showPassword, setShowPassword] = useState(false)
   const [showCreate, setShowCreate] = useState(false)
   const [createError, setCreateError] = useState<string | null>(null)
+  const [isCreating, setIsCreating] = useState(false)
   const [createUser, setCreateUser] = useState<{
     rut: string
     fullName: string
@@ -478,7 +479,7 @@ export default function Users() {
                           setCreateError('Completa todos los campos obligatorios: RUT, nombre completo, email, contraseña y rol')
                           return 
                         }
-                        setLoading(true)
+                        setIsCreating(true)
                         // Dividir nombre completo en firstName y lastName
                         const nameParts = createUser.fullName.trim().split(/\s+/)
                         const firstName = nameParts[0] || ''
@@ -486,7 +487,7 @@ export default function Users() {
                         
                         if (!firstName) {
                           setCreateError('El nombre completo debe incluir al menos un nombre')
-                          setLoading(false)
+                          setIsCreating(false)
                           return
                         }
                         
@@ -513,13 +514,13 @@ export default function Users() {
                         setCreateError(err?.response?.data?.error || err?.message || 'Error al crear el usuario')
                         // NO cerrar el formulario ni limpiar los datos - mantener todo para que el usuario pueda corregir
                       } finally { 
-                        setLoading(false) 
+                        setIsCreating(false) 
                       }
                     }}
-                    disabled={createUser.password.length < 8 || !createUser.rut || !createUser.fullName || !createUser.email || !createUser.roleId}
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+                    disabled={isCreating || createUser.password.length < 8 || !createUser.rut || !createUser.fullName || !createUser.email || !createUser.roleId}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Guardar
+                    {isCreating ? 'Guardando...' : 'Guardar'}
                   </button>
                 </div>
               </div>
