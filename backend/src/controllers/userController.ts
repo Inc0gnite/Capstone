@@ -2,7 +2,6 @@ import { Request, Response } from 'express'
 import userService from '../services/userService'
 import { sendSuccess, sendError, sendPaginated } from '../utils/response'
 import { isSuperAdminEmail } from '../utils/admin'
-import prisma from '../config/database'
 
 /**
  * Controlador de usuarios
