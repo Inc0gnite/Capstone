@@ -68,19 +68,22 @@ router.put(
 )
 
 /**
- * DELETE /api/users/:id
- * Eliminar usuario (soft delete)
+ * DELETE /api/users/:id/permanent
+ * Eliminar usuario permanentemente (hard delete)
+ * Solo el administrador supremo puede usar este endpoint
+ * IMPORTANTE: Esta ruta debe estar ANTES de /:id para que Express la reconozca
  */
 router.delete(
-  '/:id',
+  '/:id/permanent',
   requireAdmin,
-  auditLog('delete', 'users'),
-  userController.delete
+  auditLog('permanent_delete', 'users'),
+  userController.permanentDelete
 )
 
 /**
  * POST /api/users/:id/restore
  * Restaurar usuario
+ * IMPORTANTE: Esta ruta debe estar ANTES de /:id para que Express la reconozca
  */
 router.post(
   '/:id/restore',
@@ -90,15 +93,14 @@ router.post(
 )
 
 /**
- * DELETE /api/users/:id/permanent
- * Eliminar usuario permanentemente (hard delete)
- * Solo el administrador supremo puede usar este endpoint
+ * DELETE /api/users/:id
+ * Eliminar usuario (soft delete)
  */
 router.delete(
-  '/:id/permanent',
+  '/:id',
   requireAdmin,
-  auditLog('permanent_delete', 'users'),
-  userController.permanentDelete
+  auditLog('delete', 'users'),
+  userController.delete
 )
 
 /**
