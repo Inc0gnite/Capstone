@@ -33,6 +33,23 @@ export default function EntryDetail() {
       console.log('Ingreso cargado:', entryData)
       console.log('Fotos del ingreso:', entryData.photos)
       console.log('Tipo de photos:', typeof entryData.photos, Array.isArray(entryData.photos))
+      
+      // Si no hay fotos en entryData.photos, intentar cargarlas directamente del servicio de fotos
+      if (!entryData.photos || entryData.photos.length === 0) {
+        console.log('⚠️ No hay fotos en entryData, intentando cargar desde photoService...')
+        try {
+          const { photoService } = await import('../services/photoService')
+          const photos = await photoService.getEntryPhotos(id)
+          console.log('📸 Fotos cargadas desde photoService:', photos)
+          if (photos && photos.length > 0) {
+            entryData.photos = photos.map(p => p.url)
+            console.log('✅ Fotos agregadas a entryData:', entryData.photos)
+          }
+        } catch (photoError) {
+          console.error('❌ Error cargando fotos desde photoService:', photoError)
+        }
+      }
+      
       setEntry(entryData)
 
       // Cargar información del vehículo si está disponible
