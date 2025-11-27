@@ -387,8 +387,7 @@ export default function EntryDetail() {
                     )
                   })}
                 </div>
-              </div>
-            )}
+              )}
           </div>
 
           {/* Información del Vehículo */}
