@@ -111,7 +111,7 @@ export function MainLayout({ children }: MainLayoutProps) {
             {/* Taller - Centro */}
             {(user as any)?.workshop && (
               <div className="hidden md:flex items-center justify-center flex-1">
-                <p className="text-sm font-medium text-blue-600">
+                <p className="text-2xl font-bold text-black">
                   {(user as any).workshop.name}
                 </p>
               </div>
