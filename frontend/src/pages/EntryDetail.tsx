@@ -304,12 +304,19 @@ export default function EntryDetail() {
             </div>
 
             {/* Fotos del Vehículo */}
-            {entry.photos && entry.photos.length > 0 && (
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
-                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 flex items-center">
-                  <Camera className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
-                  Fotografías del Vehículo ({entry.photos.length})
-                </h3>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                <Camera className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
+                Fotografías del Vehículo {entry.photos && entry.photos.length > 0 ? `(${entry.photos.length})` : ''}
+              </h3>
+              
+              {(!entry.photos || entry.photos.length === 0) ? (
+                <div className="text-center py-8 text-gray-500">
+                  <Camera className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+                  <p className="text-sm">No hay fotografías disponibles para este ingreso.</p>
+                  <p className="text-xs mt-2 text-gray-400">Las fotografías se pueden agregar durante la creación del ingreso.</p>
+                </div>
+              ) : (
                 
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
                   {entry.photos.map((photoUrl, index) => {
