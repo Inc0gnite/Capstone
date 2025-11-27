@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, useNavigate } from 'react-router-dom'
 import { MainLayout } from '../components/Layout/MainLayout'
 import { CreateEntryModalAdvanced } from '../components/modals/CreateEntryModalAdvanced'
 import { RegisterExitModal } from '../components/modals/RegisterExitModal'
@@ -11,6 +11,7 @@ import { Search, BarChart, CheckCircle, XCircle, Factory, FileText, Clipboard, C
 
 export default function Entries() {
   const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
   const [entries, setEntries] = useState<VehicleEntry[]>([])
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [loading, setLoading] = useState(true)
@@ -355,9 +356,16 @@ export default function Entries() {
                       )}
                       <button 
                         onClick={() => handleViewDetails(entry)}
-                        className="text-blue-600 hover:text-blue-900"
+                        className="text-blue-600 hover:text-blue-900 mr-3"
                       >
-                        Ver Detalles
+                        Ver Vehículo
+                      </button>
+                      <button 
+                        onClick={() => navigate(`/entries/${entry.id}`)}
+                        className="text-green-600 hover:text-green-900"
+                        title="Ver detalle completo del ingreso incluyendo fotos"
+                      >
+                        Ver Ingreso
                       </button>
                     </td>
                   </tr>
@@ -437,7 +445,14 @@ export default function Entries() {
                       onClick={() => handleViewDetails(entry)}
                       className="flex-1 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
                     >
-                      Ver Detalles
+                      Ver Vehículo
+                    </button>
+                    <button
+                      onClick={() => navigate(`/entries/${entry.id}`)}
+                      className="flex-1 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium"
+                      title="Ver detalle completo del ingreso incluyendo fotos"
+                    >
+                      Ver Ingreso
                     </button>
                   </div>
                 </div>
@@ -491,6 +506,9 @@ export default function Entries() {
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Estado
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Acciones
                   </th>
                 </tr>
               </thead>
