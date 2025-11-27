@@ -24,13 +24,12 @@ export default function Users() {
   const [showCreate, setShowCreate] = useState(false)
   const [createUser, setCreateUser] = useState<{
     rut: string
-    firstName: string
-    lastName: string
+    fullName: string
     email: string
     password: string
     roleId: string
     workshopId?: string
-  }>({ rut: '', firstName: '', lastName: '', email: '', password: '', roleId: '', workshopId: '' })
+  }>({ rut: '', fullName: '', email: '', password: '', roleId: '', workshopId: '' })
   const [inProgressMap, setInProgressMap] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
@@ -314,19 +313,18 @@ export default function Users() {
               <div className="bg-white rounded-lg shadow-lg w-full max-w-xl p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Editar Usuario</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm text-gray-600 mb-1">Nombre</label>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm text-gray-600 mb-1">Nombre completo</label>
                     <input
-                      value={editUser.firstName}
-                      onChange={(e) => setEditUser({ ...editUser, firstName: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm text-gray-600 mb-1">Apellido</label>
-                    <input
-                      value={editUser.lastName}
-                      onChange={(e) => setEditUser({ ...editUser, lastName: e.target.value })}
+                      value={`${editUser.firstName} ${editUser.lastName}`.trim()}
+                      onChange={(e) => {
+                        const fullName = e.target.value.trim()
+                        const nameParts = fullName.split(/\s+/)
+                        const firstName = nameParts[0] || ''
+                        const lastName = nameParts.slice(1).join(' ') || ''
+                        setEditUser({ ...editUser, firstName, lastName })
+                      }}
+                      placeholder="Nombre y apellido"
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
                     />
                   </div>
@@ -418,13 +416,14 @@ export default function Users() {
                       required
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm text-gray-600 mb-1">Nombre</label>
-                    <input value={createUser.firstName} onChange={(e)=>setCreateUser({ ...createUser, firstName: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
-                  </div>
-                  <div>
-                    <label className="block text-sm text-gray-600 mb-1">Apellido</label>
-                    <input value={createUser.lastName} onChange={(e)=>setCreateUser({ ...createUser, lastName: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+                  <div className="md:col-span-2">
+                    <label className="block text-sm text-gray-600 mb-1">Nombre completo</label>
+                    <input 
+                      value={createUser.fullName} 
+                      onChange={(e)=>setCreateUser({ ...createUser, fullName: e.target.value })} 
+                      placeholder="Nombre y apellido"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" 
+                    />
                   </div>
                   <div className="md:col-span-2">
                     <label className="block text-sm text-gray-600 mb-1">Email</label>
@@ -457,16 +456,27 @@ export default function Users() {
                   <button
                     onClick={async ()=>{
                       try {
-                        if (!createUser.rut || !createUser.firstName || !createUser.lastName || !createUser.email || !createUser.password || !createUser.roleId) { 
-                          alert('Completa todos los campos obligatorios: RUT, nombre, apellido, email, contraseña y rol'); 
+                        if (!createUser.rut || !createUser.fullName || !createUser.email || !createUser.password || !createUser.roleId) { 
+                          alert('Completa todos los campos obligatorios: RUT, nombre completo, email, contraseña y rol'); 
                           return 
                         }
                         setLoading(true)
+                        // Dividir nombre completo en firstName y lastName
+                        const nameParts = createUser.fullName.trim().split(/\s+/)
+                        const firstName = nameParts[0] || ''
+                        const lastName = nameParts.slice(1).join(' ') || ''
+                        
+                        if (!firstName) {
+                          alert('El nombre completo debe incluir al menos un nombre')
+                          setLoading(false)
+                          return
+                        }
+                        
                         // Preparar datos para enviar, convirtiendo workshopId vacío a undefined
                         const userData: any = {
                           rut: createUser.rut,
-                          firstName: createUser.firstName,
-                          lastName: createUser.lastName,
+                          firstName: firstName,
+                          lastName: lastName || firstName, // Si no hay apellido, usar el nombre
                           email: createUser.email,
                           password: createUser.password,
                           roleId: createUser.roleId,
@@ -478,7 +488,7 @@ export default function Users() {
                         const created = await userService.create(userData)
                         setUsers(prev=>[...(prev||[]), created.data || created])
                         setShowCreate(false)
-                        setCreateUser({ rut:'', firstName:'', lastName:'', email:'', password:'', roleId:'', workshopId:'' })
+                        setCreateUser({ rut:'', fullName:'', email:'', password:'', roleId:'', workshopId:'' })
                       } catch (err: any) {
                         console.error('Error creando usuario:', err)
                         alert(err?.response?.data?.error || err?.message || 'Error al crear el usuario')
@@ -486,7 +496,7 @@ export default function Users() {
                         setLoading(false) 
                       }
                     }}
-                    disabled={createUser.password.length < 8 || !createUser.rut || !createUser.firstName || !createUser.lastName || !createUser.email || !createUser.roleId}
+                    disabled={createUser.password.length < 8 || !createUser.rut || !createUser.fullName || !createUser.email || !createUser.roleId}
                     className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
                   >
                     Guardar
