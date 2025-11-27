@@ -7,6 +7,7 @@ import { regionCache, Region } from '../../services/regionCache'
 import { generateUniqueVIN } from '../../utils/vinGenerator'
 import { RegionSelector } from '../forms/RegionSelector'
 import { VINField } from '../forms/VINField'
+import { RUTField } from '../forms/RUTField'
 import { PhotoGallery, type Photo } from '../photo/PhotoGallery'
 import { useAuthStore } from '../../store/authStore'
 import type { Vehicle } from '../../../../shared/types'
@@ -790,12 +791,9 @@ export function CreateEntryModalAdvanced({ isOpen, onClose, onSuccess }: CreateE
                   <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                     RUT *
                   </label>
-                  <input
-                    type="text"
+                  <RUTField
                     value={driverData.rut}
-                    onChange={(e) => setDriverData({ ...driverData, rut: e.target.value })}
-                    className="w-full px-2.5 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="12.345.678-9"
+                    onChange={(rut) => setDriverData({ ...driverData, rut })}
                     required
                   />
                 </div>

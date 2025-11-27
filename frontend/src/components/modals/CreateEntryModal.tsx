@@ -4,6 +4,7 @@ import { vehicleService } from '../../services/vehicleService'
 import { configService } from '../../services/configService'
 import { useAuthStore } from '../../store/authStore'
 import { PhotoGallery, type Photo } from '../photo/PhotoGallery'
+import { RUTField } from '../forms/RUTField'
 import type { Vehicle } from '../../../../shared/types'
 import { Camera } from 'lucide-react'
 
@@ -210,12 +211,9 @@ export function CreateEntryModal({ isOpen, onClose, onSuccess }: CreateEntryModa
                 <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                   RUT Conductor *
                 </label>
-                <input
-                  type="text"
+                <RUTField
                   value={formData.driverRut}
-                  onChange={(e) => setFormData({ ...formData, driverRut: e.target.value })}
-                  placeholder="12345678-9"
-                  className="w-full px-2.5 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onChange={(driverRut) => setFormData({ ...formData, driverRut })}
                   required
                 />
               </div>

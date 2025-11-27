@@ -5,6 +5,7 @@ import { workOrderService } from '../services/workOrderService'
 import { roleService, type Role } from '../services/roleService'
 import { workshopService, type Workshop } from '../services/workshopService'
 import { XCircle, RefreshCw, Eye, EyeOff, RotateCcw } from 'lucide-react'
+import { RUTField } from '../components/forms/RUTField'
 
 export default function Users() {
   const [users, setUsers] = useState<User[]>([])
@@ -411,7 +412,11 @@ export default function Users() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm text-gray-600 mb-1">RUT</label>
-                    <input value={createUser.rut} onChange={(e)=>setCreateUser({ ...createUser, rut: e.target.value })} placeholder="12.345.678-9" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+                    <RUTField 
+                      value={createUser.rut} 
+                      onChange={(rut) => setCreateUser({ ...createUser, rut })} 
+                      required
+                    />
                   </div>
                   <div>
                     <label className="block text-sm text-gray-600 mb-1">Nombre</label>
