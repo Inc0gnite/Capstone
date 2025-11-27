@@ -41,6 +41,7 @@ export interface VehicleFilters {
   regionId?: string
   status?: string
   vehicleType?: string
+  workshopId?: string
   sortBy?: string
   sortOrder?: 'asc' | 'desc'
 }

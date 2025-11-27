@@ -17,6 +17,7 @@ export class VehicleService {
       vehicleType,
       regionId,
       status,
+      workshopId, // Agregar workshopId a los filtros
       sortBy = 'createdAt',
       sortOrder = 'desc',
     } = filters
@@ -42,6 +43,15 @@ export class VehicleService {
     if (vehicleType) where.vehicleType = vehicleType
     if (regionId) where.regionId = regionId
     if (status) where.status = status
+
+    // Si hay workshopId, solo mostrar vehículos que tengan al menos una entrada en ese taller
+    if (workshopId) {
+      where.entries = {
+        some: {
+          workshopId: workshopId,
+        },
+      }
+    }
 
     const [vehicles, total] = await Promise.all([
       prisma.vehicle.findMany({
