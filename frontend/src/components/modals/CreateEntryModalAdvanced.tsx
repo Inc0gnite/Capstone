@@ -448,12 +448,29 @@ export function CreateEntryModalAdvanced({ isOpen, onClose, onSuccess }: CreateE
       // Subir fotos si hay alguna (opcional, no bloquea el proceso)
       if (photos.length > 0 && createdEntry?.id) {
         try {
-          console.log('📸 Subiendo fotos del ingreso...')
-          // Las fotos se suben después del ingreso para no bloquear el proceso principal
-          // Esto se puede hacer en background
-          window.dispatchEvent(new CustomEvent('entry-photos-pending', { 
-            detail: { entryId: createdEntry.id, photos } 
-          }))
+          console.log('📸 Subiendo fotos del ingreso...', photos.length)
+          // Subir cada foto al backend
+          const photoPromises = photos.map(async (photo) => {
+            try {
+              await photoService.addEntryPhoto(
+                createdEntry.id,
+                photo.url,
+                photo.photoType || 'before',
+                photo.description
+              )
+              console.log('✅ Foto subida:', photo.id)
+            } catch (photoError) {
+              console.error('⚠️ Error subiendo foto individual:', photoError)
+              // Continuar con las demás fotos aunque una falle
+            }
+          })
+          
+          // Esperar a que todas las fotos se suban (en background, no bloquea)
+          Promise.all(photoPromises).then(() => {
+            console.log('✅ Todas las fotos subidas')
+          }).catch((error) => {
+            console.error('⚠️ Algunas fotos no se pudieron subir:', error)
+          })
         } catch (photoError) {
           console.error('⚠️ Error subiendo fotos (no crítico):', photoError)
           // No fallar el proceso si las fotos no se suben

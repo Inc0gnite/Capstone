@@ -96,6 +96,11 @@ export class VehicleEntryService {
           },
         },
         keyControl: true,
+        photos: {
+          orderBy: {
+            uploadedAt: 'desc',
+          },
+        },
         workOrders: {
           include: {
             assignedTo: {
@@ -114,7 +119,13 @@ export class VehicleEntryService {
       throw new Error('Ingreso no encontrado')
     }
 
-    return entry
+    // Convertir las fotos a formato de array de URLs para compatibilidad
+    const entryWithPhotos = {
+      ...entry,
+      photos: entry.photos.map(photo => photo.url),
+    }
+
+    return entryWithPhotos
   }
 
   /**
