@@ -70,26 +70,43 @@ export class UserController {
   /**
    * POST /api/users
    * Crear usuario
-   * Solo el administrador supremo (admin@pepsico.cl) puede crear usuarios
+   * - Administrador supremo puede crear usuarios de cualquier taller
+   * - Administradores regulares solo pueden crear usuarios de su mismo taller
    */
   async create(req: Request, res: Response) {
     try {
-      // Verificar que solo el administrador supremo puede crear usuarios
       if (!req.user) {
         return sendError(res, 'Usuario no autenticado', 401)
       }
 
       const isSupremeAdmin = req.user.email && isSuperAdminEmail(req.user.email)
       
-      if (!isSupremeAdmin) {
+      // Verificar que sea administrador
+      if (req.user.roleName !== 'Administrador') {
         return sendError(
           res,
-          'Solo el administrador supremo puede crear usuarios',
+          'Solo los administradores pueden crear usuarios',
           403
         )
       }
 
       const data = req.body
+
+      // Si es administrador regular (no supremo), forzar que el usuario se cree en su taller
+      if (!isSupremeAdmin && req.user.workshopId) {
+        // Administradores regulares solo pueden crear usuarios de su mismo taller
+        data.workshopId = req.user.workshopId
+      } else if (!isSupremeAdmin && !req.user.workshopId) {
+        // Administrador regular sin taller no puede crear usuarios
+        return sendError(
+          res,
+          'No tiene taller asignado. Solo puede crear usuarios en su taller.',
+          403
+        )
+      }
+
+      // Si el administrador supremo intenta crear un usuario sin taller, validar según el rol
+      // (ya se valida en el servicio)
 
       const user = await userService.create(data)
 
