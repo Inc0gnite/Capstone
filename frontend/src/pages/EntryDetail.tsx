@@ -294,7 +294,24 @@ export default function EntryDetail() {
                 
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
                   {entry.photos.map((photoUrl, index) => {
-                    const isImage = /\.(jpe?g|png|gif|webp)$/i.test(new URL(photoUrl).pathname)
+                    // Validar si es una imagen: puede ser data URL (base64) o URL normal
+                    const isDataUrl = photoUrl.startsWith('data:image/')
+                    let isImage = false
+                    
+                    if (isDataUrl) {
+                      // Data URL: validar el tipo MIME
+                      isImage = /^data:image\/(jpe?g|png|gif|webp)/i.test(photoUrl)
+                    } else {
+                      // URL normal: validar la extensión
+                      try {
+                        const url = new URL(photoUrl)
+                        isImage = /\.(jpe?g|png|gif|webp)$/i.test(url.pathname)
+                      } catch {
+                        // Si no es una URL válida, asumir que es una imagen si no hay error
+                        isImage = true
+                      }
+                    }
+                    
                     if (!isImage) {
                       return (
                         <div key={index} className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm text-yellow-800">
@@ -310,13 +327,26 @@ export default function EntryDetail() {
                         key={index} 
                         className="relative group border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
                         onClick={() => {
-                          window.open(photoUrl, '_blank')
+                          // Para data URLs, abrir en una nueva ventana no funciona bien
+                          // Mejor mostrar en un modal o descargar
+                          if (isDataUrl) {
+                            const newWindow = window.open()
+                            if (newWindow) {
+                              newWindow.document.write(`<img src="${photoUrl}" style="max-width: 100%; height: auto;" />`)
+                            }
+                          } else {
+                            window.open(photoUrl, '_blank')
+                          }
                         }}
                       >
                         <img
                           src={photoUrl}
                           alt={`Foto del vehículo ${index + 1}`}
                           className="w-full h-32 sm:h-40 md:h-48 object-cover"
+                          onError={(e) => {
+                            console.error('Error cargando imagen:', photoUrl)
+                            e.currentTarget.style.display = 'none'
+                          }}
                         />
                         <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 flex items-center justify-center">
                           <span className="opacity-0 group-hover:opacity-100 text-white text-sm font-medium">
