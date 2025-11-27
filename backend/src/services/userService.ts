@@ -10,20 +10,30 @@ import type { RegisterRequest } from '../types'
 export class UserService {
   /**
    * Obtener todos los usuarios con paginación
+   * @param page - Página actual
+   * @param limit - Límite de resultados por página
+   * @param search - Término de búsqueda
+   * @param workshopId - Filtrar por taller (opcional)
    */
-  async getAll(page = 1, limit = 10, search = '') {
+  async getAll(page = 1, limit = 10, search = '', workshopId?: string) {
     const skip = (page - 1) * limit
 
-    const where = search
-      ? {
-          OR: [
-            { firstName: { contains: search, mode: 'insensitive' as const } },
-            { lastName: { contains: search, mode: 'insensitive' as const } },
-            { email: { contains: search, mode: 'insensitive' as const } },
-            { rut: { contains: search, mode: 'insensitive' as const } },
-          ],
-        }
-      : {}
+    const where: any = {}
+
+    // Filtrar por taller si se proporciona
+    if (workshopId) {
+      where.workshopId = workshopId
+    }
+
+    // Agregar búsqueda si existe
+    if (search) {
+      where.OR = [
+        { firstName: { contains: search, mode: 'insensitive' as const } },
+        { lastName: { contains: search, mode: 'insensitive' as const } },
+        { email: { contains: search, mode: 'insensitive' as const } },
+        { rut: { contains: search, mode: 'insensitive' as const } },
+      ]
+    }
 
     const [users, total] = await Promise.all([
       prisma.user.findMany({

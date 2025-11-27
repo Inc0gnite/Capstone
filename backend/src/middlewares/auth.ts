@@ -55,9 +55,10 @@ export async function authenticate(
       return
     }
 
-    // Agregar información del usuario al request (incluyendo workshopId y roleName)
+    // Agregar información del usuario al request (incluyendo workshopId, roleName y email)
     req.user = {
       ...payload,
+      email: user.email,
       workshopId: user.workshopId,
       roleName: user.role.name,
     }
@@ -96,6 +97,7 @@ export async function optionalAuth(
       if (user && user.isActive) {
         req.user = {
           ...payload,
+          email: user.email,
           workshopId: user.workshopId,
           roleName: user.role.name,
         }

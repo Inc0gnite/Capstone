@@ -1,6 +1,8 @@
 import { Request, Response } from 'express'
 import userService from '../services/userService'
 import { sendSuccess, sendError, sendPaginated } from '../utils/response'
+import { isSuperAdminEmail } from '../utils/admin'
+import prisma from '../config/database'
 
 /**
  * Controlador de usuarios
@@ -9,7 +11,8 @@ export class UserController {
   /**
    * GET /api/users
    * Obtener todos los usuarios
-   * Los usuarios no-admin solo ven usuarios de su taller
+   * - Administradores regulares solo ven usuarios de su taller
+   * - Administrador supremo ve todos los usuarios
    */
   async getAll(req: Request, res: Response) {
     try {
@@ -17,28 +20,24 @@ export class UserController {
       const limit = parseInt(req.query.limit as string) || 10
       const search = (req.query.search as string) || ''
 
-      // Si no es Admin, filtrar por taller del usuario
-      if (req.user && req.user.roleName !== 'Administrador' && req.user.workshopId) {
-        const users = await userService.getByWorkshop(req.user.workshopId)
-        // Aplicar búsqueda manualmente si es necesario
-        let filteredUsers = users
-        if (search) {
-          const searchLower = search.toLowerCase()
-          filteredUsers = users.filter(u =>
-            `${u.firstName} ${u.lastName}`.toLowerCase().includes(searchLower) ||
-            u.email.toLowerCase().includes(searchLower) ||
-            u.rut.toLowerCase().includes(searchLower)
-          )
-        }
-        // Paginación manual
-        const start = (page - 1) * limit
-        const end = start + limit
-        const paginatedUsers = filteredUsers.slice(start, end)
+      let workshopId: string | undefined = undefined
+
+      // Si es administrador pero no supremo, filtrar por su taller
+      if (req.user && req.user.roleName === 'Administrador') {
+        // Verificar si es administrador supremo
+        const isSupremeAdmin = req.user.email && isSuperAdminEmail(req.user.email)
         
-        return sendPaginated(res, paginatedUsers, page, limit, filteredUsers.length)
+        if (!isSupremeAdmin && req.user.workshopId) {
+          // Administrador regular: solo ver usuarios de su taller
+          workshopId = req.user.workshopId
+        }
+        // Si es supremo, workshopId queda undefined y verá todos
+      } else if (req.user && req.user.workshopId) {
+        // Usuarios no-admin: solo ver usuarios de su taller
+        workshopId = req.user.workshopId
       }
 
-      const result = await userService.getAll(page, limit, search)
+      const result = await userService.getAll(page, limit, search, workshopId)
       return sendPaginated(res, result.users, page, limit, result.total)
     } catch (error: any) {
       return sendError(res, error.message, 500)
@@ -71,12 +70,23 @@ export class UserController {
   /**
    * POST /api/users
    * Crear usuario
+   * Solo el administrador supremo (admin@pepsico.cl) puede crear usuarios
    */
   async create(req: Request, res: Response) {
     try {
-      // Si no es Admin, forzar que el usuario creado pertenezca al mismo taller
-      if (req.user && req.user.roleName !== 'Administrador' && req.user.workshopId) {
-        req.body.workshopId = req.user.workshopId
+      // Verificar que solo el administrador supremo puede crear usuarios
+      if (!req.user) {
+        return sendError(res, 'Usuario no autenticado', 401)
+      }
+
+      const isSupremeAdmin = req.user.email && isSuperAdminEmail(req.user.email)
+      
+      if (!isSupremeAdmin) {
+        return sendError(
+          res,
+          'Solo el administrador supremo puede crear usuarios',
+          403
+        )
       }
 
       const data = req.body
