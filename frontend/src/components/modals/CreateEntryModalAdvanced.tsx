@@ -441,6 +441,15 @@ export function CreateEntryModalAdvanced({ isOpen, onClose, onSuccess }: CreateE
             .filter((vin): vin is string => vin !== undefined && vin.trim() !== '')
           finalVIN = await generateUniqueVIN(existingVINs)
         }
+
+        // Generar número de flota si no está presente
+        let finalFleetNumber = vehicleData.fleetNumber
+        if (!finalFleetNumber || finalFleetNumber.trim() === '') {
+          const existingFleetNumbers = vehicles
+            .map(v => v.fleetNumber)
+            .filter((fn): fn is string => fn !== undefined && fn.trim() !== '')
+          finalFleetNumber = await generateUniqueFleetNumber(existingFleetNumbers)
+        }
         
         const vehicleCreateData = {
           licensePlate: vehicleData.licensePlate,
@@ -449,7 +458,7 @@ export function CreateEntryModalAdvanced({ isOpen, onClose, onSuccess }: CreateE
           model: vehicleData.model || '',
           year: parseInt(vehicleData.year.toString(), 10), // Asegurar que sea número
           vin: finalVIN || undefined, // Convertir string vacío a undefined
-          fleetNumber: vehicleData.fleetNumber && vehicleData.fleetNumber.trim() !== '' ? vehicleData.fleetNumber : undefined, // Convertir string vacío a undefined
+          fleetNumber: finalFleetNumber && finalFleetNumber.trim() !== '' ? finalFleetNumber : undefined, // Convertir string vacío a undefined
           regionId: finalRegionId
         }
         
