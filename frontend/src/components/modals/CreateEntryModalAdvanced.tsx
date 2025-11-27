@@ -6,6 +6,7 @@ import { photoService } from '../../services/photoService'
 import { regionCache, Region } from '../../services/regionCache'
 // import { CHILE_REGIONS } from '../../data/chileRegions'
 import { generateUniqueVIN } from '../../utils/vinGenerator'
+import { generateUniqueFleetNumber } from '../../utils/fleetNumberGenerator'
 import { RegionSelector } from '../forms/RegionSelector'
 import { VINField } from '../forms/VINField'
 import { RUTField } from '../forms/RUTField'
@@ -101,9 +102,10 @@ export function CreateEntryModalAdvanced({ isOpen, onClose, onSuccess }: CreateE
       loadVehicles()
       loadRegions()
       resetForm()
-      // Generar VIN automáticamente al abrir el modal
+      // Generar VIN y número de flota automáticamente al abrir el modal
       setTimeout(() => {
         generateVIN()
+        generateFleetNumber()
       }, 500) // Pequeño delay para asegurar que los vehículos se carguen
     }
   }, [isOpen])
@@ -263,6 +265,32 @@ export function CreateEntryModalAdvanced({ isOpen, onClose, onSuccess }: CreateE
     } catch (error) {
       console.error('❌ Error generando VIN:', error)
       alert('Error generando VIN. Por favor, ingrésalo manualmente.')
+    }
+  }
+
+  const generateFleetNumber = async () => {
+    try {
+      console.log('🔄 Generando número de flota...')
+      console.log('📋 Vehículos disponibles:', vehicles.length)
+      
+      // Obtener números de flota existentes para evitar duplicados
+      const existingFleetNumbers = vehicles
+        .map(v => v.fleetNumber)
+        .filter((fn): fn is string => {
+          if (fn === null || fn === undefined) return false
+          if (typeof fn !== 'string') return false
+          return fn.trim() !== ''
+        })
+      
+      console.log('🔍 Números de flota existentes encontrados:', existingFleetNumbers.length)
+      
+      const newFleetNumber = await generateUniqueFleetNumber(existingFleetNumbers)
+      console.log('✅ Número de flota generado:', newFleetNumber)
+      setVehicleData({ ...vehicleData, fleetNumber: newFleetNumber })
+    } catch (error) {
+      console.error('❌ Error generando número de flota:', error)
+      // No mostrar alerta, solo loggear el error
+      // El usuario puede ingresarlo manualmente si es necesario
     }
   }
 
@@ -781,13 +809,26 @@ export function CreateEntryModalAdvanced({ isOpen, onClose, onSuccess }: CreateE
                   <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                     Número de Flota
                   </label>
-                  <input
-                    type="text"
-                    value={vehicleData.fleetNumber}
-                    onChange={(e) => setVehicleData({ ...vehicleData, fleetNumber: e.target.value })}
-                    className="w-full px-2.5 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="FL001"
-                  />
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={vehicleData.fleetNumber}
+                      onChange={(e) => setVehicleData({ ...vehicleData, fleetNumber: e.target.value })}
+                      className="flex-1 px-2.5 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+                      placeholder="FL001"
+                      readOnly
+                      title="Número de flota generado automáticamente"
+                    />
+                    <button
+                      type="button"
+                      onClick={generateFleetNumber}
+                      className="px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 whitespace-nowrap"
+                      title="Generar nuevo número de flota"
+                    >
+                      🔄
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Generado automáticamente. Haz clic en 🔄 para generar uno nuevo.</p>
                 </div>
               </div>
 
