@@ -31,6 +31,8 @@ export default function EntryDetail() {
       console.log('Cargando detalles del ingreso:', id)
       const entryData = await vehicleEntryService.getById(id)
       console.log('Ingreso cargado:', entryData)
+      console.log('Fotos del ingreso:', entryData.photos)
+      console.log('Tipo de photos:', typeof entryData.photos, Array.isArray(entryData.photos))
       setEntry(entryData)
 
       // Cargar información del vehículo si está disponible
