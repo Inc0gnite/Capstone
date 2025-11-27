@@ -92,6 +92,33 @@ export function EditVehicleModal({ isOpen, onClose, onSuccess, vehicle }: EditVe
         status: status || undefined,
       }
 
+      // Validar que el número de flota no exista ya (solo si se proporciona y es diferente al actual)
+      if (payload.fleetNumber && payload.fleetNumber.trim() !== '' && 
+          payload.fleetNumber.trim().toUpperCase() !== (vehicle.fleetNumber || '').trim().toUpperCase()) {
+        try {
+          // Buscar vehículos con ese número de flota
+          const vehiclesResponse = await vehicleService.getAll({ 
+            search: payload.fleetNumber.trim(),
+            limit: 100 
+          })
+          const vehiclesWithFleetNumber = vehiclesResponse.data?.vehicles || vehiclesResponse.vehicles || []
+          const existingFleetNumber = vehiclesWithFleetNumber.find(
+            (v: any) => v.fleetNumber && 
+            v.fleetNumber.trim().toUpperCase() === payload.fleetNumber.trim().toUpperCase() &&
+            v.isActive &&
+            v.id !== vehicle.id // Excluir el vehículo actual
+          )
+          
+          if (existingFleetNumber) {
+            alert(`❌ Error: Ya existe un vehículo con el número de flota ${payload.fleetNumber}.\n\n💡 El número de flota debe ser único. Por favor, usa un número diferente.`)
+            return
+          }
+        } catch (error: any) {
+          // Si hay un error al verificar, continuar (el backend también validará)
+          console.warn('Error verificando número de flota:', error)
+        }
+      }
+
       await vehicleService.update(vehicle.id, payload)
       onSuccess()
       onClose()

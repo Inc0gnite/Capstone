@@ -290,6 +290,31 @@ export function CreateEntryModalAdvanced({ isOpen, onClose, onSuccess }: CreateE
       }
     }
 
+    // Validar que el número de flota no exista ya (solo si se proporciona)
+    if (vehicleData.fleetNumber && vehicleData.fleetNumber.trim() !== '') {
+      try {
+        // Buscar vehículos con ese número de flota
+        const vehiclesResponse = await vehicleService.getAll({ 
+          search: vehicleData.fleetNumber.trim(),
+          limit: 100 
+        })
+        const vehiclesWithFleetNumber = vehiclesResponse.data?.vehicles || vehiclesResponse.vehicles || []
+        const existingFleetNumber = vehiclesWithFleetNumber.find(
+          (v: any) => v.fleetNumber && 
+          v.fleetNumber.trim().toUpperCase() === vehicleData.fleetNumber.trim().toUpperCase() &&
+          v.isActive
+        )
+        
+        if (existingFleetNumber) {
+          alert(`❌ Error: Ya existe un vehículo con el número de flota ${vehicleData.fleetNumber}.\n\n💡 El número de flota debe ser único. Por favor, usa un número diferente.`)
+          return
+        }
+      } catch (error: any) {
+        // Si hay un error al verificar, continuar (el backend también validará)
+        console.warn('Error verificando número de flota:', error)
+      }
+    }
+
     // Determinar la región final a usar - Priorizar región del usuario
     let finalRegionId = user?.workshop?.regionId || vehicleData.regionId
     

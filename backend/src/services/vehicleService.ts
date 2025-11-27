@@ -204,6 +204,23 @@ export class VehicleService {
     const finalVIN = vin && vin.trim() !== '' ? vin : undefined
     const finalFleetNumber = fleetNumber && fleetNumber.trim() !== '' ? fleetNumber : undefined
 
+    // Validar que el número de flota sea único (solo si se proporciona)
+    if (finalFleetNumber) {
+      console.log('🔍 Verificando si número de flota existe:', finalFleetNumber)
+      const existingFleetNumber = await prisma.vehicle.findFirst({
+        where: { 
+          fleetNumber: finalFleetNumber,
+          isActive: true, // Solo verificar vehículos activos
+        },
+      })
+
+      if (existingFleetNumber) {
+        console.log('❌ Número de flota ya existe:', finalFleetNumber)
+        throw new Error(`Ya existe un vehículo con el número de flota ${finalFleetNumber}`)
+      }
+      console.log('✅ Número de flota disponible:', finalFleetNumber)
+    }
+
     // Crear vehículo
     console.log('🚗 Creando vehículo con datos:', {
       licensePlate: licensePlate.toUpperCase(),
@@ -274,6 +291,31 @@ export class VehicleService {
       }
 
       data.licensePlate = data.licensePlate.toUpperCase()
+    }
+
+    // Si se actualiza el número de flota, validar que sea único
+    if (data.fleetNumber !== undefined) {
+      const finalFleetNumber = data.fleetNumber && data.fleetNumber.trim() !== '' ? data.fleetNumber.trim() : undefined
+      
+      if (finalFleetNumber) {
+        console.log('🔍 Verificando si número de flota existe:', finalFleetNumber)
+        const existingFleetNumber = await prisma.vehicle.findFirst({
+          where: { 
+            fleetNumber: finalFleetNumber,
+            isActive: true, // Solo verificar vehículos activos
+            id: { not: id }, // Excluir el vehículo actual
+          },
+        })
+
+        if (existingFleetNumber) {
+          console.log('❌ Número de flota ya existe:', finalFleetNumber)
+          throw new Error(`Ya existe un vehículo con el número de flota ${finalFleetNumber}`)
+        }
+        console.log('✅ Número de flota disponible:', finalFleetNumber)
+      }
+      
+      // Actualizar el valor en data
+      data.fleetNumber = finalFleetNumber
     }
 
     // Actualizar vehículo
