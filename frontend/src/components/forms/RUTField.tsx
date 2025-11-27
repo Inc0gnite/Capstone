@@ -47,37 +47,55 @@ export function RUTField({
   const input3Ref = useRef<HTMLInputElement>(null)
   const input4Ref = useRef<HTMLInputElement>(null)
 
-  // Parsear el valor inicial
+  // Parsear el valor inicial - siempre sincronizar con el prop value
   useEffect(() => {
-    if (value) {
-      const clean = value.replace(/\./g, '').replace(/-/g, '')
-      if (clean.length >= 8) {
-        setPart1(clean.slice(0, 2))
-        setPart2(clean.slice(2, 5))
-        setPart3(clean.slice(5, 8))
-        setPart4(clean.slice(8, 9))
+    const clean = value ? value.replace(/\./g, '').replace(/-/g, '') : ''
+    
+    // Si el valor limpio tiene al menos 8 caracteres, parsearlo
+    if (clean.length >= 8) {
+      const newPart1 = clean.slice(0, 2)
+      const newPart2 = clean.slice(2, 5)
+      const newPart3 = clean.slice(5, 8)
+      const newPart4 = clean.slice(8, 9)
+      
+      // Construir el RUT actual desde las partes para comparar
+      const currentRUT = `${part1}${part2}${part3}${part4}`
+      
+      // Solo actualizar si hay cambios para evitar loops
+      if (clean !== currentRUT) {
+        setPart1(newPart1)
+        setPart2(newPart2)
+        setPart3(newPart3)
+        setPart4(newPart4)
       }
-    } else {
-      setPart1('')
-      setPart2('')
-      setPart3('')
-      setPart4('')
+    } else if (clean.length === 0) {
+      // Si el valor está vacío, limpiar todas las partes
+      const currentRUT = `${part1}${part2}${part3}${part4}`
+      if (currentRUT.length > 0) {
+        setPart1('')
+        setPart2('')
+        setPart3('')
+        setPart4('')
+      }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value])
 
-  // Actualizar el valor completo cuando cambian las partes
+  // Actualizar el valor completo cuando cambian las partes (solo si el usuario está editando)
   useEffect(() => {
     const fullRUT = `${part1}${part2}${part3}${part4}`
-    if (fullRUT.length === 9) {
+    const currentClean = value ? value.replace(/\./g, '').replace(/-/g, '') : ''
+    
+    // Solo actualizar si el RUT completo tiene 9 caracteres y es diferente al valor actual
+    if (fullRUT.length === 9 && fullRUT !== currentClean) {
       const formatted = `${part1}.${part2}.${part3}-${part4}`
-      // Solo actualizar si es diferente al valor actual para evitar loops
-      const currentClean = value.replace(/\./g, '').replace(/-/g, '')
-      if (fullRUT !== currentClean) {
-        onChange(formatted)
-      }
-    } else if (fullRUT.length === 0 && value && value.trim() !== '') {
+      onChange(formatted)
+    } 
+    // Si todas las partes están vacías pero el valor no, limpiar
+    else if (fullRUT.length === 0 && currentClean.length > 0) {
       onChange('')
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [part1, part2, part3, part4])
 
   const handlePart1Change = (e: React.ChangeEvent<HTMLInputElement>) => {

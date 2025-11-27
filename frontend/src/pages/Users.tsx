@@ -22,6 +22,7 @@ export default function Users() {
   const [newPassword, setNewPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [showCreate, setShowCreate] = useState(false)
+  const [createError, setCreateError] = useState<string | null>(null)
   const [createUser, setCreateUser] = useState<{
     rut: string
     fullName: string
@@ -407,6 +408,17 @@ export default function Users() {
             <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
               <div className="bg-white rounded-lg shadow-lg w-full max-w-xl p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Agregar Usuario</h3>
+                {createError && (
+                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <p className="text-sm text-red-600">{createError}</p>
+                    <button
+                      onClick={() => setCreateError(null)}
+                      className="mt-2 text-xs text-red-600 hover:text-red-800 underline"
+                    >
+                      Cerrar
+                    </button>
+                  </div>
+                )}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm text-gray-600 mb-1">RUT</label>
@@ -452,12 +464,18 @@ export default function Users() {
                   </div>
                 </div>
                 <div className="mt-6 flex justify-end space-x-2">
-                  <button onClick={()=>{setShowCreate(false)}} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">Cancelar</button>
+                  <button onClick={()=>{
+                    setShowCreate(false)
+                    setCreateError(null)
+                    setCreateUser({ rut:'', fullName:'', email:'', password:'', roleId:'', workshopId:'' })
+                  }} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">Cancelar</button>
                   <button
                     onClick={async ()=>{
                       try {
+                        setCreateError(null) // Limpiar error anterior
+                        
                         if (!createUser.rut || !createUser.fullName || !createUser.email || !createUser.password || !createUser.roleId) { 
-                          alert('Completa todos los campos obligatorios: RUT, nombre completo, email, contraseña y rol'); 
+                          setCreateError('Completa todos los campos obligatorios: RUT, nombre completo, email, contraseña y rol')
                           return 
                         }
                         setLoading(true)
@@ -467,7 +485,7 @@ export default function Users() {
                         const lastName = nameParts.slice(1).join(' ') || ''
                         
                         if (!firstName) {
-                          alert('El nombre completo debe incluir al menos un nombre')
+                          setCreateError('El nombre completo debe incluir al menos un nombre')
                           setLoading(false)
                           return
                         }
@@ -488,10 +506,12 @@ export default function Users() {
                         const created = await userService.create(userData)
                         setUsers(prev=>[...(prev||[]), created.data || created])
                         setShowCreate(false)
+                        setCreateError(null)
                         setCreateUser({ rut:'', fullName:'', email:'', password:'', roleId:'', workshopId:'' })
                       } catch (err: any) {
                         console.error('Error creando usuario:', err)
-                        alert(err?.response?.data?.error || err?.message || 'Error al crear el usuario')
+                        setCreateError(err?.response?.data?.error || err?.message || 'Error al crear el usuario')
+                        // NO cerrar el formulario ni limpiar los datos - mantener todo para que el usuario pueda corregir
                       } finally { 
                         setLoading(false) 
                       }
