@@ -541,6 +541,15 @@ export default function Entries() {
                         Completado
                       </span>
                     </td>
+                    <td className="px-4 py-3 text-sm font-medium">
+                      <button 
+                        onClick={() => navigate(`/entries/${entry.id}`)}
+                        className="text-green-600 hover:text-green-900"
+                        title="Ver detalle completo del ingreso incluyendo fotos"
+                      >
+                        Ver Ingreso
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -583,6 +592,16 @@ export default function Entries() {
                         {entry.exitDate ? `${new Date(entry.exitDate).toLocaleDateString('es-CL')} ${entry.exitTime || new Date(entry.exitDate).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}` : '-'}
                       </span>
                     </div>
+                  </div>
+                  
+                  <div className="pt-3 border-t border-gray-200 mt-3">
+                    <button
+                      onClick={() => navigate(`/entries/${entry.id}`)}
+                      className="w-full px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium"
+                      title="Ver detalle completo del ingreso incluyendo fotos"
+                    >
+                      Ver Ingreso Completo
+                    </button>
                   </div>
                 </div>
               ))
