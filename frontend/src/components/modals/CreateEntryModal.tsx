@@ -82,6 +82,16 @@ export function CreateEntryModal({ isOpen, onClose, onSuccess }: CreateEntryModa
       return
     }
 
+    // Buscar el vehículo seleccionado antes de crear el ingreso
+    const selectedVehicle = vehicles.find(v => v.id === formData.vehicleId)
+    if (!selectedVehicle) {
+      alert('❌ Error: No se pudo encontrar el vehículo seleccionado. Por favor, intenta nuevamente.')
+      return
+    }
+
+    let entryCreated = false
+    let newEntry: any = null
+
     try {
       setLoading(true)
       console.log('Creando ingreso con datos:', formData)
@@ -95,7 +105,7 @@ export function CreateEntryModal({ isOpen, onClose, onSuccess }: CreateEntryModa
         throw new Error('Usuario no autenticado')
       }
       
-      const newEntry = await vehicleEntryService.create({
+      newEntry = await vehicleEntryService.create({
         vehicleId: formData.vehicleId,
         workshopId: workshopId,
         driverRut: formData.driverRut,
@@ -108,6 +118,8 @@ export function CreateEntryModal({ isOpen, onClose, onSuccess }: CreateEntryModa
         observations: formData.observations || undefined,
         createdById: user.id
       } as any)
+      
+      entryCreated = true
       
       // Emitir evento para actualizar estadísticas
       window.dispatchEvent(new CustomEvent('entry-created'))
@@ -126,6 +138,24 @@ export function CreateEntryModal({ isOpen, onClose, onSuccess }: CreateEntryModa
       resetForm()
     } catch (error: any) {
       console.error('Error creando ingreso:', error)
+      
+      // Si el ingreso se creó pero hubo un error después, informar pero cerrar el modal
+      if (entryCreated && newEntry) {
+        console.warn('⚠️ El ingreso se creó exitosamente pero hubo un error al procesar la respuesta')
+        // Aún así, cerramos el modal y reseteamos porque el ingreso ya existe
+        onSuccess({
+          id: newEntry.id,
+          entryCode: newEntry.entryCode,
+          driverName: formData.driverName,
+          driverRut: formData.driverRut,
+          vehicle: selectedVehicle
+        })
+        onClose()
+        resetForm()
+        return
+      }
+      
+      // Si no se creó el ingreso, mostrar el error
       const errorMessage = error.response?.data?.error || error.response?.data?.message || error.message || 'Error desconocido'
       
       // Mensaje más informativo según el tipo de error
