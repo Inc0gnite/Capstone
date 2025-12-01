@@ -1,7 +1,0 @@
-[build]
-install = "npm install --omit=dev"
-build = "npm run build --workspace=backend"
-
-[start]
-cmd = "npm run start --workspace=backend"
-
