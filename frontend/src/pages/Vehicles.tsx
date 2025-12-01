@@ -160,10 +160,17 @@ export default function Vehicles() {
         workOrderService.getAll({ vehicleId, limit: 100 }),
       ])
 
-      const entries = entriesResponse.data || []
+      let entries = entriesResponse.data || []
+      
+      // Si el usuario es guardia, filtrar solo los ingresos que él creó
+      const isGuardia = (user as any)?.role?.name === 'Guardia'
+      if (isGuardia && user?.id) {
+        entries = entries.filter(entry => entry.createdById === user.id)
+      }
+      
       const photosMap: Record<string, VehicleEntryPhoto[]> = {}
 
-      // Cargar fotos de cada ingreso
+      // Cargar fotos de cada ingreso (solo los que el guardia puede ver)
       await Promise.all(
         entries.map(async (entry) => {
           try {
@@ -708,76 +715,100 @@ export default function Vehicles() {
                 </div>
               </div>
 
-              {/* Documentos del Vehículo */}
-              <div className="mt-6 pt-4 border-t border-gray-200">
-                <div className="flex items-center justify-between mb-4">
-                  <h4 className="font-medium text-gray-900 flex items-center">
-                    <span className="mr-2 text-xl">📄</span>
-                    Documentos
-                  </h4>
-                  <button
-                    onClick={() => setShowDocuments(!showDocuments)}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors text-sm flex items-center space-x-2"
-                  >
-                    {showDocuments ? (
-                      <>
-                        <EyeOff className="w-4 h-4" />
-                        <span>Ocultar</span>
-                      </>
-                    ) : (
-                      <>
-                        <Eye className="w-4 h-4" />
-                        <span>Ver</span>
-                      </>
-                    )}
-                    <span>Documentos</span>
-                  </button>
+              {/* Documentos del Vehículo - Solo para roles que no sean Guardia */}
+              {((user as any)?.role?.name !== 'Guardia') && (
+                <div className="mt-6 pt-4 border-t border-gray-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="font-medium text-gray-900 flex items-center">
+                      <span className="mr-2 text-xl">📄</span>
+                      Documentos
+                    </h4>
+                    <button
+                      onClick={() => setShowDocuments(!showDocuments)}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors text-sm flex items-center space-x-2"
+                    >
+                      {showDocuments ? (
+                        <>
+                          <EyeOff className="w-4 h-4" />
+                          <span>Ocultar</span>
+                        </>
+                      ) : (
+                        <>
+                          <Eye className="w-4 h-4" />
+                          <span>Ver</span>
+                        </>
+                      )}
+                      <span>Documentos</span>
+                    </button>
+                  </div>
+                  
+                  {showDocuments && (
+                    <div className="mt-4">
+                      <DocumentUpload
+                        relatedTo="vehicle"
+                        relatedId={selectedVehicle.id}
+                        onDocumentUploaded={(doc) => {
+                          console.log('Documento subido:', doc)
+                        }}
+                        onDocumentDeleted={(docId) => {
+                          console.log('Documento eliminado:', docId)
+                        }}
+                      />
+                    </div>
+                  )}
+                  
+                  {!showDocuments && (
+                    <div className="text-center py-8 bg-gray-50 rounded-lg border border-gray-200">
+                      <p className="text-gray-500">Haz clic en "Ver Documentos" para gestionar los documentos del vehículo</p>
+                    </div>
+                  )}
                 </div>
-                
-                {showDocuments && (
-                  <div className="mt-4">
-                    <DocumentUpload
-                      relatedTo="vehicle"
-                      relatedId={selectedVehicle.id}
-                      onDocumentUploaded={(doc) => {
-                        console.log('Documento subido:', doc)
-                      }}
-                      onDocumentDeleted={(docId) => {
-                        console.log('Documento eliminado:', docId)
-                      }}
-                    />
-                  </div>
-                )}
-                
-                {!showDocuments && (
-                  <div className="text-center py-8 bg-gray-50 rounded-lg border border-gray-200">
-                    <p className="text-gray-500">Haz clic en "Ver Documentos" para gestionar los documentos del vehículo</p>
-                  </div>
-                )}
-              </div>
+              )}
 
-              {/* Historial del Vehículo */}
+              {/* Historial del Vehículo / Fotos del Guardia */}
               <div className="mt-6 pt-4 border-t border-gray-200">
                 <h4 className="font-medium text-gray-900 mb-4 flex items-center gap-2">
-                  <Clipboard className="w-5 h-5" />
-                  Historial del Vehículo
+                  {((user as any)?.role?.name === 'Guardia') ? (
+                    <>
+                      <Camera className="w-5 h-5" />
+                      Fotos de mis Registros
+                    </>
+                  ) : (
+                    <>
+                      <Clipboard className="w-5 h-5" />
+                      Historial del Vehículo
+                    </>
+                  )}
                 </h4>
                 
                 {vehicleHistory.loading ? (
                   <div className="text-center py-4">
                     <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
-                    <p className="text-sm text-gray-500 mt-2">Cargando historial...</p>
+                    <p className="text-sm text-gray-500 mt-2">Cargando {((user as any)?.role?.name === 'Guardia') ? 'fotos' : 'historial'}...</p>
                   </div>
                 ) : (
                   <div className="space-y-6">
                     {/* Historial de Ingresos */}
                     <div>
                       <h5 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
-                        <FileText className="w-4 h-4 mr-2" />
-                        Ingresos al Taller ({vehicleHistory.entries.length})
+                        {((user as any)?.role?.name === 'Guardia') ? (
+                          <>
+                            <Camera className="w-4 h-4 mr-2" />
+                            Mis Registros con Fotos ({vehicleHistory.entries.length})
+                          </>
+                        ) : (
+                          <>
+                            <FileText className="w-4 h-4 mr-2" />
+                            Ingresos al Taller ({vehicleHistory.entries.length})
+                          </>
+                        )}
                       </h5>
                       {vehicleHistory.entries.length === 0 ? (
-                        <p className="text-sm text-gray-500 text-center py-2">No hay ingresos registrados</p>
+                        <p className="text-sm text-gray-500 text-center py-2">
+                          {((user as any)?.role?.name === 'Guardia') 
+                            ? 'No has registrado ingresos para este vehículo' 
+                            : 'No hay ingresos registrados'}
+                        </p>
                       ) : (
                         <div className="space-y-2 max-h-60 overflow-y-auto">
                           {vehicleHistory.entries.map((entry) => {
