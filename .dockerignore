@@ -112,6 +112,25 @@ shared/types/*.js.map
 railway.json
 railpack.toml
 
+# Excluir todo el frontend completamente
+frontend/**
+!frontend/.gitkeep
+
+# Excluir shared types compilados (solo necesitamos el source)
+shared/types/*.js
+shared/types/*.d.ts.map
+shared/types/*.js.map
+
+# Excluir todos los scripts de desarrollo
+backend/scripts/**
+backend/tests/**
+
+# Excluir archivos de configuración de desarrollo
+backend/jest.config.js
+backend/.eslintrc.json
+backend/vercel.json
+backend/env.example.txt
+
 # Otros
 *.tgz
 *.zip
