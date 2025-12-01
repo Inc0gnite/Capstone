@@ -282,25 +282,17 @@ export default function GuardiaDashboard() {
             </button>
             <button
               onClick={handleCreateVehicle}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors flex items-center space-x-2"
+              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium transition-colors flex items-center space-x-2"
             >
               <Car className="w-4 h-4" />
               <span>Nuevo Vehículo</span>
             </button>
             <button
               onClick={handleRegisterExit}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium transition-colors flex items-center space-x-2"
+              className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 font-medium transition-colors flex items-center space-x-2"
             >
               <CheckCircle className="w-4 h-4" />
               <span>Registrar Salida</span>
-            </button>
-            <button
-              onClick={handleForceRefresh}
-              disabled={loading || loadingData}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed font-medium transition-colors flex items-center space-x-2"
-            >
-              <RefreshCw className="w-4 h-4" />
-              <span>Forzar Actualización</span>
             </button>
           </div>
         </div>
@@ -472,14 +464,7 @@ export default function GuardiaDashboard() {
                 <p className="text-sm mt-2 text-gray-400">
                   Los vehículos aparecerán aquí cuando ingresen al taller
                 </p>
-                <div className="mt-4 space-y-2">
-                  <button
-                    onClick={handleForceRefresh}
-                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium mr-2"
-                  >
-                    <Zap className="w-4 h-4 inline mr-1" />
-                    Forzar Actualización
-                  </button>
+                <div className="mt-4">
                   <button
                     onClick={loadDashboardData}
                     className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 text-sm font-medium"
