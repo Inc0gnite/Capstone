@@ -3,10 +3,8 @@ import { vehicleEntryService } from '../../services/vehicleEntryService'
 import { vehicleService } from '../../services/vehicleService'
 import { configService } from '../../services/configService'
 import { useAuthStore } from '../../store/authStore'
-import { PhotoGallery, type Photo } from '../photo/PhotoGallery'
 import { RUTField } from '../forms/RUTField'
 import type { Vehicle } from '../../../../shared/types'
-import { Camera } from 'lucide-react'
 
 interface CreateEntryModalProps {
   isOpen: boolean
@@ -19,8 +17,6 @@ export function CreateEntryModal({ isOpen, onClose, onSuccess }: CreateEntryModa
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [loading, setLoading] = useState(false)
   const [loadingVehicles, setLoadingVehicles] = useState(false)
-  const [photos, setPhotos] = useState<Photo[]>([])
-  const [showPhotoSection, setShowPhotoSection] = useState(false)
   const [formData, setFormData] = useState({
     vehicleId: '',
     driverRut: '',
@@ -59,20 +55,6 @@ export function CreateEntryModal({ isOpen, onClose, onSuccess }: CreateEntryModa
     } finally {
       setLoadingVehicles(false)
     }
-  }
-
-  const handleAddPhoto = (photo: Photo) => {
-    setPhotos(prev => [...prev, photo])
-  }
-
-  const handleDeletePhoto = (photoId: string) => {
-    setPhotos(prev => prev.filter(p => p.id !== photoId))
-  }
-
-  const handleUpdatePhoto = (photoId: string, description: string) => {
-    setPhotos(prev => prev.map(p => 
-      p.id === photoId ? { ...p, description } : p
-    ))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -365,36 +347,6 @@ export function CreateEntryModal({ isOpen, onClose, onSuccess }: CreateEntryModa
                 rows={3}
                 className="w-full px-2.5 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
               />
-            </div>
-
-            {/* Sección de Fotografías */}
-            <div className="border-t pt-4 sm:pt-6">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 mb-3 sm:mb-4">
-                <h3 className="text-base sm:text-lg font-medium text-gray-900 flex items-center gap-2">
-                  <Camera className="w-5 h-5" />
-                  Fotografías del Vehículo
-                </h3>
-                <button
-                  type="button"
-                  onClick={() => setShowPhotoSection(!showPhotoSection)}
-                  className="flex items-center gap-1 sm:gap-2 text-blue-600 hover:text-blue-700 text-xs sm:text-sm font-medium"
-                >
-                  {showPhotoSection ? 'Ocultar' : 'Mostrar'} Fotos
-                  <span className="text-xs">
-                    ({photos.length} {photos.length === 1 ? 'foto' : 'fotos'})
-                  </span>
-                </button>
-              </div>
-              
-              {showPhotoSection && (
-                <PhotoGallery
-                  entryId="temp-entry" // ID temporal para el modal
-                  photos={photos}
-                  onAddPhoto={handleAddPhoto}
-                  onDeletePhoto={handleDeletePhoto}
-                  onUpdatePhoto={handleUpdatePhoto}
-                />
-              )}
             </div>
 
             {/* Botones */}
