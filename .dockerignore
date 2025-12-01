@@ -91,12 +91,11 @@ temp/
 .gitignore
 .gitattributes
 
-# Documentation - excluir específicamente, NO excluir README.md
+# Documentation - NO excluir README.md
+# Solo excluir directorios específicos, no archivos .md en general
 Trash/
 docs/
 DEPLOY_TEST.md
-Trash/**/*.md
-docs/**/*.md
 
 # Scripts de desarrollo (no necesarios en producción)
 scripts/
