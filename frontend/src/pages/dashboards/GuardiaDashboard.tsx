@@ -281,6 +281,20 @@ export default function GuardiaDashboard() {
               <span>Actualizar Todo</span>
             </button>
             <button
+              onClick={handleCreateVehicle}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors flex items-center space-x-2"
+            >
+              <Car className="w-4 h-4" />
+              <span>Nuevo Vehículo</span>
+            </button>
+            <button
+              onClick={handleRegisterExit}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium transition-colors flex items-center space-x-2"
+            >
+              <CheckCircle className="w-4 h-4" />
+              <span>Registrar Salida</span>
+            </button>
+            <button
               onClick={handleForceRefresh}
               disabled={loading || loadingData}
               className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed font-medium transition-colors flex items-center space-x-2"
@@ -594,30 +608,6 @@ export default function GuardiaDashboard() {
           </div>
         </div>
       </div>
-
-      {/* Botón flotante para nuevo vehículo */}
-      <button
-        onClick={handleCreateVehicle}
-        className="fixed bottom-24 right-6 bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-full shadow-lg transition-all duration-300 hover:scale-110 z-50"
-        title="Registrar Nuevo Vehículo"
-      >
-        <div className="flex items-center space-x-2">
-          <Car className="w-6 h-6" />
-          <span className="font-medium">Nuevo Vehículo</span>
-        </div>
-      </button>
-
-      {/* Botón flotante para registrar salida */}
-      <button
-        onClick={handleRegisterExit}
-        className="fixed bottom-6 right-6 bg-green-600 hover:bg-green-700 text-white p-4 rounded-full shadow-lg transition-all duration-300 hover:scale-110 z-50"
-        title="Registrar Salida de Vehículo"
-      >
-        <div className="flex items-center space-x-2">
-          <CheckCircle className="w-6 h-6" />
-          <span className="font-medium">Registrar Salida</span>
-        </div>
-      </button>
 
       {/* Modal de creación de ingreso */}
       {showCreateModal && (
