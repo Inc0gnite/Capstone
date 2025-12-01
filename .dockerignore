@@ -1,0 +1,119 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Testing
+coverage/
+*.lcov
+tests/
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+jest.config.js
+
+# Production builds (se generarán en el contenedor)
+dist/
+build/
+*.tsbuildinfo
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+env.example.txt
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# Prisma (solo excluir DB local, mantener schema)
+prisma/dev.db
+prisma/dev.db-journal
+*.db
+*.db-journal
+
+# Uploads
+uploads/
+temp/
+
+# Cache
+.cache/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+.npm
+.node_repl_history
+
+# Yarn
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+# Local development
+*.local
+.vercel
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Documentation
+*.md
+!README.md
+Trash/
+docs/
+
+# Scripts de desarrollo (no necesarios en producción)
+scripts/
+!scripts/add-*.ts
+
+# Frontend (solo necesitamos backend)
+frontend/
+
+# Shared (se incluirá si es necesario, pero optimizado)
+shared/types/*.d.ts.map
+shared/types/*.js.map
+
+# Railway
+railway.json
+railpack.toml
+
+# Otros
+*.tgz
+*.zip
+*.tar.gz
+
