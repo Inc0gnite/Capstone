@@ -19,5 +19,15 @@ router.post(
   adminController.addReportsPermission
 )
 
+/**
+ * POST /api/admin/add-work-orders-read-permission-guardia
+ * Endpoint temporal para agregar permiso work-orders:read al rol Guardia
+ * Solo accesible por Administradores
+ */
+router.post(
+  '/add-work-orders-read-permission-guardia',
+  adminController.addWorkOrdersReadPermissionToGuardia
+)
+
 export default router
 

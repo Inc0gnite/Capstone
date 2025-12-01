@@ -114,6 +114,128 @@ export class AdminController {
       return sendError(res, error.message, 500)
     }
   }
+
+  /**
+   * POST /api/admin/add-work-orders-read-permission-guardia
+   * Agregar permiso work-orders:read al rol Guardia
+   * Endpoint temporal para migración de permisos
+   */
+  async addWorkOrdersReadPermissionToGuardia(_req: Request, res: Response) {
+    try {
+      console.log('🔧 Iniciando asignación de permiso work-orders:read al rol Guardia...')
+
+      // Buscar el rol Guardia
+      const guardiaRole = await prisma.role.findUnique({
+        where: { name: 'Guardia' },
+      })
+
+      if (!guardiaRole) {
+        return sendError(res, 'No se encontró el rol "Guardia"', 404)
+      }
+
+      console.log(`✅ Rol Guardia encontrado: ${guardiaRole.id}`)
+
+      // Buscar el permiso work-orders:read
+      let workOrdersReadPermission = await prisma.permission.findFirst({
+        where: {
+          resource: 'work-orders',
+          action: 'read',
+        },
+      })
+
+      if (!workOrdersReadPermission) {
+        console.log('📝 Creando el permiso work-orders:read...')
+        workOrdersReadPermission = await prisma.permission.create({
+          data: {
+            resource: 'work-orders',
+            action: 'read',
+            description: 'Ver órdenes de trabajo',
+          },
+        })
+        console.log(`✅ Permiso creado: ${workOrdersReadPermission.id}`)
+      } else {
+        console.log(`✅ Permiso work-orders:read encontrado: ${workOrdersReadPermission.id}`)
+      }
+
+      // Verificar si el permiso ya está asignado
+      const existingPermission = await prisma.rolePermission.findUnique({
+        where: {
+          roleId_permissionId: {
+            roleId: guardiaRole.id,
+            permissionId: workOrdersReadPermission.id,
+          },
+        },
+      })
+
+      if (existingPermission) {
+        return sendSuccess(
+          res,
+          {
+            permission: {
+              id: workOrdersReadPermission.id,
+              resource: workOrdersReadPermission.resource,
+              action: workOrdersReadPermission.action,
+            },
+            role: {
+              id: guardiaRole.id,
+              name: guardiaRole.name,
+            },
+            message: 'El permiso work-orders:read ya está asignado al rol Guardia',
+          },
+          'El permiso ya estaba asignado'
+        )
+      }
+
+      // Asignar el permiso al rol Guardia
+      console.log('📝 Asignando permiso work-orders:read al rol Guardia...')
+      await prisma.rolePermission.create({
+        data: {
+          roleId: guardiaRole.id,
+          permissionId: workOrdersReadPermission.id,
+        },
+      })
+
+      console.log('✅ Permiso work-orders:read asignado al rol Guardia exitosamente')
+
+      // Verificar los permisos actuales del rol Guardia
+      const guardiaWithPermissions = await prisma.role.findUnique({
+        where: { id: guardiaRole.id },
+        include: {
+          permissions: {
+            include: {
+              permission: true,
+            },
+          },
+        },
+      })
+
+      const permissions = guardiaWithPermissions?.permissions.map((rp) => ({
+        resource: rp.permission.resource,
+        action: rp.permission.action,
+      })) || []
+
+      return sendSuccess(
+        res,
+        {
+          permission: {
+            id: workOrdersReadPermission.id,
+            resource: workOrdersReadPermission.resource,
+            action: workOrdersReadPermission.action,
+          },
+          role: {
+            id: guardiaRole.id,
+            name: guardiaRole.name,
+          },
+          permissions,
+          message: 'Permiso work-orders:read asignado exitosamente al rol Guardia',
+        },
+        'Permiso asignado exitosamente'
+      )
+    } catch (error: any) {
+      console.error('❌ Error al asignar permiso:', error)
+      return sendError(res, error.message || 'Error al asignar permiso', 500)
+    }
+  }
 }
 
 export default new AdminController()
