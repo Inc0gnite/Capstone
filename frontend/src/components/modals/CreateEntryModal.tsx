@@ -45,8 +45,14 @@ export function CreateEntryModal({ isOpen, onClose, onSuccess }: CreateEntryModa
       console.log('Cargando vehículos...')
       const response = await vehicleService.getAll()
       console.log('Respuesta de vehículos:', response)
-      setVehicles(response.data || [])
-      console.log('Vehículos cargados:', response.data || [])
+      
+      // Filtrar solo vehículos que NO están en mantenimiento
+      const availableVehicles = (response.data || []).filter(
+        (vehicle: Vehicle) => vehicle.status !== 'in_maintenance' && vehicle.isActive
+      )
+      
+      setVehicles(availableVehicles)
+      console.log('Vehículos disponibles (sin mantenimiento):', availableVehicles.length)
     } catch (error) {
       console.error('Error cargando vehículos:', error)
       alert('Error al cargar vehículos: ' + (error as Error).message)

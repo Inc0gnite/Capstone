@@ -141,12 +141,14 @@ export function CreateEntryModalAdvanced({ isOpen, onClose, onSuccess }: CreateE
       const vehiclesData = response.data || response || []
       console.log('✅ Vehículos cargados:', vehiclesData.length)
       
-      // Filtrar vehículos válidos y limpiar datos nulos
+      // Filtrar vehículos válidos, que NO estén en mantenimiento y que estén activos
       const validVehicles = vehiclesData.filter((vehicle: any) => 
         vehicle && 
         vehicle.id && 
         vehicle.licensePlate && 
-        vehicle.brand
+        vehicle.brand &&
+        vehicle.status !== 'in_maintenance' && // Excluir vehículos en mantenimiento
+        vehicle.isActive // Solo vehículos activos
       ).map((vehicle: any) => ({
         ...vehicle,
         vin: vehicle.vin || '', // Asegurar que VIN sea string
@@ -154,7 +156,7 @@ export function CreateEntryModalAdvanced({ isOpen, onClose, onSuccess }: CreateE
         fleetNumber: vehicle.fleetNumber || '' // Asegurar que fleetNumber sea string
       }))
       
-      console.log('✅ Vehículos válidos procesados:', validVehicles.length)
+      console.log('✅ Vehículos válidos procesados (sin mantenimiento):', validVehicles.length)
       setVehicles(validVehicles)
     } catch (error) {
       console.error('❌ Error cargando vehículos:', error)
