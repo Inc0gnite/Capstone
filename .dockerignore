@@ -92,10 +92,13 @@ temp/
 .gitattributes
 
 # Documentation - NO excluir README.md
+# IMPORTANTE: README.md debe estar disponible para Railpack
 # Solo excluir directorios específicos, no archivos .md en general
 Trash/
 docs/
 DEPLOY_TEST.md
+# Asegurar explícitamente que README.md NO esté excluido
+!README.md
 
 # Scripts de desarrollo (no necesarios en producción)
 scripts/
