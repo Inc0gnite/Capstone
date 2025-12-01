@@ -89,6 +89,15 @@ export function CreateEntryModal({ isOpen, onClose, onSuccess }: CreateEntryModa
       return
     }
 
+    // Guardar los datos del vehículo para usar después
+    const vehicleData = {
+      id: selectedVehicle.id,
+      licensePlate: selectedVehicle.licensePlate,
+      brand: selectedVehicle.brand,
+      model: selectedVehicle.model,
+      year: selectedVehicle.year
+    }
+
     let entryCreated = false
     let newEntry: any = null
 
@@ -130,7 +139,7 @@ export function CreateEntryModal({ isOpen, onClose, onSuccess }: CreateEntryModa
         entryCode: newEntry.entryCode,
         driverName: formData.driverName,
         driverRut: formData.driverRut,
-        vehicle: selectedVehicle
+        vehicle: vehicleData
       }
       
       onSuccess(entryData)
@@ -148,7 +157,7 @@ export function CreateEntryModal({ isOpen, onClose, onSuccess }: CreateEntryModa
           entryCode: newEntry.entryCode,
           driverName: formData.driverName,
           driverRut: formData.driverRut,
-          vehicle: selectedVehicle
+          vehicle: vehicleData
         })
         onClose()
         resetForm()
@@ -163,6 +172,10 @@ export function CreateEntryModal({ isOpen, onClose, onSuccess }: CreateEntryModa
         alert(`❌ Error al crear el ingreso: ${errorMessage}\n\n💡 El taller asignado no es válido. Contacta al administrador.`)
       } else if (errorMessage.includes('Vehículo no encontrado')) {
         alert(`❌ Error al crear el ingreso: ${errorMessage}\n\n💡 El vehículo seleccionado no existe. Intenta seleccionar otro vehículo.`)
+      } else if (errorMessage.includes('selectedVehicle')) {
+        // Manejar específicamente este error
+        console.error('Error de selectedVehicle - esto no debería ocurrir')
+        alert('❌ Error inesperado al procesar el vehículo. Por favor, intenta nuevamente.')
       } else {
         alert(`❌ Error al crear el ingreso: ${errorMessage}`)
       }
