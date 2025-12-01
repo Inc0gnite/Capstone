@@ -98,9 +98,6 @@ export function CreateEntryModal({ isOpen, onClose, onSuccess }: CreateEntryModa
       year: selectedVehicle.year
     }
 
-    let entryCreated = false
-    let newEntry: any = null
-
     try {
       setLoading(true)
       console.log('Creando ingreso con datos:', formData)
@@ -114,7 +111,13 @@ export function CreateEntryModal({ isOpen, onClose, onSuccess }: CreateEntryModa
         throw new Error('Usuario no autenticado')
       }
       
-      newEntry = await vehicleEntryService.create({
+      // Validar que tenemos todos los datos necesarios antes de crear
+      if (!vehicleData || !vehicleData.id) {
+        throw new Error('Error: No se pudo obtener la información del vehículo seleccionado')
+      }
+      
+      // Crear el ingreso
+      const newEntry = await vehicleEntryService.create({
         vehicleId: formData.vehicleId,
         workshopId: workshopId,
         driverRut: formData.driverRut,
@@ -128,43 +131,37 @@ export function CreateEntryModal({ isOpen, onClose, onSuccess }: CreateEntryModa
         createdById: user.id
       } as any)
       
-      entryCreated = true
+      // Validar que la respuesta del backend sea válida
+      if (!newEntry || !newEntry.id || !newEntry.entryCode) {
+        throw new Error('Error: La respuesta del servidor no es válida. El ingreso puede no haberse creado correctamente.')
+      }
       
       // Emitir evento para actualizar estadísticas
       window.dispatchEvent(new CustomEvent('entry-created'))
       
-      // Preparar datos para la notificación
-      const entryData = {
-        id: newEntry.id,
-        entryCode: newEntry.entryCode,
-        driverName: formData.driverName,
-        driverRut: formData.driverRut,
-        vehicle: vehicleData
-      }
-      
-      onSuccess(entryData)
-      onClose()
-      resetForm()
-    } catch (error: any) {
-      console.error('Error creando ingreso:', error)
-      
-      // Si el ingreso se creó pero hubo un error después, informar pero cerrar el modal
-      if (entryCreated && newEntry) {
-        console.warn('⚠️ El ingreso se creó exitosamente pero hubo un error al procesar la respuesta')
-        // Aún así, cerramos el modal y reseteamos porque el ingreso ya existe
-        onSuccess({
+      // Preparar datos para la notificación - validar que todos los datos estén disponibles
+      try {
+        const entryData = {
           id: newEntry.id,
           entryCode: newEntry.entryCode,
           driverName: formData.driverName,
           driverRut: formData.driverRut,
           vehicle: vehicleData
-        })
+        }
+        
+        // Solo si todo está correcto, proceder con el éxito
+        onSuccess(entryData)
         onClose()
         resetForm()
-        return
+      } catch (processingError: any) {
+        // Si hay un error al procesar la respuesta, lanzar el error
+        console.error('Error procesando respuesta del ingreso:', processingError)
+        throw new Error(`Error al procesar la respuesta del servidor: ${processingError.message}`)
       }
+    } catch (error: any) {
+      console.error('Error creando ingreso:', error)
       
-      // Si no se creó el ingreso, mostrar el error
+      // NO cerrar el modal si hay un error - el usuario debe saber que algo salió mal
       const errorMessage = error.response?.data?.error || error.response?.data?.message || error.message || 'Error desconocido'
       
       // Mensaje más informativo según el tipo de error
@@ -172,13 +169,13 @@ export function CreateEntryModal({ isOpen, onClose, onSuccess }: CreateEntryModa
         alert(`❌ Error al crear el ingreso: ${errorMessage}\n\n💡 El taller asignado no es válido. Contacta al administrador.`)
       } else if (errorMessage.includes('Vehículo no encontrado')) {
         alert(`❌ Error al crear el ingreso: ${errorMessage}\n\n💡 El vehículo seleccionado no existe. Intenta seleccionar otro vehículo.`)
-      } else if (errorMessage.includes('selectedVehicle')) {
-        // Manejar específicamente este error
-        console.error('Error de selectedVehicle - esto no debería ocurrir')
-        alert('❌ Error inesperado al procesar el vehículo. Por favor, intenta nuevamente.')
+      } else if (errorMessage.includes('selectedVehicle') || errorMessage.includes('vehículo')) {
+        alert(`❌ Error al procesar el vehículo: ${errorMessage}\n\n💡 Por favor, intenta nuevamente.`)
       } else {
-        alert(`❌ Error al crear el ingreso: ${errorMessage}`)
+        alert(`❌ Error al crear el ingreso: ${errorMessage}\n\n💡 El ingreso NO se ha guardado. Por favor, intenta nuevamente.`)
       }
+      
+      // NO cerrar el modal ni resetear el formulario - el usuario puede corregir y reintentar
     } finally {
       setLoading(false)
     }
