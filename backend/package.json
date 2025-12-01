@@ -27,6 +27,7 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "fix:guardia-permissions": "tsx scripts/add-regions-permission-guardia.ts",
+    "fix:guardia-work-orders-read": "tsx scripts/add-work-orders-read-permission-to-guardia.ts",
     "fix:mecanico-spare-parts-permission": "tsx scripts/add-spare-parts-update-permission-to-mecanico.ts",
     "fix:mecanico-vehicle-entries-read": "tsx scripts/add-vehicle-entries-read-permission-to-mecanico.ts",
     "fix:reports-permission": "tsx scripts/add-reports-read-permission.ts"

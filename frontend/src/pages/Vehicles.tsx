@@ -5,6 +5,7 @@ import { vehicleService } from '../services/vehicleService'
 import { regionService } from '../services/regionService'
 import { vehicleEntryService, type VehicleEntry } from '../services/vehicleEntryService'
 import { workOrderService, type WorkOrder } from '../services/workOrderService'
+import { photoService, type VehicleEntryPhoto } from '../services/photoService'
 import { DeleteVehicleModal } from '../components/modals/DeleteVehicleModal'
 import { EditVehicleModal } from '../components/modals/EditVehicleModal'
 import { DocumentUpload } from '../components/DocumentUpload'
@@ -12,7 +13,7 @@ import { useAuthStore } from '../store/authStore'
 import type { Vehicle, VehicleFilters, Region } from '../../../shared/types'
 import { 
   Car, CheckCircle, Wrench, XCircle, Search, Pencil, 
-  Trash2, Eye, EyeOff, Clipboard, FileText, Wrench as WrenchIcon
+  Trash2, Eye, EyeOff, Clipboard, FileText, Wrench as WrenchIcon, Camera
 } from 'lucide-react'
 
 export default function Vehicles() {
@@ -30,6 +31,7 @@ export default function Vehicles() {
     workOrders: [],
     loading: false,
   })
+  const [entryPhotos, setEntryPhotos] = useState<Record<string, VehicleEntryPhoto[]>>({})
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [vehicleToDelete, setVehicleToDelete] = useState<Vehicle | null>(null)
   const [showEditModal, setShowEditModal] = useState(false)
@@ -151,14 +153,32 @@ export default function Vehicles() {
   const loadVehicleHistory = async (vehicleId: string) => {
     try {
       setVehicleHistory({ entries: [], workOrders: [], loading: true })
+      setEntryPhotos({})
       
       const [entriesResponse, workOrdersResponse] = await Promise.all([
         vehicleEntryService.getAll({ vehicleId, limit: 100 }),
         workOrderService.getAll({ vehicleId, limit: 100 }),
       ])
 
+      const entries = entriesResponse.data || []
+      const photosMap: Record<string, VehicleEntryPhoto[]> = {}
+
+      // Cargar fotos de cada ingreso
+      await Promise.all(
+        entries.map(async (entry) => {
+          try {
+            const photos = await photoService.getEntryPhotos(entry.id)
+            photosMap[entry.id] = photos
+          } catch (error) {
+            console.error(`Error cargando fotos del ingreso ${entry.id}:`, error)
+            photosMap[entry.id] = []
+          }
+        })
+      )
+
+      setEntryPhotos(photosMap)
       setVehicleHistory({
-        entries: entriesResponse.data || [],
+        entries,
         workOrders: workOrdersResponse.data || [],
         loading: false,
       })
@@ -760,40 +780,91 @@ export default function Vehicles() {
                         <p className="text-sm text-gray-500 text-center py-2">No hay ingresos registrados</p>
                       ) : (
                         <div className="space-y-2 max-h-60 overflow-y-auto">
-                          {vehicleHistory.entries.map((entry) => (
-                            <div
-                              key={entry.id}
-                              className="bg-gray-50 rounded-lg p-3 border border-gray-200 hover:bg-gray-100 transition-colors cursor-pointer"
-                              onClick={() => {
-                                handleCloseVehicleModal()
-                                navigate(`/entries/${entry.id}`)
-                              }}
-                            >
-                              <div className="flex items-start justify-between">
-                                <div className="flex-1">
-                                  <div className="flex items-center space-x-2 mb-1">
-                                    <span className="text-xs font-semibold text-blue-600">{entry.entryCode}</span>
-                                    <span className={`px-2 py-0.5 text-xs rounded-full ${
-                                      entry.status === 'ingresado' 
-                                        ? 'bg-yellow-100 text-yellow-800' 
-                                        : 'bg-green-100 text-green-800'
-                                    }`}>
-                                      {entry.status === 'ingresado' ? 'En Taller' : 'Salida'}
-                                    </span>
+                          {vehicleHistory.entries.map((entry) => {
+                            const photos = entryPhotos[entry.id] || []
+                            return (
+                              <div
+                                key={entry.id}
+                                className="bg-gray-50 rounded-lg p-3 border border-gray-200 hover:bg-gray-100 transition-colors"
+                              >
+                                <div 
+                                  className="flex items-start justify-between cursor-pointer"
+                                  onClick={() => {
+                                    handleCloseVehicleModal()
+                                    navigate(`/entries/${entry.id}`)
+                                  }}
+                                >
+                                  <div className="flex-1">
+                                    <div className="flex items-center space-x-2 mb-1">
+                                      <span className="text-xs font-semibold text-blue-600">{entry.entryCode}</span>
+                                      <span className={`px-2 py-0.5 text-xs rounded-full ${
+                                        entry.status === 'ingresado' 
+                                          ? 'bg-yellow-100 text-yellow-800' 
+                                          : 'bg-green-100 text-green-800'
+                                      }`}>
+                                        {entry.status === 'ingresado' ? 'En Taller' : 'Salida'}
+                                      </span>
+                                    </div>
+                                    <p className="text-xs text-gray-600">
+                                      <span className="font-medium">{entry.driverName}</span> • {entry.driverRut}
+                                    </p>
+                                    <p className="text-xs text-gray-500 mt-1">
+                                      {new Date(entry.entryDate).toLocaleDateString('es-CL')} • 
+                                      {entry.entryKm.toLocaleString()} km
+                                      {entry.exitKm && ` → ${entry.exitKm.toLocaleString()} km`}
+                                    </p>
                                   </div>
-                                  <p className="text-xs text-gray-600">
-                                    <span className="font-medium">{entry.driverName}</span> • {entry.driverRut}
-                                  </p>
-                                  <p className="text-xs text-gray-500 mt-1">
-                                    {new Date(entry.entryDate).toLocaleDateString('es-CL')} • 
-                                    {entry.entryKm.toLocaleString()} km
-                                    {entry.exitKm && ` → ${entry.exitKm.toLocaleString()} km`}
-                                  </p>
+                                  <span className="text-xs text-gray-400">→</span>
                                 </div>
-                                <span className="text-xs text-gray-400">→</span>
+                                
+                                {/* Fotos del ingreso */}
+                                {photos.length > 0 && (
+                                  <div className="mt-3 pt-3 border-t border-gray-200">
+                                    <div className="flex items-center space-x-1 mb-2">
+                                      <Camera className="w-3 h-3 text-gray-500" />
+                                      <span className="text-xs font-medium text-gray-700">
+                                        Fotos del registro ({photos.length})
+                                      </span>
+                                    </div>
+                                    <div className="grid grid-cols-4 gap-2">
+                                      {photos.slice(0, 4).map((photo, index) => (
+                                        <div
+                                          key={photo.id}
+                                          className="relative aspect-square rounded-md overflow-hidden border border-gray-300 bg-gray-100 cursor-pointer hover:opacity-80 transition-opacity"
+                                          onClick={(e) => {
+                                            e.stopPropagation()
+                                            window.open(photo.url, '_blank')
+                                          }}
+                                        >
+                                          <img
+                                            src={photo.url}
+                                            alt={`Foto ${index + 1} del ingreso ${entry.entryCode}`}
+                                            className="w-full h-full object-cover"
+                                            onError={(e) => {
+                                              e.currentTarget.style.display = 'none'
+                                            }}
+                                          />
+                                        </div>
+                                      ))}
+                                      {photos.length > 4 && (
+                                        <div className="relative aspect-square rounded-md overflow-hidden border border-gray-300 bg-gray-200 flex items-center justify-center cursor-pointer hover:bg-gray-300 transition-colors"
+                                          onClick={(e) => {
+                                            e.stopPropagation()
+                                            handleCloseVehicleModal()
+                                            navigate(`/entries/${entry.id}`)
+                                          }}
+                                        >
+                                          <span className="text-xs font-medium text-gray-600">
+                                            +{photos.length - 4}
+                                          </span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
                               </div>
-                            </div>
-                          ))}
+                            )
+                          })}
                         </div>
                       )}
                     </div>
