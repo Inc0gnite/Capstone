@@ -91,11 +91,12 @@ temp/
 .gitignore
 .gitattributes
 
-# Documentation
+# Documentation (mantener README.md)
 *.md
 !README.md
 Trash/
 docs/
+DEPLOY_TEST.md
 
 # Scripts de desarrollo (no necesarios en producción)
 scripts/
