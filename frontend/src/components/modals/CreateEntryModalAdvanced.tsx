@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { vehicleEntryService } from '../../services/vehicleEntryService'
 import { vehicleService } from '../../services/vehicleService'
 import { configService } from '../../services/configService'
-import { photoService } from '../../services/photoService'
 import { regionCache, Region } from '../../services/regionCache'
 // import { CHILE_REGIONS } from '../../data/chileRegions'
 import { generateUniqueVIN } from '../../utils/vinGenerator'
@@ -10,10 +9,8 @@ import { generateUniqueFleetNumber } from '../../utils/fleetNumberGenerator'
 import { RegionSelector } from '../forms/RegionSelector'
 import { VINField } from '../forms/VINField'
 import { RUTField } from '../forms/RUTField'
-import { PhotoGallery, type Photo } from '../photo/PhotoGallery'
 import { useAuthStore } from '../../store/authStore'
 import type { Vehicle } from '../../../../shared/types'
-import { Camera } from 'lucide-react'
 
 interface CreateEntryModalProps {
   isOpen: boolean
@@ -92,10 +89,6 @@ export function CreateEntryModalAdvanced({ isOpen, onClose, onSuccess }: CreateE
   
   // Vehículo creado
   const [createdVehicle, setCreatedVehicle] = useState<any>(null)
-  
-  // Estado para fotos
-  const [photos, setPhotos] = useState<Photo[]>([])
-  const [showPhotoSection, setShowPhotoSection] = useState(false)
 
   useEffect(() => {
     if (isOpen) {
@@ -225,23 +218,6 @@ export function CreateEntryModalAdvanced({ isOpen, onClose, onSuccess }: CreateE
     })
     setStep('vehicle')
     setCreatedVehicle(null)
-    setPhotos([])
-    setShowPhotoSection(false)
-  }
-
-  // Funciones para manejar fotos
-  const handleAddPhoto = (photo: Photo) => {
-    setPhotos(prev => [...prev, photo])
-  }
-
-  const handleDeletePhoto = (photoId: string) => {
-    setPhotos(prev => prev.filter(p => p.id !== photoId))
-  }
-
-  const handleUpdatePhoto = (photoId: string, description: string) => {
-    setPhotos(prev => prev.map(p => 
-      p.id === photoId ? { ...p, description } : p
-    ))
   }
 
   const generateVIN = async () => {
@@ -510,61 +486,6 @@ export function CreateEntryModalAdvanced({ isOpen, onClose, onSuccess }: CreateE
       // Emitir evento para actualizar estadísticas
       window.dispatchEvent(new CustomEvent('entry-created'))
       
-      // Subir fotos si hay alguna (opcional, no bloquea el proceso)
-      if (photos.length > 0 && createdEntry?.id) {
-        try {
-          console.log('📸 Subiendo fotos del ingreso...', photos.length, 'fotos')
-          console.log('📸 ID del ingreso:', createdEntry.id)
-          console.log('📸 Fotos a subir:', photos.map(p => ({ id: p.id, type: p.photoType, hasUrl: !!p.url })))
-          
-          // Subir cada foto al backend
-          const photoPromises = photos.map(async (photo, index) => {
-            try {
-              console.log(`📤 Subiendo foto ${index + 1}/${photos.length}...`)
-              const result = await photoService.addEntryPhoto(
-                createdEntry.id,
-                photo.url,
-                photo.photoType || 'before',
-                photo.description
-              )
-              console.log('✅ Foto subida exitosamente:', result.id, result.url.substring(0, 50) + '...')
-              return result
-            } catch (photoError: any) {
-              console.error('⚠️ Error subiendo foto individual:', photoError)
-              console.error('⚠️ Detalles del error:', {
-                message: photoError.message,
-                response: photoError.response?.data,
-                status: photoError.response?.status
-              })
-              // Continuar con las demás fotos aunque una falle
-              throw photoError
-            }
-          })
-          
-          // Esperar a que todas las fotos se suban (en background, no bloquea)
-          Promise.all(photoPromises).then((results) => {
-            console.log('✅ Todas las fotos subidas exitosamente:', results.length)
-            // Emitir evento para refrescar la página de detalle si está abierta
-            window.dispatchEvent(new CustomEvent('entry-photos-uploaded', { 
-              detail: { entryId: createdEntry.id, photoCount: results.length } 
-            }))
-          }).catch((error) => {
-            console.error('⚠️ Algunas fotos no se pudieron subir:', error)
-          })
-        } catch (photoError) {
-          console.error('⚠️ Error subiendo fotos (no crítico):', photoError)
-          // No fallar el proceso si las fotos no se suben
-        }
-      } else {
-        console.log('ℹ️ No hay fotos para subir o el ingreso no tiene ID')
-        if (photos.length === 0) {
-          console.log('ℹ️ Array de fotos está vacío')
-        }
-        if (!createdEntry?.id) {
-          console.log('ℹ️ El ingreso creado no tiene ID:', createdEntry)
-        }
-      }
-      
       onSuccess()
       onClose()
       resetForm()
@@ -623,19 +544,11 @@ export function CreateEntryModalAdvanced({ isOpen, onClose, onSuccess }: CreateE
   }
 
   const handleClose = () => {
-    // Verificar si hay fotos sin guardar
-    const hasUnsavedPhotos = photos.length > 0
-    
     // Si hay un vehículo creado pero no se completó el ingreso, preguntar al usuario
     if (createdVehicle) {
       let confirmMessage = step === 'entry' 
         ? '¿Estás seguro de cerrar? El vehículo ya fue creado pero el ingreso no se ha registrado. El vehículo será eliminado automáticamente.'
         : '¿Estás seguro de cerrar? El vehículo ya fue creado y será eliminado automáticamente.'
-      
-      // Agregar advertencia sobre fotos si las hay
-      if (hasUnsavedPhotos) {
-        confirmMessage += `\n\n⚠️ ADVERTENCIA: Tienes ${photos.length} ${photos.length === 1 ? 'foto' : 'fotos'} sin guardar que se perderán al cerrar.`
-      }
       
       if (!confirm(confirmMessage)) {
         return // El usuario canceló el cierre
@@ -651,19 +564,9 @@ export function CreateEntryModalAdvanced({ isOpen, onClose, onSuccess }: CreateE
           console.error('❌ Error eliminando vehículo al cerrar:', error)
           alert('⚠️ El vehículo fue creado pero no se pudo eliminar automáticamente. Contacta al administrador.')
         })
-    } else if (hasUnsavedPhotos || step !== 'vehicle') {
-      // Si hay fotos o si ya pasó del paso 1, advertir
-      let confirmMessage = '¿Estás seguro de cerrar?'
-      
-      if (hasUnsavedPhotos) {
-        confirmMessage += `\n\n⚠️ ADVERTENCIA: Tienes ${photos.length} ${photos.length === 1 ? 'foto' : 'fotos'} sin guardar que se perderán al cerrar.`
-      }
-      
-      if (step !== 'vehicle') {
-        confirmMessage += '\n\n⚠️ ADVERTENCIA: Los datos ingresados se perderán al cerrar.'
-      }
-      
-      if (!confirm(confirmMessage)) {
+    } else if (step !== 'vehicle') {
+      // Si ya pasó del paso 1, advertir
+      if (!confirm('¿Estás seguro de cerrar? Los datos ingresados se perderán al cerrar.')) {
         return // El usuario canceló el cierre
       }
     }
@@ -1025,36 +928,6 @@ export function CreateEntryModalAdvanced({ isOpen, onClose, onSuccess }: CreateE
                   rows={3}
                   placeholder="Observaciones adicionales..."
                 />
-              </div>
-
-              {/* Sección de Fotografías */}
-              <div className="border-t pt-4 sm:pt-6">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 mb-3 sm:mb-4">
-                  <h3 className="text-base sm:text-lg font-medium text-gray-900 flex items-center gap-2">
-                    <Camera className="w-5 h-5" />
-                    Fotografías del Vehículo
-                  </h3>
-                  <button
-                    type="button"
-                    onClick={() => setShowPhotoSection(!showPhotoSection)}
-                    className="flex items-center gap-1 sm:gap-2 text-blue-600 hover:text-blue-700 text-xs sm:text-sm font-medium"
-                  >
-                    {showPhotoSection ? 'Ocultar' : 'Mostrar'} Fotos
-                    <span className="text-xs">
-                      ({photos.length} {photos.length === 1 ? 'foto' : 'fotos'})
-                    </span>
-                  </button>
-                </div>
-                
-                {showPhotoSection && (
-                  <PhotoGallery
-                    entryId="temp-entry" // ID temporal para el modal
-                    photos={photos}
-                    onAddPhoto={handleAddPhoto}
-                    onDeletePhoto={handleDeletePhoto}
-                    onUpdatePhoto={handleUpdatePhoto}
-                  />
-                )}
               </div>
 
               <div className="flex flex-col sm:flex-row justify-between gap-2 sm:gap-3 pt-3 sm:pt-4">
