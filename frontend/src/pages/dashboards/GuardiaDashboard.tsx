@@ -8,6 +8,7 @@ import { workOrderService } from '../../services/workOrderService'
 import { useAuthStore } from '../../store/authStore'
 import { CreateEntryModal } from '../../components/modals/CreateEntryModal'
 import { CreateEntryModalAdvanced } from '../../components/modals/CreateEntryModalAdvanced'
+import { requestCache } from '../../utils/requestCache'
 import type { VehicleEntry, Vehicle, WorkOrder } from '../../../../shared/types'
 import { RefreshCw, FileText, Factory, CheckCircle, Search, Car, Wrench, Lightbulb, XCircle, BarChart, Zap, Play, Pause, Clock, Clipboard, Package, ArrowRight, AlertTriangle, UserCog } from 'lucide-react'
 
@@ -38,19 +39,69 @@ export default function GuardiaDashboard() {
     loadDashboardData()
   }, [])
 
+  // Actualización automática periódica cada 30 segundos
+  useEffect(() => {
+    const interval = setInterval(() => {
+      console.log('🔄 Actualización automática del dashboard (cada 30s)')
+      loadDashboardData()
+      refreshStats()
+    }, 30000) // 30 segundos
+
+    return () => clearInterval(interval)
+  }, [refreshStats])
+
+  // Actualizar cuando el usuario vuelve a la pestaña
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        console.log('👁️ Pestaña visible, actualizando dashboard...')
+        // Invalidar caché para forzar actualización
+        requestCache.invalidate(/vehicle-entries/)
+        loadDashboardData()
+        refreshStats()
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [refreshStats])
+
   // Escuchar eventos de creación de entradas
   useEffect(() => {
     const handleEntryCreated = () => {
+      console.log('📢 Evento entry-created recibido, actualizando dashboard...')
+      requestCache.invalidate(/vehicle-entries/)
       loadDashboardData()
       refreshStats()
     }
 
     const handleExitRegistered = () => {
+      console.log('📢 Evento exit-registered recibido, actualizando dashboard...')
+      requestCache.invalidate(/vehicle-entries/)
       loadDashboardData()
       refreshStats()
     }
 
     const handleOrderMarkedReady = () => {
+      console.log('📢 Evento order-marked-ready recibido, actualizando dashboard...')
+      requestCache.invalidate(/vehicle-entries/)
+      loadDashboardData()
+      refreshStats()
+    }
+
+    const handleWorkOrderUpdated = () => {
+      console.log('📢 Evento work-order-updated recibido, actualizando dashboard...')
+      requestCache.invalidate(/vehicle-entries/)
+      loadDashboardData()
+      refreshStats()
+    }
+
+    const handleWorkOrderCompleted = () => {
+      console.log('📢 Evento work-order-completed recibido, actualizando dashboard...')
+      requestCache.invalidate(/vehicle-entries/)
       loadDashboardData()
       refreshStats()
     }
@@ -58,13 +109,23 @@ export default function GuardiaDashboard() {
     window.addEventListener('entry-created', handleEntryCreated)
     window.addEventListener('exit-registered', handleExitRegistered)
     window.addEventListener('order-marked-ready', handleOrderMarkedReady)
+    window.addEventListener('work-order-updated', handleWorkOrderUpdated)
+    window.addEventListener('work-order-completed', handleWorkOrderCompleted)
 
     return () => {
       window.removeEventListener('entry-created', handleEntryCreated)
       window.removeEventListener('exit-registered', handleExitRegistered)
       window.removeEventListener('order-marked-ready', handleOrderMarkedReady)
+      window.removeEventListener('work-order-updated', handleWorkOrderUpdated)
+      window.removeEventListener('work-order-completed', handleWorkOrderCompleted)
     }
   }, [refreshStats])
+
+  // Actualizar cuando cambia el período
+  useEffect(() => {
+    console.log(`📊 Período cambiado a: ${period}, actualizando estadísticas...`)
+    refreshStats()
+  }, [period, refreshStats])
 
   const loadDashboardData = async () => {
     // Evitar peticiones concurrentes

@@ -170,6 +170,7 @@ export function useStats(period: PeriodType = 'diario') {
   // Escuchar eventos de actualización de datos
   useEffect(() => {
     const handleDataUpdate = () => {
+      console.log('📢 Evento recibido, actualizando estadísticas...')
       refreshStats()
     }
 
@@ -177,13 +178,51 @@ export function useStats(period: PeriodType = 'diario') {
     window.addEventListener('entry-created', handleDataUpdate)
     window.addEventListener('entry-updated', handleDataUpdate)
     window.addEventListener('exit-registered', handleDataUpdate)
+    window.addEventListener('order-marked-ready', handleDataUpdate)
+    window.addEventListener('work-order-completed', handleDataUpdate)
+    window.addEventListener('work-order-updated', handleDataUpdate)
 
     return () => {
       window.removeEventListener('entry-created', handleDataUpdate)
       window.removeEventListener('entry-updated', handleDataUpdate)
       window.removeEventListener('exit-registered', handleDataUpdate)
+      window.removeEventListener('order-marked-ready', handleDataUpdate)
+      window.removeEventListener('work-order-completed', handleDataUpdate)
+      window.removeEventListener('work-order-updated', handleDataUpdate)
     }
   }, [refreshStats])
+
+  // Actualización automática periódica cada 30 segundos
+  useEffect(() => {
+    const interval = setInterval(() => {
+      console.log('🔄 Actualización automática de estadísticas (cada 30s)')
+      refreshStats()
+    }, 30000) // 30 segundos
+
+    return () => clearInterval(interval)
+  }, [refreshStats])
+
+  // Actualizar cuando el usuario vuelve a la pestaña
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        console.log('👁️ Pestaña visible, actualizando estadísticas...')
+        refreshStats()
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [refreshStats])
+
+  // Actualizar cuando cambia el período
+  useEffect(() => {
+    console.log(`📊 Período cambiado a: ${period}, recargando estadísticas...`)
+    refreshStats()
+  }, [period, refreshStats])
 
   return {
     stats,
